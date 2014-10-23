@@ -34,7 +34,7 @@ int main() {
     //signal(SIGINT, sigintHandler);
 
     // Establish connection with server1, else exit with error
-    if ((conn = get_server_connection("134.198.169.255", PORT)) == -1) { close(conn); exit(EXIT_FAILURE); }
+    if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { close(conn); exit(EXIT_FAILURE); }
 
     // Input and tx/rx loop here?
     while(exit_flag) {
