@@ -27,13 +27,15 @@ int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
 
 int main() {
-	int chat_serv_sock_fd;
-	int clientA_sock_fd;
-	int clientB_sock_fd;
+	int chat_serv_sock_fd; //server socket
+	int clientA_sock_fd;   //socket for first client
+	int clientB_sock_fd;   //socket for second client
 
+	//Strings for users' messages
 	char clientA_message[128];
 	char clientB_message[128];
 
+	//Open server socket
 	chat_serv_sock_fd = get_server_socket(HOSTNAME, PORT);
 
         // step 3: get ready to accept connections
@@ -42,14 +44,18 @@ int main() {
              exit(1);
         }	
 
+	//Accept client connections
 	clientA_sock_fd = accept_client(chat_serv_sock_fd);
 	clientB_sock_fd = accept_client(chat_serv_sock_fd);
 
+	//Loop until a user enters "EXIT"
 	while(strcmp(clientA_message, "EXIT") != 0 && strcmp(clientB_message, "EXIT") != 0) {
+		//Send client A message to client B
 		int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
 		clientA_message[read_countA] = '\0';
 		send(clientB_sock_fd, clientA_message, read_countA, 0);
 
+		//Send client B message to client A
 		int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
 		clientB_message[read_countB] = '\0';
 		send(clientA_sock_fd, clientB_message, read_countB, 0);
@@ -60,6 +66,8 @@ int main() {
 	close(chat_serv_sock_fd);
 
 }
+
+//Copied from Dr. Bi's example
 int get_server_socket(char *hostname, char *port) {
     struct addrinfo hints, *servinfo, *p;
     int status;
@@ -102,6 +110,7 @@ int get_server_socket(char *hostname, char *port) {
     return server_socket;
 }
 
+//Copied from Dr. Bi's example
 int start_server(int serv_socket, int backlog) {
     int status = 0;
     if ((status = listen(serv_socket, backlog)) == -1) {
@@ -110,6 +119,7 @@ int start_server(int serv_socket, int backlog) {
     return status;
 }
 
+//Copied from Dr. Bi's example
 int accept_client(int serv_sock) {
     int reply_sock_fd = -1;
     socklen_t sin_size = sizeof(struct sockaddr_storage);
