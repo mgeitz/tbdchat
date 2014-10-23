@@ -25,18 +25,30 @@ int get_server_connection(char *hostname, char *port);
 
 
 int main() {
-    int conn;
-    int exit_flag = 1;
+    int conn;             //
+    int exit_flag = 1;    // Exit flag var
+    int i;
+    char buffer[128];     // Input buffer
 
     // Trap CTRL+C
     //signal(SIGINT, sigintHandler);
 
-    // Establish connection with server1, else print halp
-    if ((conn = get_server_connection("134.198.169.255", PORT)) == -1) { printf("halp"); }
+    // Establish connection with server1, else exit with error
+    if ((conn = get_server_connection("134.198.169.255", PORT)) == -1) { break; }
 
     // Input and tx/rx loop here?
     while(exit_flag) {
-        
+        // Read input into buffer until newline or EOF (CTRL+D)
+        i = 0;
+        buffer[i] = getc(stdin);
+        while (buffer[i] != '\n' && buffer[i] != EOF) { buffer[++i] = getc(stdin); }
+
+        // Transmit message
+
+        // Receive message
+
+        // Wipe buffer clean
+        memset(buffer, 0, sizeof(buffer));
     }
 
     // Close connection
