@@ -49,16 +49,19 @@ int main() {
 	clientB_sock_fd = accept_client(chat_serv_sock_fd);
 
 	//Loop until a user enters "EXIT"
-	while(strcmp(clientA_message, "EXIT") != 0 && strcmp(clientB_message, "EXIT") != 0) {
+	while(1) {
+//	while(strcmp(clientA_message, "EXIT") != 0 && strcmp(clientB_message, "EXIT") != 0) {
 		//Send client A message to client B
 		int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
 		clientA_message[read_countA] = '\0';
-		send(clientB_sock_fd, clientA_message, read_countA, 0);
+		printf("%s\n", clientA_message);
+		if(send(clientB_sock_fd, clientA_message, read_countA, 0) == 0) printf("Client A message sent\n");
 
 		//Send client B message to client A
 		int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
 		clientB_message[read_countB] = '\0';
-		send(clientA_sock_fd, clientB_message, read_countB, 0);
+		printf("%s\n", clientB_message);
+		if(send(clientA_sock_fd, clientB_message, read_countB, 0) == 0) printf("Client B message sent\n");
 	}
 
 	close(clientA_sock_fd);
