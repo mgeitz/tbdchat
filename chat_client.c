@@ -79,9 +79,11 @@ void receivePrint(void *ptr) {
     char buf[128];
     int i;
     int *conn = (int*)ptr;
-    i = recv(conn, buf, sizeof(buf), 0);
-    buf[i] = '\0';
-    printf("%s\n", buf);
+    while (1) {
+        i = recv(conn, buf, sizeof(buf), 0);
+        buf[i] = '\0';
+        printf("%s\n", buf);
+    }
 }
 
 /* Copied wholesale from bi example */
