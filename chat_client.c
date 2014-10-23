@@ -19,7 +19,7 @@
 #define PORT "32300"
 #define BUFFERSIZE 256
 
-void sigintHandler(int sig_num);
+//void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 
@@ -44,7 +44,7 @@ int main() {
 }
 
 /* Handle SIGINT (CTRL+C) [basically ignores it]*/
-void sigintHandler(int sig_num) { printf("\b\b  \b\b"); fflush(stdout); }
+//void sigintHandler(int sig_num) { printf("\b\b  \b\b"); fflush(stdout); }
 
 /* Copied wholesale from bi example */
 int get_server_connection(char *hostname, char *port) {
