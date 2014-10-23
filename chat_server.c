@@ -24,7 +24,7 @@
 
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
-
+int accept_client(int serv_sock);
 
 int main() {
 	int chat_serv_sock_fd;
@@ -42,9 +42,24 @@ int main() {
              exit(1);
         }	
 
+	clientA_sock_fd = accept_client(chat_serv_sock_fd);
+	clientB_sock_fd = accept_client(chat_serv_sock_fd);
+
 	while(strcmp(clientA_message, "EXIT") != 0 && strcmp(clientB_message, "EXIT") != 0) {
-	
+		int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
+		clientA_message[read_countA] = '\0';
+		send(clientB_sock_fd, clientA_message, read_countA, 0);
+
+		int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
+		clientB_message[read_countB] = '\0';
+		send(clientA_sock_fd, clientB_message, read_countB, 0);
 	}
+
+	close(clientA_sock_fd);
+	close(clientB_sock_fd);
+	close(chat_serv_sock_fd);
+
+}
 int get_server_socket(char *hostname, char *port) {
     struct addrinfo hints, *servinfo, *p;
     int status;
@@ -81,7 +96,7 @@ int get_server_socket(char *hostname, char *port) {
        }
        break;
     }
-    print_ip(servinfo);
+    //print_ip(servinfo);
     freeaddrinfo(servinfo);   // servinfo structure is no longer needed. free it.
 
     return server_socket;
@@ -93,4 +108,20 @@ int start_server(int serv_socket, int backlog) {
         printf("socket listen error\n");
     }
     return status;
-}}
+}
+
+int accept_client(int serv_sock) {
+    int reply_sock_fd = -1;
+    socklen_t sin_size = sizeof(struct sockaddr_storage);
+    struct sockaddr_storage client_addr;
+    char client_printable_addr[INET6_ADDRSTRLEN];
+
+    // accept a connection request from a client
+    // the returned file descriptor from accept will be used
+    // to communicate with this client.
+    if ((reply_sock_fd = accept(serv_sock, 
+       (struct sockaddr *)&client_addr, &sin_size)) == -1) {
+            printf("socket accept error\n");
+    }
+    return reply_sock_fd;
+}
