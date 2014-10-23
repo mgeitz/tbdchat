@@ -2,7 +2,7 @@
 #    Chat client program.
 #    Authors: Matthew Owens, Michael Geitz, Shayne Wierbowski
 #
-#    gcc ./chat_client.c -Wall -o chat_client
+#    gcc ./chat_client.c -Wall -o chat_client -l pthread
 */
 
 #include <stdio.h>
@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <signal.h>
+#include <pthread.h>
 
 #define PORT "32300"
 #define BUFFERSIZE 256
@@ -22,12 +23,14 @@
 //void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
+void receivePrint(void *ptr);
 
 
 int main() {
+    pthread_t thread1;
     int conn;             //
     int exit_flag = 1;    // Exit flag var
-    int i;
+    int i, readThread;
     char buffer[128];     // Input buffer
 
     // Trap CTRL+C
@@ -35,6 +38,8 @@ int main() {
 
     // Establish connection with server1, else exit with error
     if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { close(conn); exit(EXIT_FAILURE); }
+
+    readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
 
     // Input and tx/rx loop here?
     while(exit_flag) {
@@ -49,27 +54,35 @@ int main() {
         
         // Receive message
         memset(buffer, 0, sizeof(buffer));
-        i = 0;
-        //while ((i = recv(conn, buffer, sizeof(buffer), 0)) > 0) { if (i < 0) { 
-        //    close(conn); 
-        //    exit(EXIT_FAILURE); } 
-        //}
-        i = recv(conn, buffer, sizeof(buffer), 0);
-        buffer[i] = '\0';
-        printf("%s\n", buffer);
+        //i = 0;
+        //i = recv(conn, buffer, sizeof(buffer), 0);
+        //buffer[i] = '\0';
+        //printf("%s\n", buffer);
 
         // Wipe buffer clean
         memset(buffer, 0, sizeof(buffer));
     }
 
     // Close connection
+    pthread_join(thread1, NULL);
     close(conn);
+    exit(0);
 }
 
 
 /* Handle SIGINT (CTRL+C) [basically ignores it]*/
 //void sigintHandler(int sig_num) { printf("\b\b  \b\b"); fflush(stdout); }
 
+
+/* Print messages as they are received */
+void receivePrint(void *ptr) {
+    char buf[128];
+    int i;
+    int *conn = (int*)ptr;
+    i = recv(conn, buf, sizeof(buf), 0);
+    buf[i] = '\0';
+    printf("%s\n", buf);
+}
 
 /* Copied wholesale from bi example */
 int get_server_connection(char *hostname, char *port) {
