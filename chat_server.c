@@ -16,7 +16,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <netdb.h>
-
+#include <pthread.h>
 
 #define PORT "32300" //Port clients will connect to
 #define HOSTNAME "server1.cs.scranton.edu" //hostname of the chat server
@@ -25,15 +25,19 @@
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
+void *clientA_thread(void *ptr);
+void *clientB_thread(void *ptr);
+
+int clientA_sock_fd;   //socket for first client
+int clientB_sock_fd;   //socket for second client
 
 int main() {
 	int chat_serv_sock_fd; //server socket
-	int clientA_sock_fd;   //socket for first client
-	int clientB_sock_fd;   //socket for second client
 
-	//Strings for users' messages
-	char clientA_message[128];
-	char clientB_message[128];
+	//Threads
+	pthread_t client_A_thread, client_B_thread;
+
+	int iret1, iret2;
 
 	//Open server socket
 	chat_serv_sock_fd = get_server_socket(HOSTNAME, PORT);
@@ -48,21 +52,11 @@ int main() {
 	clientA_sock_fd = accept_client(chat_serv_sock_fd);
 	clientB_sock_fd = accept_client(chat_serv_sock_fd);
 
-	//Loop until a user enters "EXIT"
-	while(1) {
-//	while(strcmp(clientA_message, "EXIT") != 0 && strcmp(clientB_message, "EXIT") != 0) {
-		//Send client A message to client B
-		int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
-		clientA_message[read_countA] = '\0';
-		printf("%s\n", clientA_message);
-		if(send(clientB_sock_fd, clientA_message, read_countA, 0) == 0) printf("Client A message sent\n");
+	iret1 = pthread_create(&client_A_thread, NULL, clientA_thread, NULL);
+        iret2 = pthread_create(&client_B_thread, NULL, clientB_thread, NULL);
 
-		//Send client B message to client A
-		int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
-		clientB_message[read_countB] = '\0';
-		printf("%s\n", clientB_message);
-		if(send(clientA_sock_fd, clientB_message, read_countB, 0) == 0) printf("Client B message sent\n");
-	}
+	pthread_join(client_A_thread, NULL);
+	pthread_join(client_B_thread, NULL);
 
 	close(clientA_sock_fd);
 	close(clientB_sock_fd);
@@ -137,4 +131,28 @@ int accept_client(int serv_sock) {
             printf("socket accept error\n");
     }
     return reply_sock_fd;
+}
+
+void *clientA_thread(void *ptr) {
+        char clientA_message[128];
+
+	while (1) {
+	        //Send client A message to client B
+                int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
+                clientA_message[read_countA] = '\0';
+                printf("%s\n", clientA_message);
+                if(send(clientB_sock_fd, clientA_message, 128, 0) != -1) printf("Client A message sent\n");
+	}
+}
+
+void *clientB_thread(void *ptr) {
+        char clientB_message[128];
+
+	while(1) {
+		//Send client B message to client A
+                int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
+                clientB_message[read_countB] = '\0';
+                printf("%s\n", clientB_message);
+                if(send(clientA_sock_fd, clientB_message, 128, 0) != -1) printf("Client B message sent\n");
+	}
 }
