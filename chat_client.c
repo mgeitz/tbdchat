@@ -34,7 +34,7 @@ int main() {
     //signal(SIGINT, sigintHandler);
 
     // Establish connection with server1, else exit with error
-    if ((conn = get_server_connection("134.198.169.255", PORT)) == -1) { break; }
+    if ((conn = get_server_connection("134.198.169.255", PORT)) == -1) { close(conn); exit(EXIT_FAILURE); }
 
     // Input and tx/rx loop here?
     while(exit_flag) {
@@ -42,10 +42,17 @@ int main() {
         i = 0;
         buffer[i] = getc(stdin);
         while (buffer[i] != '\n' && buffer[i] != EOF) { buffer[++i] = getc(stdin); }
+        buffer[i] = "\0";
 
         // Transmit message
-
+        send(conn, buffer, strlen(buffer), 0);
+        
         // Receive message
+        memset(buffer, 0, sizeof(buffer));
+        i = 0;
+        while ((i = recv(conn, buffer, sizeof(buffer), 0)) > 0) { if (i < 0) { close(conn); exit(EXIT_FAILURE); } }
+        buffer[i] = "\0";
+        printf("%s\n", buffer);
 
         // Wipe buffer clean
         memset(buffer, 0, sizeof(buffer));
@@ -55,8 +62,29 @@ int main() {
     close(conn);
 }
 
+
 /* Handle SIGINT (CTRL+C) [basically ignores it]*/
 //void sigintHandler(int sig_num) { printf("\b\b  \b\b"); fflush(stdout); }
+
+
+void sendMessage(int http_conn, char *http_request) {
+    int numbytes = 0;
+    char buf[256];
+    // step 4.1: send the HTTP request
+
+    // step 4.2: receive message from server
+    while ((numbytes=recv(http_conn, buf, sizeof(buf),  0)) > 0) {
+       if ( numbytes < 0)  {
+          perror("recv");
+          exit(1);
+        }
+
+       // step 4.3: the received may not end with a '\0' 
+       buf[numbytes] = '\0';
+       printf("%s",buf);
+    }
+}
+
 
 /* Copied wholesale from bi example */
 int get_server_connection(char *hostname, char *port) {
