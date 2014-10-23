@@ -50,10 +50,11 @@ int main() {
         // Receive message
         memset(buffer, 0, sizeof(buffer));
         i = 0;
-        while ((i = recv(conn, buffer, sizeof(buffer), 0)) > 0) { if (i < 0) { 
-            close(conn); 
-            exit(EXIT_FAILURE); } 
-        }
+        //while ((i = recv(conn, buffer, sizeof(buffer), 0)) > 0) { if (i < 0) { 
+        //    close(conn); 
+        //    exit(EXIT_FAILURE); } 
+        //}
+        i = recv(conn, buffer, sizeof(buffer), 0);
         buffer[i] = '\0';
         printf("%s\n", buffer);
 
