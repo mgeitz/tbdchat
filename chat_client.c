@@ -15,7 +15,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <signal.h>
-#include <pthread.h>
+//#include <pthread.h>
 
 #define PORT "32300"
 #define BUFFERSIZE 256
@@ -27,10 +27,10 @@ void receivePrint(void *ptr);
 
 
 int main() {
-    pthread_t thread1;
+    //pthread_t thread1;
     int conn;             //
     int exit_flag = 1;    // Exit flag var
-    int i, readThread;
+    int i;
     char buffer[128];     // Input buffer
 
     // Trap CTRL+C
@@ -39,7 +39,7 @@ int main() {
     // Establish connection with server1, else exit with error
     if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { close(conn); exit(EXIT_FAILURE); }
 
-    readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
+    //readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
 
     // Input and tx/rx loop here?
     while(exit_flag) {
@@ -55,16 +55,16 @@ int main() {
         // Receive message
         memset(buffer, 0, sizeof(buffer));
         //i = 0;
-        //i = recv(conn, buffer, sizeof(buffer), 0);
-        //buffer[i] = '\0';
-        //printf("%s\n", buffer);
+        i = recv(conn, buffer, sizeof(buffer), 0);
+        buffer[i] = '\0';
+        printf("%s\n", buffer);
 
         // Wipe buffer clean
         memset(buffer, 0, sizeof(buffer));
     }
 
     // Close connection
-    pthread_join(thread1, NULL);
+    //pthread_join(thread1, NULL);
     close(conn);
     exit(0);
 }
@@ -82,7 +82,7 @@ void receivePrint(void *ptr) {
     while (1) {
         i = recv(conn, buf, sizeof(buf), 0);
         buf[i] = '\0';
-        if (i > 0) { printf("%s\n", buf); }
+        if (i > 0) { printf("%s\n", buf); memset(buf, 0, sizeof(buf)); }
     }
 }
 
