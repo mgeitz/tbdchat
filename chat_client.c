@@ -82,7 +82,7 @@ void receivePrint(void *ptr) {
     while (1) {
         i = recv(conn, buf, sizeof(buf), 0);
         buf[i] = '\0';
-        printf("%s\n", buf);
+        if (i > 0) { printf("%s\n", buf); }
     }
 }
 
