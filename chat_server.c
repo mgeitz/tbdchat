@@ -141,7 +141,14 @@ void *clientA_thread(void *ptr) {
                 int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
                 clientA_message[read_countA] = '\0';
                 printf("%s\n", clientA_message);
-                if(send(clientB_sock_fd, clientA_message, 128, 0) != -1) printf("Client A message sent\n");
+		if(strcmp(clientA_message, "EXIT") == 0) {
+			send(clientB_sock_fd, "Other user disconnected.", 128, 0);
+			break;
+		}
+
+		else {
+                	if(send(clientB_sock_fd, clientA_message, 128, 0) != -1) printf("Client A message sent\n");
+		}
 	}
 }
 
@@ -153,6 +160,13 @@ void *clientB_thread(void *ptr) {
                 int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
                 clientB_message[read_countB] = '\0';
                 printf("%s\n", clientB_message);
-                if(send(clientA_sock_fd, clientB_message, 128, 0) != -1) printf("Client B message sent\n");
+                
+		if(strcmp(clientB_message, "EXIT") == 0) {
+			send(clientA_sock_fd, "Other user disconnected.", 128, 0);
+			break;
+		}
+		else {
+			if(send(clientA_sock_fd, clientB_message, 128, 0) != -1) printf("Client B message sent\n");
+		}
 	}
 }
