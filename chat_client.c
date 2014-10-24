@@ -38,7 +38,12 @@ int main() {
     signal(SIGINT, sigintHandler);
 
     // Establish connection with server1, else exit with error
-    if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { close(conn); exit(EXIT_FAILURE); }
+    printf("Connecting . . .\n");
+    if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { 
+        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
+        close(conn); 
+        exit(1); 
+    }
 
     //readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
 
@@ -68,6 +73,7 @@ int main() {
 
     // Close connection
     //pthread_join(thread1, NULL);
+    printf("Exiting.\n");
     close(conn);
     exit(0);
 }
@@ -114,13 +120,13 @@ int get_server_connection(char *hostname, char *port) {
        if ((serverfd = socket(p->ai_family, p->ai_socktype,
                            p->ai_protocol)) == -1) {
            printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m socket socket \n");
-           continue;
+           continue; // What is this error?
        }
 
        if (connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
            close(serverfd);
            printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m socket connect \n");
-           continue;
+           return -1;
        }
        break;
     }
