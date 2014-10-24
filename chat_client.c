@@ -41,8 +41,7 @@ int main() {
     printf("Connecting . . .\n");
     if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { 
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
-        close(conn); 
-        exit(1); 
+        exit_flag = 0; 
     }
 
     //readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
