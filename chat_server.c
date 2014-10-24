@@ -27,12 +27,13 @@ int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
 void *clientA_thread(void *ptr);
 void *clientB_thread(void *ptr);
+void end();
 
 int clientA_sock_fd;   //socket for first client
 int clientB_sock_fd;   //socket for second client
+int chat_serv_sock_fd; //server socket
 
 int main() {
-	int chat_serv_sock_fd; //server socket
 
 	//Threads
 	pthread_t client_A_thread, client_B_thread;
@@ -49,18 +50,19 @@ int main() {
         }	
 
 	//Accept client connections
-	clientA_sock_fd = accept_client(chat_serv_sock_fd);
+	clientA_sock_fd = accept_client(chat_serv_sock_fd); 
+	
+	if(clientA_sock_fd != -1) printf("Client A connected\n");
+
 	clientB_sock_fd = accept_client(chat_serv_sock_fd);
+
+	if(clientB_sock_fd != -1) printf("Client B connected\n");
 
 	iret1 = pthread_create(&client_A_thread, NULL, clientA_thread, NULL);
         iret2 = pthread_create(&client_B_thread, NULL, clientB_thread, NULL);
 
 	pthread_join(client_A_thread, NULL);
 	pthread_join(client_B_thread, NULL);
-
-	close(clientA_sock_fd);
-	close(clientB_sock_fd);
-	close(chat_serv_sock_fd);
 
 }
 
@@ -141,8 +143,16 @@ void *clientA_thread(void *ptr) {
                 int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
                 clientA_message[read_countA] = '\0';
                 printf("%s\n", clientA_message);
-                if(send(clientB_sock_fd, clientA_message, 128, 0) != -1) printf("Client A message sent\n");
+		if(strcmp(clientA_message, "EXIT") == 0) {
+			send(clientB_sock_fd, "Other user disconnected.", 128, 0);
+			break;
+		}
+
+		else {
+                	if(send(clientB_sock_fd, clientA_message, 128, 0) != -1) printf("Client A message sent\n");
+		}
 	}
+	end();
 }
 
 void *clientB_thread(void *ptr) {
@@ -153,6 +163,23 @@ void *clientB_thread(void *ptr) {
                 int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
                 clientB_message[read_countB] = '\0';
                 printf("%s\n", clientB_message);
-                if(send(clientA_sock_fd, clientB_message, 128, 0) != -1) printf("Client B message sent\n");
+                
+		if(strcmp(clientB_message, "EXIT") == 0) {
+			send(clientA_sock_fd, "Other user disconnected.", 128, 0);
+			break;
+		}
+		else {
+			if(send(clientA_sock_fd, clientB_message, 128, 0) != -1) printf("Client B message sent\n");
+		}
 	}
+	end();
+}
+
+void end() {
+        close(clientA_sock_fd);
+        close(clientB_sock_fd);
+        close(chat_serv_sock_fd);
+
+	printf("Session ended.\n");
+	exit(0);
 }
