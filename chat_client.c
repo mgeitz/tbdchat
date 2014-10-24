@@ -15,7 +15,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <signal.h>
-//#include <pthread.h>
+#include <pthread.h>
 
 #define PORT "32300"
 #define BUFFERSIZE 128
@@ -23,16 +23,16 @@
 void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
-//void receivePrint(void *ptr);
+void *chatRX(void *ptr);
 
 
 int main() {
-    //pthread_t thread1;
+    pthread_t chat_rx_thread;
     int conn;                         //
     int exit_flag = 1;                // Exit flag for main loop
     int i;                            // Counter
     char kb_buf[BUFFERSIZE];          // Keyboard buffer
-    char chat_rx_buf[BUFFERSIZE];     // Received chat buffer
+//    char chat_rx_buf[BUFFERSIZE];     // Received chat buffer
 
     // Trap CTRL+C
     signal(SIGINT, sigintHandler);
@@ -44,10 +44,14 @@ int main() {
         exit_flag = 0; 
     }
 
-    //readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
+    if (pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn)) { 
+        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not created.\n");
+        exit_flag = 0; 
+    }
 
     // Input and tx/rx loop here?
     while(exit_flag) {
+
         // Read input into buffer until newline or EOF (CTRL+D)
         i = 0;
         kb_buf[i] = getc(stdin);
@@ -55,30 +59,34 @@ int main() {
         // If EOF is read, exit?
         if (kb_buf[i] == EOF) { exit_flag = 0; }
         // Otherwise Null terminate kb_buff
-        kb_buf[i] = '\0';
+        else kb_buf[i] = '\0';
 
         // Transmit message if it is not empty
         if (i > 0) { send(conn, kb_buf, strlen(kb_buf), 0); }
         
+        /*
         // Receive message, print of not empty
         i = recv(conn, chat_rx_buf, sizeof(chat_rx_buf), 0);
         chat_rx_buf[i] = '\0';
         if (i > 0) { printf("%s\n", chat_rx_buf); }
+        */
 
         // Wipe buffers clean
         memset(kb_buf, 0, sizeof(kb_buf));
-        memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
+        //memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
     }
 
     // Close connection
-    //pthread_join(thread1, NULL);
+    if (pthread_join(chat_rx_thread, NULL)) {
+        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
+    }
     printf("Exiting.\n");
     close(conn);
     exit(0);
 }
 
 
-/* Handle SIGINT (CTRL+C) [basically ignores it]*/
+/* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) { 
     //printf("\b\b  \b\b"); fflush(stdout); // Ignore CTRL+C
     printf("\b\b\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Forced Exit.\n");
@@ -86,16 +94,20 @@ void sigintHandler(int sig_num) {
 }
 
 /* Print messages as they are received */
-//void receivePrint(void *ptr) {
-//    char buf[128];
-//    int i;
-//    int *conn = (int*)ptr;
-//    while (1) {
-//        i = recv(conn, buf, sizeof(buf), 0);
-//        buf[i] = '\0';
-//        if (i > 0) { printf("%s\n", buf); memset(buf, 0, sizeof(buf)); }
-//    }
-//}
+void *chatRX(void *ptr) {
+    char chat_rx_buf[BUFFERSIZE];
+    int received;
+    int *conn = (int *)ptr;
+    while (1) {
+        received = recv(*conn, &chat_rx_buf, sizeof(chat_rx_buf), 0);
+        chat_rx_buf[received] = '\0';
+        if (received > 0) { 
+            printf("%s\n", chat_rx_buf); 
+            memset(chat_rx_buf, 0, sizeof(chat_rx_buf)); 
+        }
+    }
+    return NULL;
+}
 
 /* Establish server connection */
 int get_server_connection(char *hostname, char *port) {
