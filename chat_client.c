@@ -27,29 +27,30 @@ void *chatRX(void *ptr);
 
 
 int main() {
-    pthread_t chat_rx_thread;
-    int conn;                         //
+    pthread_t chat_rx_thread;         // Chat RX thread
+    int conn;                         // Connection fd
     int exit_flag = 1;                // Exit flag for main loop
     int i;                            // Counter
-    char kb_buf[BUFFERSIZE];          // Keyboard buffer
-//    char chat_rx_buf[BUFFERSIZE];     // Received chat buffer
+    char kb_buf[BUFFERSIZE];          // Keyboard input buffer
 
-    // Trap CTRL+C
+    // Handle CTRL+C
     signal(SIGINT, sigintHandler);
 
-    // Establish connection with server1, else exit with error
+    // Establish connection with server1
     printf("Connecting . . .\n");
     if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { 
+        // If connection fails, exit
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
         exit_flag = 0; 
     }
-
+    // Start chat rx thread
     if (pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn)) { 
+        // If thread creation fails, exit
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not created.\n");
         exit_flag = 0; 
     }
 
-    // Input and tx/rx loop here?
+    // Primary execution loop
     while(exit_flag) {
 
         // Read input into buffer until newline or EOF (CTRL+D)
@@ -58,24 +59,15 @@ int main() {
         while (kb_buf[i] != '\n' && kb_buf[i] != EOF) { kb_buf[++i] = getc(stdin); }
         // If EOF is read, exit?
         if (kb_buf[i] == EOF) { exit_flag = 0; }
-        // Otherwise Null terminate kb_buff
+        // Otherwise Null terminate keyboard buffer
         else kb_buf[i] = '\0';
 
         // Transmit message if it is not empty
-        if (i > 0) { send(conn, kb_buf, strlen(kb_buf), 0); }
+        if (i > 0 && kb_buf[i] != EOF) { send(conn, kb_buf, strlen(kb_buf), 0); }
         
-        /*
-        // Receive message, print of not empty
-        i = recv(conn, chat_rx_buf, sizeof(chat_rx_buf), 0);
-        chat_rx_buf[i] = '\0';
-        if (i > 0) { printf("%s\n", chat_rx_buf); }
-        */
-
-        // Wipe buffers clean
+        // Wipe keyboard buffer clean
         memset(kb_buf, 0, sizeof(kb_buf));
-        //memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
     }
-
     // Close connection
     if (pthread_join(chat_rx_thread, NULL)) {
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
@@ -93,14 +85,18 @@ void sigintHandler(int sig_num) {
     exit(1); // Exit with error
 }
 
+
 /* Print messages as they are received */
 void *chatRX(void *ptr) {
-    char chat_rx_buf[BUFFERSIZE];
-    int received;
-    int *conn = (int *)ptr;
-    while (1) {
+    char chat_rx_buf[BUFFERSIZE];    
+    int received;                    
+    int *conn = (int *)ptr;          
+    while (1) { // Better condition here?
+        // Wait for message to arrive..
         received = recv(*conn, &chat_rx_buf, sizeof(chat_rx_buf), 0);
+        // Null terminate buffer
         chat_rx_buf[received] = '\0';
+        // Print if not empty 
         if (received > 0) { 
             printf("%s\n", chat_rx_buf); 
             memset(chat_rx_buf, 0, sizeof(chat_rx_buf)); 
@@ -108,6 +104,7 @@ void *chatRX(void *ptr) {
     }
     return NULL;
 }
+
 
 /* Establish server connection */
 int get_server_connection(char *hostname, char *port) {
