@@ -24,31 +24,53 @@
 #include <netdb.h>
 #include <pthread.h>
 
-#define PORT "32300" //Port clients will connect to
-#define HOSTNAME "server1.cs.scranton.edu" //hostname of the chat server
-#define BACKLOG 2 //How many pending connections the queue will hold
+#define PORT "32300" // port clients will connect to
+#define HOSTNAME "server1.cs.scranton.edu" // hostname of the chat server
+#define BACKLOG 2 // how many pending connections the queue will hold
+#define BUFFERSIZE 128
+
+struct sendPacket
+{
+   time_t timestamp;
+   char alias[32];
+   char buf[BUFFERSIZE];
+};
+typedef struct sendPacket packet;
+
+// Defined color constants
+#define NORMAL "\x1B[0m"
+#define BLACK "\x1B[30;1m"
+#define RED "\x1B[31;1m"
+#define GREEN "\x1B[32;1m"
+#define YELLOW "\x1B[33;1m"
+#define BLUE "\x1B[34;1m"
+#define MAGENTA "\x1B[35;1m"
+#define CYAN "\x1B[36;1m"
+#define WHITE "\x1B[37;1m"
 
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock, char* usrID);
 void *clientA_thread(void *ptr);
 void *clientB_thread(void *ptr);
+void end();
 
 int clientA_sock_fd;   //socket for first client
 int clientB_sock_fd;   //socket for second client
+int chat_serv_sock_fd; //server socket
 
 int main()
 {
-   int chat_serv_sock_fd; //server socket
+   // User IDs
    char clientA_usrID[32];
    char clientB_usrID[32];
    
-   //Threads
+   // Threads
    pthread_t client_A_thread, client_B_thread;
    
    int iret1, iret2;
    
-   //Open server socket
+   // Open server socket
    chat_serv_sock_fd = get_server_socket(HOSTNAME, PORT);
    
    // step 3: get ready to accept connections
@@ -60,12 +82,19 @@ int main()
    
    //Accept client connections
    clientA_sock_fd = accept_client(chat_serv_sock_fd, &clientA_usrID);
-   printf("Accepted %s as Client A\n", clientA_usrID);
-   clientB_sock_fd = accept_client(chat_serv_sock_fd, &clientB_usrID);
-   printf("Accepted %s as Client B\n", clientB_usrID);
+   if(clientA_sock_fd != -1)
+   {
+      printf("%s connected as Client A\n", clientA_usrID);
+   }
    
-   send(clientA_sock_fd, &clientB_usrID, 128, 0);
-   send(clientB_sock_fd, &clientA_usrID, 128, 0);
+   clientB_sock_fd = accept_client(chat_serv_sock_fd, &clientB_usrID);
+   if(clientB_sock_fd != -1)
+   {
+      printf("%s connected as Client B\n", clientB_usrID);
+   }
+   
+   //send(clientA_sock_fd, &clientB_usrID, 128, 0);
+   //send(clientB_sock_fd, &clientA_usrID, 128, 0);
    
    
    iret1 = pthread_create(&client_A_thread, NULL, clientA_thread, NULL);
@@ -73,10 +102,6 @@ int main()
    
    pthread_join(client_A_thread, NULL);
    pthread_join(client_B_thread, NULL);
-   
-   close(clientA_sock_fd);
-   close(clientB_sock_fd);
-   close(chat_serv_sock_fd);
 }
 
 //Copied from Dr. Bi's example
@@ -162,34 +187,62 @@ int accept_client(int serv_sock, char* usrID)
 
 void *clientA_thread(void *ptr)
 {
-   char clientA_message[128];
+   packet *clientA_message = (packet *) malloc(sizeof(packet));
    
    while(1)
    {
       //Send client A message to client B
-      int read_countA = recv(clientA_sock_fd, clientA_message, 128, 0);
-      clientA_message[read_countA] = '\0';
-      printf("Client A: %s\n", clientA_message);
-      if(send(clientB_sock_fd, clientA_message, 128, 0) != -1)
+      int read_countA = recv(clientA_sock_fd, clientA_message,
+                             sizeof(clientA_message), 0);
+      //clientA_message[read_countA] = '\0';
+      printf("%s%s (%s):%s%s\n", RED, clientA_message->alias,
+             clientA_message->timestamp, clientA_message->buf, NORMAL);
+      if(strcmp(clientA_message->buf, "EXIT") == 0)
       {
-         printf("Client A message sent successfully\n");
+         //send(clientB_sock_fd, "Other user disconnected.", 128, 0);
+         break;
+      }
+      else if(send(clientB_sock_fd, clientA_message,
+                     sizeof(clientA_message), 0) != -1)
+      {
+         //printf("Client A message sent successfully\n");
       }
    }
+   end();
 }
 
 void *clientB_thread(void *ptr)
 {
-   char clientB_message[128];
+   packet *clientB_message = (packet *) malloc(sizeof(packet));
    
    while(1)
    {
       //Send client B message to client A
-      int read_countB = recv(clientB_sock_fd, clientB_message, 128, 0);
-      clientB_message[read_countB] = '\0';
-      printf("Client B: %s\n", clientB_message);
-      if(send(clientA_sock_fd, clientB_message, 128, 0) != -1)
+      int read_countB = recv(clientB_sock_fd, clientB_message,
+                             sizeof(clientB_message), 0);
+      //clientB_message[read_countB] = '\0';
+      printf("%s%s (%s):%s%s\n", BLUE, clientB_message->alias,
+             clientB_message->timestamp, clientB_message->buf, NORMAL);
+      if(strcmp(clientB_message->buf, "EXIT") == 0)
       {
-         printf("Client B message sent successfully\n");
+          //send(clientA_sock_fd, "Other user disconnected.", 128, 0);
+          break;
+      }
+      else if(send(clientA_sock_fd, clientB_message,
+                     sizeof(clientB_message), 0) != -1)
+      {
+         //printf("Client B message sent successfully\n");
       }
    }
+   end();
+}
+
+void end()
+{
+   close(clientA_sock_fd);
+   close(clientB_sock_fd);
+   close(chat_serv_sock_fd);
+   
+   printf("Session ended.\n");
+   exit(0);
 }

@@ -20,92 +20,122 @@
 #include <sys/socket.h>
 #include <signal.h>
 #include <time.h>
-//#include <pthread.h>
+#include <pthread.h>
 
 #define PORT "32300"
 #define BUFFERSIZE 128
 
+struct sendPacket
+{
+   time_t timestamp;
+   char alias[32];
+   char buf[BUFFERSIZE];
+};
+typedef struct sendPacket packet;
+
+// Defined color constants
+#define NORMAL "\x1B[0m"
+#define BLACK "\x1B[30;1m"
+#define RED "\x1B[31;1m"
+#define GREEN "\x1B[32;1m"
+#define YELLOW "\x1B[33;1m"
+#define BLUE "\x1B[34;1m"
+#define MAGENTA "\x1B[35;1m"
+#define CYAN "\x1B[36;1m"
+#define WHITE "\x1B[37;1m"
+
 void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
-//void receivePrint(void *ptr);
-
+void *chatRX(void *ptr);
 
 int main()
 {
-   //pthread_t thread1;
+   pthread_t chat_rx_thread;         // Chat RX thread
    int conn;                         //
    int exit_flag = 1;                // Exit flag for main loop
    int i;                            // Counter
-   char kb_buf[BUFFERSIZE];          // Keyboard buffer
-   char chat_rx_buf[BUFFERSIZE];     // Received chat buffer
-   char myUsrID[32];
-   char hisUsrID[32];
-   time_t ltime;
+   char name[32];
    
-   // Trap CTRL+C
+   // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
+   // Initiliaze memory space for send packet
+   packet *spkt = (packet *) malloc(sizeof(packet));
+   
+   // Assign name as *nix username, maybe add ability to assign alias
+   strcpy(name, getlogin());
+   
    // Establish connection with server1, else exit with error
+   printf("Connecting . . .\n");
    if((conn = get_server_connection("134.198.169.2", PORT)) == -1)
    {
+      // If connection fails, exit
       close(conn);
-      printf("ERROR: Could not connect to server, now terminating\n");
-      exit(EXIT_FAILURE);
+      printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
+      exit_flag = 0;
    }
-   recv(conn, &hisUsrID, 128, 0);
-   printf("Beginning conversation with %s\n", hisUsrID);
    
-   //readThread = pthread_create( &thread1, NULL, receivePrint, (void*) &conn);
+   // Start chat rx thread
+   if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn))
+   {
+      // If thread creation fails, exit
+      printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not created.\n");
+      exit_flag = 0;
+   }
    
-   // Input and tx/rx loop here?
+   // Primary execution loop
    while(exit_flag)
    {
+      // Add alias to send packet
+      strcpy(spkt->alias, name);
+      
       // Read input into buffer until newline or EOF (CTRL+D)
       i = 0;
-      kb_buf[i] = getc(stdin);
-      while(kb_buf[i] != '\n' && kb_buf[i] != EOF)
+      spkt->buf[i] = getc(stdin);
+      while(spkt->buf[i] != '\n' && spkt->buf[i] != EOF)
       {
          i ++;
-         kb_buf[i] = getc(stdin);
+         spkt->buf[i] = getc(stdin);
       }
       // If EOF is read, exit?
-      if(kb_buf[i] == EOF)
+      if(spkt->buf[i] == EOF)
       {
          exit_flag = 0;
       }
       // Otherwise Null terminate kb_buff
-      kb_buf[i] = '\0';
-      
-      // Transmit message if it is not empty
-      if(i > 0)
+      else
       {
-         send(conn, kb_buf, strlen(kb_buf), 0);
+         spkt->buf[i] = '\0';
       }
       
-      // Receive message, print if not empty
-      i = recv(conn, chat_rx_buf, sizeof(chat_rx_buf), 0);
-      chat_rx_buf[i] = '\0';
-      if(i > 0)
+      // Transmit message if it is not empty
+      if (i > 0 && spkt->buf[i] != EOF)
       {
-         ltime=time(NULL); /* get current cal time */
-         printf("%s [%s\b]: ", hisUsrID, asctime(localtime(&ltime)));
-         printf("%s\n", chat_rx_buf);
+         // Timestamp packet
+         asctime(localtime(&spkt->timestamp));
+         printf("%s%s (%s):%s%s\n", RED, spkt->alias,
+                spkt->timestamp, spkt->buf, NORMAL);
+
+         send(conn, spkt, sizeof(spkt), 0);
       }
       
       // Wipe buffers clean
-      memset(kb_buf, 0, sizeof(kb_buf));
-      memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
+      memset(spkt, 0, sizeof(spkt));
    }
    
    // Close connection
-   //pthread_join(thread1, NULL);
+   if(pthread_join(chat_rx_thread, NULL))
+   {
+      printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
+   }
+   printf("Exiting.\n");
    close(conn);
    exit(0);
 }
 
 
-/* Handle SIGINT (CTRL+C) [basically ignores it]*/
+/* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num)
 { 
    //printf("\b\b  \b\b"); fflush(stdout); // Ignore CTRL+C
@@ -114,22 +144,30 @@ void sigintHandler(int sig_num)
 }
 
 /* Print messages as they are received */
-//void receivePrint(void *ptr)
-//{
-//   char buf[128];
-//   int i;
-//   int *conn = (int*)ptr;
-//   while (1)
-//   {
-//      i = recv(conn, buf, sizeof(buf), 0);
-//      buf[i] = '\0';
-//      if (i > 0)
-//      {
-//         printf("%s\n", buf);
-//         memset(buf, 0, sizeof(buf));
-//      }
-//   }
-//}
+void *chatRX(void *ptr)
+{
+   packet *chat_rx_buf = (packet *) malloc(sizeof(packet));
+   int received;
+   time_t ltime;
+   int *conn = (int *)ptr;
+   
+   while(1)
+   {
+      // Wait for message to arrive..
+      received = recv(*conn, chat_rx_buf, sizeof(chat_rx_buf), 0);
+      // Null terminate buffer
+      //chat_rx_buf[received] = '\0';
+      // Print if not empty
+      if(received > 0)
+      {
+         printf("%s%s (%s):%s%s\n", BLUE, chat_rx_buf->alias,
+                chat_rx_buf->timestamp, chat_rx_buf->buf, NORMAL);
+
+         //memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
+      }
+   }
+   return NULL;
+}
 
 /* Establish server connection */
 int get_server_connection(char *hostname, char *port)
