@@ -188,15 +188,20 @@ int accept_client(int serv_sock, char* usrID)
 void *clientA_thread(void *ptr)
 {
    packet *clientA_message = (packet *) malloc(sizeof(packet));
-   
+   char *timestamp;
+ 
    while(1)
    {
       //Send client A message to client B
       int read_countA = recv(clientA_sock_fd, clientA_message,
                              sizeof(clientA_message), 0);
       //clientA_message[read_countA] = '\0';
-      printf("%s%s (%s):%s%s\n", RED, clientA_message->alias,
-             clientA_message->timestamp, clientA_message->buf, NORMAL);
+     
+      //Format timestamp and remove \n
+      timestamp = asctime(localtime(&(clientA_message->timestamp)));
+      timestamp[strlen(timestamp) -1] = '\0';
+     printf("%s%s (%s):%s%s\n", RED, clientA_message->alias,
+             timestamp, clientA_message->buf, NORMAL);
       if(strcmp(clientA_message->buf, "EXIT") == 0)
       {
          //send(clientB_sock_fd, "Other user disconnected.", 128, 0);
@@ -214,16 +219,20 @@ void *clientA_thread(void *ptr)
 void *clientB_thread(void *ptr)
 {
    packet *clientB_message = (packet *) malloc(sizeof(packet));
-   
+   char *timestamp;
+ 
    while(1)
    {
       //Send client B message to client A
       int read_countB = recv(clientB_sock_fd, clientB_message,
                              sizeof(clientB_message), 0);
       //clientB_message[read_countB] = '\0';
+      timestamp = asctime(localtime(&(clientB_message->timestamp)));
+      timestamp[strlen(timestamp) -1]  = '\0';
+
       printf("%s%s (%s):%s%s\n", BLUE, clientB_message->alias,
-             clientB_message->timestamp, clientB_message->buf, NORMAL);
-      if(strcmp(clientB_message->buf, "EXIT") == 0)
+             timestamp, clientB_message->buf, NORMAL);
+     if(strcmp(clientB_message->buf, "EXIT") == 0)
       {
           //send(clientA_sock_fd, "Other user disconnected.", 128, 0);
           break;
