@@ -114,8 +114,8 @@ int main()
       {
          // Timestamp packet
         spkt->timestamp = time(NULL);
-	printf("%s%s (%s):%s%s\n", RED, spkt->alias,
-                asctime(localtime(&(spkt->timestamp))), spkt->buf, NORMAL);
+//	printf("%s%s (%s):%s%s\n", RED, spkt->alias,
+  //              asctime(localtime(&(spkt->timestamp))), spkt->buf, NORMAL);
 
          send(conn, spkt, sizeof(spkt), 0);
       }
@@ -148,9 +148,9 @@ void *chatRX(void *ptr)
 {
    packet *chat_rx_buf = (packet *) malloc(sizeof(packet));
    int received;
-   time_t ltime;
    int *conn = (int *)ptr;
-   
+   char *timestamp;
+ 
    while(1)
    {
       // Wait for message to arrive..
@@ -160,8 +160,11 @@ void *chatRX(void *ptr)
       // Print if not empty
       if(received > 0)
       {
+         //Format timestamp
+	 timestamp = asctime(localtime(&(chat_rx_buf->timestamp)));
+	 timestamp[strlen(timestamp) -1] = '\0';
          printf("%s%s (%s):%s%s\n", BLUE, chat_rx_buf->alias,
-                asctime(localtime(&(chat_rx_buf->timestamp))), chat_rx_buf->buf, NORMAL);
+                timestamp, chat_rx_buf->buf, NORMAL);
 
          //memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
       }
