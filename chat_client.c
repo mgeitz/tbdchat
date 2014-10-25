@@ -20,21 +20,34 @@
 #define PORT "32300"
 #define BUFFERSIZE 128
 
+struct sendPacket {
+    time_t timestamp;
+    char alias[32];
+    char buf[BUFFERSIZE];
+};
+
+typedef struct sendPacket packet;
+
 void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
-
 
 int main() {
     pthread_t chat_rx_thread;         // Chat RX thread
     int conn;                         // Connection fd
     int exit_flag = 1;                // Exit flag for main loop
     int i;                            // Counter
-    char kb_buf[BUFFERSIZE];          // Keyboard input buffer
+    char name[32];                    // User alias
 
     // Handle CTRL+C
     signal(SIGINT, sigintHandler);
+
+    // Initiliaze memory space for send packet
+    packet *spkt = (packet *) malloc(sizeof(packet));
+
+    // Assign name as *nix username, maybe add ability to assign alias
+    strcpy(name, getlogin());
 
     // Establish connection with server1
     printf("Connecting . . .\n");
@@ -53,21 +66,29 @@ int main() {
     // Primary execution loop
     while(exit_flag) {
 
-        // Read input into buffer until newline or EOF (CTRL+D)
-        i = 0;
-        kb_buf[i] = getc(stdin);
-        while (kb_buf[i] != '\n' && kb_buf[i] != EOF) { kb_buf[++i] = getc(stdin); }
-        // If EOF is read, exit?
-        if (kb_buf[i] == EOF) { exit_flag = 0; }
-        // Otherwise Null terminate keyboard buffer
-        else kb_buf[i] = '\0';
+        // Add alias to send packet
+        strcpy(spkt->alias, name);
 
-        // Transmit message if it is not empty
-        if (i > 0 && kb_buf[i] != EOF) { send(conn, kb_buf, strlen(kb_buf), 0); }
+        // Read input into packet buffer until newline or EOF (CTRL+D)
+        i = 0;
+        spkt->buf[i] = getc(stdin);
+        while (spkt->buf[i] != '\n' && spkt->buf[i] != EOF) { spkt->buf[++i] = getc(stdin); }
+        // If EOF is read, exit?
+        if (spkt->buf[i] == EOF) { exit_flag = 0; }
+        // Otherwise Null terminate keyboard buffer
+        else spkt->buf[i] = '\0';
+
+        // Transmit packet if input buffer is not empty
+        if (i > 0 && spkt->buf[i] != EOF) { 
+            // Timestamp packet
+            asctime(localtime(&spkt->timestamp));
+            send(conn, spkt, sizeof(spkt), 0); 
+        }
         
-        // Wipe keyboard buffer clean
-        memset(kb_buf, 0, sizeof(kb_buf));
+        // Wipe packet buffer clean
+        memset(spkt, 0, sizeof(spkt));
     }
+
     // Close connection
     if (pthread_join(chat_rx_thread, NULL)) {
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
@@ -90,7 +111,9 @@ void sigintHandler(int sig_num) {
 void *chatRX(void *ptr) {
     char chat_rx_buf[BUFFERSIZE];    
     int received;                    
+    time_t ltime;
     int *conn = (int *)ptr;          
+
     while (1) { // Better condition here?
         // Wait for message to arrive..
         received = recv(*conn, &chat_rx_buf, sizeof(chat_rx_buf), 0);
@@ -98,7 +121,7 @@ void *chatRX(void *ptr) {
         chat_rx_buf[received] = '\0';
         // Print if not empty 
         if (received > 0) { 
-            printf("%s\n", chat_rx_buf); 
+            printf("%s\t%s\n", asctime(localtime(&ltime)), chat_rx_buf); 
             memset(chat_rx_buf, 0, sizeof(chat_rx_buf)); 
         }
     }
