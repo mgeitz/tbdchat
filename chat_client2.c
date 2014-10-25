@@ -113,9 +113,9 @@ int main()
       if (i > 0 && spkt->buf[i] != EOF)
       {
          // Timestamp packet
-         asctime(localtime(&spkt->timestamp));
-         printf("%s%s (%s):%s%s\n", RED, spkt->alias,
-                spkt->timestamp, spkt->buf, NORMAL);
+        spkt->timestamp = time(NULL);
+	printf("%s%s (%s):%s%s\n", RED, spkt->alias,
+                asctime(localtime(&(spkt->timestamp))), spkt->buf, NORMAL);
 
          send(conn, spkt, sizeof(spkt), 0);
       }
@@ -161,7 +161,7 @@ void *chatRX(void *ptr)
       if(received > 0)
       {
          printf("%s%s (%s):%s%s\n", BLUE, chat_rx_buf->alias,
-                chat_rx_buf->timestamp, chat_rx_buf->buf, NORMAL);
+                asctime(localtime(&(chat_rx_buf->timestamp))), chat_rx_buf->buf, NORMAL);
 
          //memset(chat_rx_buf, 0, sizeof(chat_rx_buf));
       }
