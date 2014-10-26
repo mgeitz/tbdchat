@@ -3,7 +3,7 @@
    Date:                10/23/2014
    File Name:           chat_server.c
    Compile:             gcc -o chat_server chat_server.c -l pthread
-   Run:                 ./chat_server
+   Run:                 ./chat_server IP_ADDRESS PORT
 
    The server program for a simple two way chat utility
 
@@ -24,9 +24,7 @@
 #include <netdb.h>
 #include <pthread.h>
 
-#define PORT "32300" // port clients will connect to
-#define HOSTNAME "server1.cs.scranton.edu" // hostname of the chat server
-#define BACKLOG 2 // how many pending connections the queue will hold
+#define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
 
 struct Packet
@@ -65,8 +63,14 @@ void start_subserver(int A_fd, int B_fd);
 
 int chat_serv_sock_fd; //server socket
 
-int main()
+int main(int argc, char **argv)
 {
+
+    if (argc < 3) {
+        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n", argv[0]);
+        exit(0);
+    }
+
    //Client Sockets
    int clientA_sock_fd, clientB_sock_fd;
 
@@ -76,7 +80,7 @@ int main()
    
    
    // Open server socket
-   chat_serv_sock_fd = get_server_socket(HOSTNAME, PORT);
+   chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
    
    // step 3: get ready to accept connections
    if(start_server(chat_serv_sock_fd, BACKLOG) == -1)
@@ -88,13 +92,13 @@ int main()
    while(1)
    { 
       //Accept client connections
-      clientA_sock_fd = accept_client(chat_serv_sock_fd, &clientA_usrID);
+      clientA_sock_fd = accept_client(chat_serv_sock_fd, clientA_usrID);
       if(clientA_sock_fd != -1)
       {
          printf("%s connected as Client A\n", clientA_usrID);
       }
    
-      clientB_sock_fd = accept_client(chat_serv_sock_fd, &clientB_usrID);
+      clientB_sock_fd = accept_client(chat_serv_sock_fd, clientB_usrID);
       if(clientB_sock_fd != -1)
       {
          printf("%s connected as Client B\n", clientB_usrID);
@@ -118,9 +122,9 @@ int get_server_socket(char *hostname, char *port)
    int yes = 1;
    
    memset(&hints, 0, sizeof hints);
-   hints.ai_family = PF_UNSPEC;
-   hints.ai_socktype = SOCK_STREAM;
-   hints.ai_flags = AI_PASSIVE;
+   hints.ai_family = PF_UNSPEC;      // either ipv4 or ipv6
+   hints.ai_socktype = SOCK_STREAM;  // TCP
+   hints.ai_flags = AI_PASSIVE;      // Flag for returning bindable socket addr for either ipv4/6
    
    if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0)
    {
@@ -175,7 +179,7 @@ int accept_client(int serv_sock, char* usrID)
    int reply_sock_fd = -1;
    socklen_t sin_size = sizeof(struct sockaddr_storage);
    struct sockaddr_storage client_addr;
-   char client_printable_addr[INET6_ADDRSTRLEN];
+   //char client_printable_addr[INET6_ADDRSTRLEN];
    
    // accept a connection request from a client
    // the returned file descriptor from accept will be used
@@ -185,7 +189,7 @@ int accept_client(int serv_sock, char* usrID)
    {
       printf("socket accept error\n");
    }
-   int i = recv(reply_sock_fd, usrID, 128, 0);
+   recv(reply_sock_fd, usrID, 128, 0);
    //*usrID[i] = '\0';
    return reply_sock_fd;
 }

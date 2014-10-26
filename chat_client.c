@@ -7,7 +7,7 @@
 #   Date:                10/23/2014
 #
 #   Compile:             gcc chat_client.c -o chat_client -l pthread
-#   Run:                 ./chat_client
+#   Run:                 ./chat_client IP_ADDRESS PORT
 #
 */
 
@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <string.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -62,7 +63,6 @@ int main(int argc, char **argv) {
     strcpy(name, getlogin());
 
     // Establish connection with server1
-    printf("Connecting . . .\n");
     if ((conn = get_server_connection(argv[1], argv[2], name)) == -1) { 
         // If connection fails, exit
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
@@ -197,8 +197,6 @@ void print_ip( struct addrinfo *ai) {
    struct sockaddr_in6 *ipv6;
    short port = 0;
 
-   /* How much of this do we need? */
-
    for (p = ai; p !=  NULL; p = p->ai_next) {
       if (p->ai_family == AF_INET) {
          ipv4 = (struct sockaddr_in *)p->ai_addr;
@@ -212,7 +210,9 @@ void print_ip( struct addrinfo *ai) {
          port = ipv4->sin_port;
          ipver = "IPV6";
       }
+      // Write readable form of IP to ipstr 
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-      printf("serv ip info: %s - %s @%d\n", ipstr, ipver, ntohs(port));
+      // Print connection information
+      printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
    }
 }
