@@ -200,6 +200,7 @@ void *clientA_thread(void *ptr)
    packet clientA_message;
    char *timestamp;
    int received;
+   char *disconnect = "Other user disconnected\0";
 
    while(1)
    {
@@ -216,16 +217,16 @@ void *clientA_thread(void *ptr)
       if (!received) { printf("Connection lost."); }
       else if(strcmp(clientA_message.buf, "EXIT") == 0)
       {
-         //send(clientB_sock_fd, "Other user disconnected.", 128, 0);
+         strcpy(&(clientA_message.buf), disconnect);
+         send(current_session->clientB_fd, (void *)&clientA_message, 128, 0);
          break;
       }
       else if(send(current_session->clientB_fd, (void *)&clientA_message,
                      sizeof(packet), 0) != -1)
       {
-         //printf("Client A message sent successfully\n");
+         printf("Client A message sent successfully\n");
       }
    }
-   free(&clientA_message);
    end(current_session);
    return NULL;
 }
@@ -236,7 +237,7 @@ void *clientB_thread(void *ptr)
    packet clientB_message;
    char *timestamp;
    int received; 
-
+   char *disconnect = "Other user disconnected.";
    while(1)
    {
       //Send client B message to client A
@@ -250,16 +251,16 @@ void *clientB_thread(void *ptr)
       if (!received) { printf("Connection lost."); }
       else if(strcmp(clientB_message.buf, "EXIT") == 0)
       {
-          //send(clientA_sock_fd, "Other user disconnected.", 128, 0);
+          strcpy(&(clientB_message.buf), disconnect);
+          send(current_session->clientA_fd, (void *)&clientB_message, 128, 0);
           break;
       }
       else if(send(current_session->clientA_fd, (void *)&clientB_message,
                      sizeof(packet), 0) != -1)
       {
-         //printf("Client B message sent successfully\n");
+         printf("Client B message sent successfully\n");
       }
    }
-   free(&clientB_message);
    end(current_session);
    return NULL;
 }
@@ -272,7 +273,6 @@ void end(session *ptr)
    printf("Session between %d and %d ended.\n", ptr->clientA_fd, ptr->clientB_fd);
    
    free(ptr);
-   exit(0);
 }
 
 void start_subserver(int A_fd, int B_fd) 
