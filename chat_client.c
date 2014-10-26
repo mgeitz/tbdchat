@@ -23,7 +23,6 @@
 #include <signal.h>
 #include <pthread.h>
 
-#define PORT "32300"
 #define BUFFERSIZE 128
 
 struct Packet {
@@ -42,11 +41,16 @@ void *chatRX(void *ptr);
 // Declare exit_flag as global volatile int
 int exit_flag = 1;
 
-int main() {
+int main(int argc, char **argv) {
     pthread_t chat_rx_thread;         // Chat RX thread
     int conn;                         // Connection fd
     int i;                            // Counter
     char name[32];                    // User alias
+
+    if (argc < 3) {
+        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n", argv[0]);
+        exit(0);
+    }
 
     // Handle CTRL+C
     signal(SIGINT, sigintHandler);
@@ -59,7 +63,7 @@ int main() {
 
     // Establish connection with server1
     printf("Connecting . . .\n");
-    if ((conn = get_server_connection("134.198.169.2", PORT, name)) == -1) { 
+    if ((conn = get_server_connection(argv[1], argv[2], name)) == -1) { 
         // If connection fails, exit
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
         exit_flag = 0; 
