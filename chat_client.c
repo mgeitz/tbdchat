@@ -1,8 +1,14 @@
-/*
-#    Chat client program.
-#    Authors: Matthew Owens, Michael Geitz, Shayne Wierbowski
+/* 
 #
-#    gcc ./chat_client.c -Wall -o chat_client -l pthread
+#   Program:             Simple Chat Client
+#   File Name:           chat_client.c
+#
+#   Authors:             Matthew Owens, Michale Geitz, Shayne Wierbowski
+#   Date:                10/23/2014
+#
+#   Compile:             gcc chat_client.c -o chat_client -l pthread
+#   Run:                 ./chat_client
+#
 */
 
 #include <stdio.h>
@@ -20,23 +26,25 @@
 #define PORT "32300"
 #define BUFFERSIZE 128
 
-struct sendPacket {
+struct Packet {
     time_t timestamp;
     char alias[32];
     char buf[BUFFERSIZE];
 };
 
-typedef struct sendPacket packet;
+typedef struct Packet packet;
 
 void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
-int get_server_connection(char *hostname, char *port);
+int get_server_connection(char *hostname, char *port, char *user);
 void *chatRX(void *ptr);
+
+// Declare exit_flag as global volatile int
+int exit_flag = 1;
 
 int main() {
     pthread_t chat_rx_thread;         // Chat RX thread
     int conn;                         // Connection fd
-    int exit_flag = 1;                // Exit flag for main loop
     int i;                            // Counter
     char name[32];                    // User alias
 
@@ -44,14 +52,14 @@ int main() {
     signal(SIGINT, sigintHandler);
 
     // Initiliaze memory space for send packet
-    packet *spkt = (packet *) malloc(sizeof(packet));
+    packet tx_pkt;
 
     // Assign name as *nix username, maybe add ability to assign alias
     strcpy(name, getlogin());
 
     // Establish connection with server1
     printf("Connecting . . .\n");
-    if ((conn = get_server_connection("134.198.169.2", PORT)) == -1) { 
+    if ((conn = get_server_connection("134.198.169.2", PORT, name)) == -1) { 
         // If connection fails, exit
         printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
         exit_flag = 0; 
@@ -67,26 +75,30 @@ int main() {
     while(exit_flag) {
 
         // Add alias to send packet
-        strcpy(spkt->alias, name);
+        strcpy(tx_pkt.alias, name);
 
         // Read input into packet buffer until newline or EOF (CTRL+D)
         i = 0;
-        spkt->buf[i] = getc(stdin);
-        while (spkt->buf[i] != '\n' && spkt->buf[i] != EOF) { spkt->buf[++i] = getc(stdin); }
+        tx_pkt.buf[i] = getc(stdin);
+        while (tx_pkt.buf[i] != '\n' && tx_pkt.buf[i] != EOF) { 
+            tx_pkt.buf[++i] = getc(stdin); 
+        }
         // If EOF is read, exit?
-        if (spkt->buf[i] == EOF) { exit_flag = 0; }
+        if (tx_pkt.buf[i] == EOF) { 
+            exit_flag = 0; 
+        }
         // Otherwise Null terminate keyboard buffer
-        else spkt->buf[i] = '\0';
+        else { tx_pkt.buf[i] = '\0'; }
 
         // Transmit packet if input buffer is not empty
-        if (i > 0 && spkt->buf[i] != EOF) { 
+        if (i > 0 && tx_pkt.buf[i] != EOF) { 
             // Timestamp packet
-            asctime(localtime(&spkt->timestamp));
-            send(conn, spkt, sizeof(spkt), 0); 
+            tx_pkt.timestamp = time(NULL);
+            send(conn, (void *)&tx_pkt, sizeof(packet), 0); 
         }
         
         // Wipe packet buffer clean
-        memset(spkt, 0, sizeof(spkt));
+        memset(&tx_pkt, 0, sizeof(packet));
     }
 
     // Close connection
@@ -103,26 +115,29 @@ int main() {
 void sigintHandler(int sig_num) { 
     //printf("\b\b  \b\b"); fflush(stdout); // Ignore CTRL+C
     printf("\b\b\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Forced Exit.\n");
-    exit(1); // Exit with error
+    exit_flag = 0;
 }
 
 
 /* Print messages as they are received */
 void *chatRX(void *ptr) {
-    char chat_rx_buf[BUFFERSIZE];    
+    //char chat_rx_buf[BUFFERSIZE];    
+    //packet *rpkt = (packet *) malloc(sizeof(packet));
+    packet rx_pkt;
     int received;                    
-    time_t ltime;
     int *conn = (int *)ptr;          
+    char *timestamp;
 
-    while (1) { // Better condition here?
+    while (exit_flag) { 
         // Wait for message to arrive..
-        received = recv(*conn, &chat_rx_buf, sizeof(chat_rx_buf), 0);
-        // Null terminate buffer
-        chat_rx_buf[received] = '\0';
+        received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
         // Print if not empty 
         if (received > 0) { 
-            printf("%s\t%s\n", asctime(localtime(&ltime)), chat_rx_buf); 
-            memset(chat_rx_buf, 0, sizeof(chat_rx_buf)); 
+            // Format timestamp
+            timestamp = asctime(localtime(&(rx_pkt.timestamp)));
+            timestamp[strlen(timestamp) -1] = '\0';
+            printf("\x1b[31m\e[1m%s\x1b[0m | %s\e[0m: %s\n", timestamp, rx_pkt.alias, rx_pkt.buf); 
+            memset(&rx_pkt, 0, sizeof(packet)); 
         }
     }
     return NULL;
@@ -130,7 +145,7 @@ void *chatRX(void *ptr) {
 
 
 /* Establish server connection */
-int get_server_connection(char *hostname, char *port) {
+int get_server_connection(char *hostname, char *port, char *user) {
     int serverfd;
     struct addrinfo hints, *servinfo, *p;
     int status;
@@ -163,7 +178,7 @@ int get_server_connection(char *hostname, char *port) {
     }
 
     freeaddrinfo(servinfo);
-   
+    send(serverfd, user, strlen(user), 0);   
     return serverfd;
 }
 
