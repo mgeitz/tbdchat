@@ -101,13 +101,16 @@ int main(int argc, char **argv) {
             send(conn, (void *)&tx_pkt, sizeof(packet), 0); 
         }
         
+        //Handle 'EXIT' message
+        if(strcmp("EXIT", &(tx_pkt.buf)) == 0) exit_flag = 0;
+
         // Wipe packet buffer clean
         memset(&tx_pkt, 0, sizeof(packet));
     }
 
     // Close connection
     if (pthread_join(chat_rx_thread, NULL)) {
-        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
+      printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
     }
     printf("Exiting.\n");
     close(conn);
@@ -135,6 +138,15 @@ void *chatRX(void *ptr) {
     while (exit_flag) { 
         // Wait for message to arrive..
         received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
+
+        //Handle 'EXIT' message
+        if(strcmp("EXIT", &(rx_pkt.buf)) == 0)
+        {
+             exit_flag = 0;
+             printf("Other user disconnected.\n");
+             received = 0;
+        }
+
         // Print if not empty 
         if (received > 0) { 
             // Format timestamp
@@ -142,6 +154,8 @@ void *chatRX(void *ptr) {
             timestamp[strlen(timestamp) -1] = '\0';
             printf("\x1b[31m\e[1m%s\x1b[0m | %s\e[0m: %s\n", timestamp, rx_pkt.alias, rx_pkt.buf); 
             memset(&rx_pkt, 0, sizeof(packet)); 
+
+
         }
     }
     return NULL;
@@ -216,3 +230,5 @@ void print_ip( struct addrinfo *ai) {
       printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
    }
 }
+
+
