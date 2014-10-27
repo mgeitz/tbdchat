@@ -39,6 +39,7 @@ struct chatSession
 {
    int clientA_fd;
    int clientB_fd;
+   int running;
 };
 typedef struct chatSession session;
 // Defined color constants
@@ -201,7 +202,7 @@ void *clientA_thread(void *ptr)
    char *timestamp;
    int received;
 
-   while(1)
+   while(current_session->running)
    {
       //Send client A message to client B
       received = recv(current_session->clientA_fd, (void *)&clientA_message,
@@ -213,10 +214,13 @@ void *clientA_thread(void *ptr)
       timestamp[strlen(timestamp) -1] = '\0';
       printf("%s%s [%s]:%s%s\n", RED, timestamp, clientA_message.alias,
              NORMAL, clientA_message.buf);
-      if (!received) { printf("Connection lost."); }
-      else if(strcmp(clientA_message.buf, "EXIT") == 0)
+      //if (!received) { printf("Connection lost."); }
+      if(strcmp(clientA_message.buf, "EXIT") == 0)
       {
          send(current_session->clientB_fd, (void *)&clientA_message, sizeof(packet), 0);
+         printf("Session between %d and %d ended.\n", current_session->clientA_fd, current_session->clientB_fd);
+
+         current_session->running = 0;
          break;
       }
       else if(send(current_session->clientB_fd, (void *)&clientA_message,
@@ -226,7 +230,6 @@ void *clientA_thread(void *ptr)
       }
    }
    end(current_session);
-   pthread_exit(NULL);
    return NULL;
 }
 
@@ -237,7 +240,7 @@ void *clientB_thread(void *ptr)
    char *timestamp;
    int received; 
    
-   while(1)
+   while(current_session->running)
    {
       //Send client B message to client A
       received = recv(current_session->clientB_fd, (void *)&clientB_message,
@@ -247,10 +250,13 @@ void *clientB_thread(void *ptr)
       timestamp[strlen(timestamp) -1]  = '\0';
       printf("%s%s [%s]:%s%s\n", BLUE, timestamp, clientB_message.alias,
              NORMAL, clientB_message.buf);
-      if (!received) { printf("Connection lost."); }
-      else if(strcmp(clientB_message.buf, "EXIT") == 0)
+      //if (!received) { printf("Connection lost."); }
+      if(strcmp(clientB_message.buf, "EXIT") == 0)
       {
           send(current_session->clientA_fd, (void *)&clientB_message, sizeof(packet), 0);
+          current_session->running = 0;
+          printf("Session between %d and %d ended.\n", current_session->clientA_fd, current_session->clientB_fd);
+
           break;
       }
       else if(send(current_session->clientA_fd, (void *)&clientB_message,
@@ -260,7 +266,6 @@ void *clientB_thread(void *ptr)
       }
    }
    end(current_session);
-   pthread_exit(NULL);
    return NULL;
 }
 
@@ -268,8 +273,6 @@ void end(session *ptr)
 {
    close(ptr->clientA_fd);
    close(ptr->clientB_fd);
-   
-   printf("Session between %d and %d ended.\n", ptr->clientA_fd, ptr->clientB_fd);
    
    free(ptr);
 }
@@ -280,7 +283,7 @@ void start_subserver(int A_fd, int B_fd)
    session *newSession = (session *)malloc(sizeof(session));
    newSession->clientA_fd = A_fd;
    newSession->clientB_fd = B_fd;
-
+   newSession->running = 1;
    pthread_t new_session_thread;
    int iret;
 
@@ -292,7 +295,7 @@ void *subserver(void *ptr)
 {
    // Threads
    pthread_t client_A_thread, client_B_thread;
-
+   
    int iret1, iret2;
 
    iret1 = pthread_create(&client_A_thread, NULL, clientA_thread, ptr);
