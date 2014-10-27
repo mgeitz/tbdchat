@@ -142,9 +142,9 @@ void *chatRX(void *ptr) {
         //Handle 'EXIT' message
         if(strcmp("EXIT", &(rx_pkt.buf)) == 0)
         {
-             exit_flag = 0;
              printf("Other user disconnected.\n");
-             received = 0;
+             close(*conn);
+             exit(0);
         }
 
         // Print if not empty 
