@@ -200,7 +200,6 @@ void *clientA_thread(void *ptr)
    packet clientA_message;
    char *timestamp;
    int received;
-   char *disconnect = "Other user disconnected.";
 
    while(1)
    {
@@ -217,7 +216,7 @@ void *clientA_thread(void *ptr)
       if (!received) { printf("Connection lost."); }
       else if(strcmp(clientA_message.buf, "EXIT") == 0)
       {
-         send(current_session->clientB_fd, (void *)&clientA_message, 128, 0);
+         send(current_session->clientB_fd, (void *)&clientA_message, sizeof(packet), 0);
          break;
       }
       else if(send(current_session->clientB_fd, (void *)&clientA_message,
@@ -236,7 +235,7 @@ void *clientB_thread(void *ptr)
    packet clientB_message;
    char *timestamp;
    int received; 
-   char *disconnect = "Other user disconnected.";
+   
    while(1)
    {
       //Send client B message to client A
@@ -250,7 +249,7 @@ void *clientB_thread(void *ptr)
       if (!received) { printf("Connection lost."); }
       else if(strcmp(clientB_message.buf, "EXIT") == 0)
       {
-          send(current_session->clientA_fd, (void *)&clientB_message, 128, 0);
+          send(current_session->clientA_fd, (void *)&clientB_message, , 0);
           break;
       }
       else if(send(current_session->clientA_fd, (void *)&clientB_message,
