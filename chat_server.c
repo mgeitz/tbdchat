@@ -226,6 +226,7 @@ void *clientA_thread(void *ptr)
       }
    }
    end(current_session);
+   pthread_exit(NULL);
    return NULL;
 }
 
@@ -249,7 +250,7 @@ void *clientB_thread(void *ptr)
       if (!received) { printf("Connection lost."); }
       else if(strcmp(clientB_message.buf, "EXIT") == 0)
       {
-          send(current_session->clientA_fd, (void *)&clientB_message, , 0);
+          send(current_session->clientA_fd, (void *)&clientB_message, sizeof(packet), 0);
           break;
       }
       else if(send(current_session->clientA_fd, (void *)&clientB_message,
@@ -259,6 +260,7 @@ void *clientB_thread(void *ptr)
       }
    }
    end(current_session);
+   pthread_exit(NULL);
    return NULL;
 }
 
