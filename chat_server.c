@@ -42,6 +42,7 @@ struct chatSession
    int running;
 };
 typedef struct chatSession session;
+
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -93,7 +94,8 @@ int main(int argc, char **argv)
       printf("start server error\n");
       exit(1);
    }	
-   
+
+   //Main execution loop   
    while(1)
    { 
       //Accept client connections
@@ -197,6 +199,11 @@ int accept_client(int serv_sock, char* usrID)
    return reply_sock_fd;
 }
 
+
+/*
+ *Main thread for client A.  Tracks both incoming 
+ *and outgoing messages.
+ */
 void *clientA_thread(void *ptr)
 {
    session *current_session = (session *)ptr;
@@ -217,6 +224,7 @@ void *clientA_thread(void *ptr)
       printf("%s%s [%s]:%s%s\n", RED, timestamp, clientA_message.alias,
              NORMAL, clientA_message.buf);
 
+      //Handle "EXIT" message
       if(strcmp(clientA_message.buf, "EXIT") == 0)
       {
          send(current_session->clientB_fd, (void *)&clientA_message, sizeof(packet), 0);
@@ -227,6 +235,7 @@ void *clientA_thread(void *ptr)
          break;
       }
 
+      //Send message to client B
       else if(send(current_session->clientB_fd, (void *)&clientA_message,
                      sizeof(packet), 0) != -1)
       {
@@ -238,6 +247,10 @@ void *clientA_thread(void *ptr)
    return NULL;
 }
 
+/*
+ *Main thread for client B. Tracks both incoming and 
+ *outgoing messages.
+ */
 void *clientB_thread(void *ptr)
 {
    session *current_session = (session *)ptr;
@@ -278,6 +291,11 @@ void *clientB_thread(void *ptr)
    return NULL;
 }
 
+/*
+ *Used to safely end a chat session.  Closes the sockets
+ *for each client and sets a flag telling the threads 
+ *for that session to exit.
+ */
 void end(session *ptr)
 {
    close(ptr->clientA_fd);
@@ -285,6 +303,10 @@ void end(session *ptr)
    free(ptr);
 }
 
+/*
+ *Sets up necessary information to start a subserver
+ *for a chat session.
+ */
 void start_subserver(int A_fd, int B_fd) 
 {
    //Set up struct to pass to subserver
@@ -300,6 +322,10 @@ void start_subserver(int A_fd, int B_fd)
    iret = pthread_create(&new_session_thread, NULL, subserver, (void *)newSession);
 }
 
+/*
+ *Subserver thread for a conversation.  Starts the main
+ *threads for each client.
+ */
 void *subserver(void *ptr)
 {
    // Threads
