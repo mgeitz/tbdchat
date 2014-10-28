@@ -66,19 +66,19 @@ int chat_serv_sock_fd; //server socket
 
 int main(int argc, char **argv)
 {
-
-    if (argc < 3) {
-        printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n", argv[0]);
-        exit(0);
-    }
-
+   
+   if(argc < 3)
+   {
+      printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n", argv[0]);
+      exit(0);
+   }
+   
    //Client Sockets
    int clientA_sock_fd, clientB_sock_fd;
-
+   
    // User IDs
    char clientA_usrID[32];
    char clientB_usrID[32];
-   
    
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
       printf("start server error\n");
       exit(1);
    }	
-  
+   
    while(1)
    { 
       //Accept client connections
@@ -98,20 +98,18 @@ int main(int argc, char **argv)
       {
          printf("%s connected as Client A\n", clientA_usrID);
       }
-   
+      
       clientB_sock_fd = accept_client(chat_serv_sock_fd, clientB_usrID);
       if(clientB_sock_fd != -1)
       {
          printf("%s connected as Client B\n", clientB_usrID);
       }
-   
+      
       start_subserver(clientA_sock_fd, clientB_sock_fd); 
    
    }
-
    
    close(chat_serv_sock_fd);
-
 }
 
 //Copied from Dr. Bi's example
@@ -201,7 +199,7 @@ void *clientA_thread(void *ptr)
    packet clientA_message;
    char *timestamp;
    int received;
-
+   
    while(current_session->running)
    {
       //Send client A message to client B
@@ -219,7 +217,7 @@ void *clientA_thread(void *ptr)
       {
          send(current_session->clientB_fd, (void *)&clientA_message, sizeof(packet), 0);
          printf("Session between %d and %d ended.\n", current_session->clientA_fd, current_session->clientB_fd);
-
+         
          current_session->running = 0;
          break;
       }
@@ -255,8 +253,8 @@ void *clientB_thread(void *ptr)
       {
           send(current_session->clientA_fd, (void *)&clientB_message, sizeof(packet), 0);
           current_session->running = 0;
-          printf("Session between %d and %d ended.\n", current_session->clientA_fd, current_session->clientB_fd);
-
+          printf("Session between %d and %d ended.\n", current_session->clientA_fd,
+                 current_session->clientB_fd);
           break;
       }
       else if(send(current_session->clientA_fd, (void *)&clientB_message,
@@ -273,7 +271,6 @@ void end(session *ptr)
 {
    close(ptr->clientA_fd);
    close(ptr->clientB_fd);
-   
    free(ptr);
 }
 
@@ -286,9 +283,8 @@ void start_subserver(int A_fd, int B_fd)
    newSession->running = 1;
    pthread_t new_session_thread;
    int iret;
-
+   
    iret = pthread_create(&new_session_thread, NULL, subserver, (void *)newSession);
-
 }
 
 void *subserver(void *ptr)
@@ -297,13 +293,12 @@ void *subserver(void *ptr)
    pthread_t client_A_thread, client_B_thread;
    
    int iret1, iret2;
-
+   
    iret1 = pthread_create(&client_A_thread, NULL, clientA_thread, ptr);
    iret2 = pthread_create(&client_B_thread, NULL, clientB_thread, ptr);
-
+   
    pthread_join(client_A_thread, NULL);
    pthread_join(client_B_thread, NULL);
-
+   
    return NULL;
 }
-
