@@ -61,6 +61,7 @@ void *clientB_thread(void *ptr);
 void *subserver(void *ptr);
 void end(session *ptr);
 void start_subserver(int A_fd, int B_fd);
+void sigintHandler(int sig_num);
 
 int chat_serv_sock_fd; //server socket
 
@@ -69,9 +70,12 @@ int main(int argc, char **argv)
    
    if(argc < 3)
    {
-      printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n", argv[0]);
+      printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n", RED, NORMAL, argv[0]);
       exit(0);
    }
+
+   // Handle CTRL+C
+   signal(SIGINT, sigintHandler);
    
    //Client Sockets
    int clientA_sock_fd, clientB_sock_fd;
@@ -96,13 +100,13 @@ int main(int argc, char **argv)
       clientA_sock_fd = accept_client(chat_serv_sock_fd, clientA_usrID);
       if(clientA_sock_fd != -1)
       {
-         printf("%s connected as Client A\n", clientA_usrID);
+         printf("%s connected as Client A at socket_fd %d\n", clientA_usrID, clientA_sock_fd);
       }
       
       clientB_sock_fd = accept_client(chat_serv_sock_fd, clientB_usrID);
       if(clientB_sock_fd != -1)
       {
-         printf("%s connected as Client B\n", clientB_usrID);
+         printf("%s connected as Client B at socket_fd %d\n", clientB_usrID, clientB_sock_fd);
       }
       
       start_subserver(clientA_sock_fd, clientB_sock_fd); 
@@ -205,28 +209,31 @@ void *clientA_thread(void *ptr)
       //Send client A message to client B
       received = recv(current_session->clientA_fd, (void *)&clientA_message,
                              sizeof(packet), 0);
-      //clientA_message[read_countA] = '\0';
      
       //Format timestamp and remove \n
       timestamp = asctime(localtime(&(clientA_message.timestamp)));
       timestamp[strlen(timestamp) -1] = '\0';
+    
       printf("%s%s [%s]:%s%s\n", RED, timestamp, clientA_message.alias,
              NORMAL, clientA_message.buf);
-      //if (!received) { printf("Connection lost."); }
+
       if(strcmp(clientA_message.buf, "EXIT") == 0)
       {
          send(current_session->clientB_fd, (void *)&clientA_message, sizeof(packet), 0);
-         printf("Session between %d and %d ended.\n", current_session->clientA_fd, current_session->clientB_fd);
+         printf("Session between %d and %d ended.\n", current_session->clientA_fd,
+            current_session->clientB_fd);
          
          current_session->running = 0;
          break;
       }
+
       else if(send(current_session->clientB_fd, (void *)&clientA_message,
                      sizeof(packet), 0) != -1)
       {
          printf("Client A message sent successfully\n");
       }
    }
+
    end(current_session);
    return NULL;
 }
@@ -243,18 +250,21 @@ void *clientB_thread(void *ptr)
       //Send client B message to client A
       received = recv(current_session->clientB_fd, (void *)&clientB_message,
                              sizeof(packet), 0);
-      //clientB_message[read_countB] = '\0';
+
+      //Format timestamp and remove \n
       timestamp = asctime(localtime(&(clientB_message.timestamp)));
       timestamp[strlen(timestamp) -1]  = '\0';
+
       printf("%s%s [%s]:%s%s\n", BLUE, timestamp, clientB_message.alias,
              NORMAL, clientB_message.buf);
-      //if (!received) { printf("Connection lost."); }
+
       if(strcmp(clientB_message.buf, "EXIT") == 0)
       {
           send(current_session->clientA_fd, (void *)&clientB_message, sizeof(packet), 0);
-          current_session->running = 0;
           printf("Session between %d and %d ended.\n", current_session->clientA_fd,
                  current_session->clientB_fd);
+         
+          current_session->running = 0;
           break;
       }
       else if(send(current_session->clientA_fd, (void *)&clientB_message,
@@ -263,6 +273,7 @@ void *clientB_thread(void *ptr)
          printf("Client B message sent successfully\n");
       }
    }
+
    end(current_session);
    return NULL;
 }
@@ -281,6 +292,8 @@ void start_subserver(int A_fd, int B_fd)
    newSession->clientA_fd = A_fd;
    newSession->clientB_fd = B_fd;
    newSession->running = 1;
+
+   //Start subserver thread
    pthread_t new_session_thread;
    int iret;
    
@@ -302,3 +315,12 @@ void *subserver(void *ptr)
    
    return NULL;
 }
+
+/* Handle SIGINT (CTRL+C) */
+void sigintHandler(int sig_num)
+{
+   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
+   close(chat_serv_sock_fd);
+   exit(0);
+}
+

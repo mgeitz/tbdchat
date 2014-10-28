@@ -87,6 +87,8 @@ int main(int argc, char **argv)
       printf("%s --- Error:%s Connection failure.\n", RED, NORMAL);
       exit_flag = 0;
    }
+
+   printf("Connected.\n");
    
    // Start chat rx thread
    if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn))
