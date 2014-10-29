@@ -194,8 +194,8 @@ int accept_client(int serv_sock, char* usrID)
    {
       printf("socket accept error\n");
    }
-   recv(reply_sock_fd, usrID, 128, 0);
-   //*usrID[i] = '\0';
+   int i = recv(reply_sock_fd, usrID, 128, 0);
+   usrID[i] = '\0';
    return reply_sock_fd;
 }
 
@@ -216,14 +216,17 @@ void *clientA_thread(void *ptr)
       //Send client A message to client B
       received = recv(current_session->clientA_fd, (void *)&clientA_message,
                              sizeof(packet), 0);
-     
+      
       //Format timestamp and remove \n
       timestamp = asctime(localtime(&(clientA_message.timestamp)));
       timestamp[strlen(timestamp) -1] = '\0';
-    
-      printf("%s%s [%s]:%s%s\n", RED, timestamp, clientA_message.alias,
-             NORMAL, clientA_message.buf);
-
+      
+      if(current_session->running)
+      {
+         printf("%s%s [%s]:%s%s\n", RED, timestamp, clientA_message.alias,
+                NORMAL, clientA_message.buf);
+      }
+      
       //Handle "EXIT" message
       if(strcmp(clientA_message.buf, "EXIT") == 0)
       {
@@ -234,7 +237,7 @@ void *clientA_thread(void *ptr)
          current_session->running = 0;
          break;
       }
-
+      
       //Send message to client B
       else if(send(current_session->clientB_fd, (void *)&clientA_message,
                      sizeof(packet), 0) != -1)
@@ -263,20 +266,23 @@ void *clientB_thread(void *ptr)
       //Send client B message to client A
       received = recv(current_session->clientB_fd, (void *)&clientB_message,
                              sizeof(packet), 0);
-
+      
       //Format timestamp and remove \n
       timestamp = asctime(localtime(&(clientB_message.timestamp)));
       timestamp[strlen(timestamp) -1]  = '\0';
-
-      printf("%s%s [%s]:%s%s\n", BLUE, timestamp, clientB_message.alias,
-             NORMAL, clientB_message.buf);
-
+      
+      if(current_session->running)
+      {
+         printf("%s%s [%s]:%s%s\n", BLUE, timestamp, clientB_message.alias,
+                NORMAL, clientB_message.buf);
+      }
+      
       if(strcmp(clientB_message.buf, "EXIT") == 0)
       {
           send(current_session->clientA_fd, (void *)&clientB_message, sizeof(packet), 0);
           printf("Session between %d and %d ended.\n", current_session->clientA_fd,
                  current_session->clientB_fd);
-         
+          
           current_session->running = 0;
           break;
       }
@@ -349,4 +355,3 @@ void sigintHandler(int sig_num)
    close(chat_serv_sock_fd);
    exit(0);
 }
-
