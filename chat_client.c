@@ -258,8 +258,8 @@ void *chatRX(void *ptr)
          timestamp[strlen(timestamp) - 1] = '\0';
          //printf("\a\x1b[31m\e[1m%s\x1b[0m | %s\e[0m: %s\n", timestamp,
          //       rx_pkt.alias, rx_pkt.buf);
-    //     printf("\a%s%s [%s]:%s %s\n", RED, timestamp,
-    //            rx_pkt.alias, NORMAL, rx_pkt.buf);
+         printf("\a%s%s []:%s %s\n", RED, timestamp,
+                 NORMAL, rx_pkt.buf);
          memset(&rx_pkt, 0, sizeof(packet));
       }
    }
