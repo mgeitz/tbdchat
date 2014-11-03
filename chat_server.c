@@ -30,8 +30,8 @@
 struct Packet
 {
    time_t timestamp;
-   char alias[32];
    char buf[BUFFERSIZE];
+   int options;
 };
 typedef struct Packet packet;
 
@@ -39,6 +39,8 @@ struct chatSession
 {
    int clientA_fd;
    int clientB_fd;
+   char aliasA[32];
+   char aliasB[32];
    int running;
 };
 typedef struct chatSession session;
@@ -56,12 +58,12 @@ typedef struct chatSession session;
 
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
-int accept_client(int serv_sock, char* usrID);
+int accept_client(int serv_sock);
 void *clientA_thread(void *ptr);
 void *clientB_thread(void *ptr);
 void *subserver(void *ptr);
 void end(session *ptr);
-void start_subserver(int A_fd, int B_fd);
+void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);
 void sigintHandler(int sig_num);
 
 int chat_serv_sock_fd; //server socket
@@ -74,7 +76,7 @@ int main(int argc, char **argv)
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n", RED, NORMAL, argv[0]);
       exit(0);
    }
-
+   
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
@@ -84,6 +86,11 @@ int main(int argc, char **argv)
    // User IDs
    char clientA_usrID[32];
    char clientB_usrID[32];
+   char clientA_name[32];
+   char clientB_name[32];
+   
+   // Packet
+   packet pck;
    
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
@@ -94,24 +101,76 @@ int main(int argc, char **argv)
       printf("start server error\n");
       exit(1);
    }	
-
+   
    //Main execution loop   
    while(1)
-   { 
+   {
       //Accept client connections
-      clientA_sock_fd = accept_client(chat_serv_sock_fd, clientA_usrID);
+      clientA_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientA_sock_fd != -1)
       {
+         //while(!valid login)
+         //{
+            // Receive command and username
+            recv(clientA_sock_fd, &pck, sizeof(pck), 0);
+            strcpy(clientA_usrID, pck.buf);
+            printf("User ID is: %s\n", clientA_usrID);
+            
+            // Register
+            if(pck.options == 0)
+            {
+               recv(clientA_sock_fd, &pck, sizeof(pck), 0);
+               //if(usrname valid)
+               //{
+                  strcpy(clientA_name, pck.buf);
+                  printf("Name is: %s\n", clientA_name);
+                  // ADD TO LIST
+               //}
+            }
+            
+            // Login
+            //if(username valid)
+            //{
+               //FIND IN LIST
+               
+            //}
+         //}
          printf("%s connected as Client A at socket_fd %d\n", clientA_usrID, clientA_sock_fd);
       }
       
-      clientB_sock_fd = accept_client(chat_serv_sock_fd, clientB_usrID);
+      clientB_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientB_sock_fd != -1)
       {
+         //while(!valid login)
+         //{
+            // Receive command and username
+            recv(clientB_sock_fd, &pck, sizeof(pck), 0);
+            strcpy(clientB_usrID, pck.buf);
+            printf("User ID is: %s", clientB_usrID);
+             
+            // Register
+            if(pck.options == 0)
+            {
+               recv(clientB_sock_fd, &pck, sizeof(pck), 0);
+               //if(usrname valid)
+               //{
+                  strcpy(clientB_name, pck.buf);
+                  printf("Name is: %s", clientB_name);
+                  // ADD TO LIST
+               //}
+            }
+            
+            // Login
+            //if(username valid)
+            //{
+               //FIND IN LIST
+               
+            //}
+         //}
          printf("%s connected as Client B at socket_fd %d\n", clientB_usrID, clientB_sock_fd);
       }
       
-      start_subserver(clientA_sock_fd, clientB_sock_fd); 
+      start_subserver(clientA_sock_fd, clientB_sock_fd, &clientA_usrID, &clientB_usrID); 
    
    }
    
@@ -179,7 +238,7 @@ int start_server(int serv_socket, int backlog)
 }
 
 //Copied from Dr. Bi's example
-int accept_client(int serv_sock, char* usrID)
+int accept_client(int serv_sock)
 {
    int reply_sock_fd = -1;
    socklen_t sin_size = sizeof(struct sockaddr_storage);
@@ -194,8 +253,6 @@ int accept_client(int serv_sock, char* usrID)
    {
       printf("socket accept error\n");
    }
-   int i = recv(reply_sock_fd, usrID, 128, 0);
-   usrID[i] = '\0';
    return reply_sock_fd;
 }
 
@@ -211,6 +268,10 @@ void *clientA_thread(void *ptr)
    char *timestamp;
    int received;
    
+   strcpy(clientA_message.buf, current_session->aliasA);
+   send(current_session->clientB_fd, (void *)&clientA_message, 
+                     sizeof(packet), 0); 
+   
    while(current_session->running)
    {
       //Send client A message to client B
@@ -223,7 +284,7 @@ void *clientA_thread(void *ptr)
       
       if(current_session->running)
       {
-         printf("%s%s [%s]:%s%s\n", RED, timestamp, clientA_message.alias,
+         printf("%s%s [%s]:%s%s\n", RED, timestamp, current_session->aliasA,
                 NORMAL, clientA_message.buf);
       }
       
@@ -261,6 +322,9 @@ void *clientB_thread(void *ptr)
    char *timestamp;
    int received; 
    
+   strcpy(clientB_message.buf, current_session->aliasB);
+   send(current_session->clientA_fd, (void *)&clientB_message,
+                     sizeof(packet), 0);
    while(current_session->running)
    {
       //Send client B message to client A
@@ -273,7 +337,7 @@ void *clientB_thread(void *ptr)
       
       if(current_session->running)
       {
-         printf("%s%s [%s]:%s%s\n", BLUE, timestamp, clientB_message.alias,
+         printf("%s%s [%s]:%s%s\n", BLUE, timestamp, current_session->aliasB,
                 NORMAL, clientB_message.buf);
       }
       
@@ -313,14 +377,16 @@ void end(session *ptr)
  *Sets up necessary information to start a subserver
  *for a chat session.
  */
-void start_subserver(int A_fd, int B_fd) 
+void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID) 
 {
    //Set up struct to pass to subserver
    session *newSession = (session *)malloc(sizeof(session));
    newSession->clientA_fd = A_fd;
    newSession->clientB_fd = B_fd;
+   strcpy(newSession->aliasA, clientA_usrID);
+   strcpy(newSession->aliasB, clientB_usrID);
    newSession->running = 1;
-
+   
    //Start subserver thread
    pthread_t new_session_thread;
    int iret;
