@@ -236,7 +236,11 @@ void *chatRX(void *ptr)
    int received;
    int *conn = (int *)ptr;
    char *timestamp;
-   
+   char partner_name[32];
+ 
+   recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
+   strcpy(partner_name, rx_pkt.buf);
+
    while(exit_flag)
    {
       // Wait for message to arrive..
@@ -258,7 +262,7 @@ void *chatRX(void *ptr)
          timestamp[strlen(timestamp) - 1] = '\0';
          //printf("\a\x1b[31m\e[1m%s\x1b[0m | %s\e[0m: %s\n", timestamp,
          //       rx_pkt.alias, rx_pkt.buf);
-         printf("\a%s%s []:%s %s\n", RED, timestamp,
+         printf("\a%s%s [%s]:%s %s\n", RED, timestamp, partner_name,
                  NORMAL, rx_pkt.buf);
          memset(&rx_pkt, 0, sizeof(packet));
       }
