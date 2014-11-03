@@ -240,6 +240,7 @@ void *chatRX(void *ptr)
  
    recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
    strcpy(partner_name, rx_pkt.buf);
+   printf("Conversation started with %s.\n", partner_name);
 
    while(exit_flag)
    {
