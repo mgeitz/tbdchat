@@ -49,6 +49,7 @@ void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
+void userInput(int conn);
 
 // Declare exit_flag as global volatile int
 int exit_flag = 1;
@@ -57,7 +58,6 @@ int main(int argc, char **argv)
 {
    pthread_t chat_rx_thread;         // Chat RX thread
    int conn;                         // Connection fd
-   int i;                            // Counter
    char fname[32];                    // User alias
    char lname[32];
    int selection;		     // User selection on startup
@@ -66,10 +66,6 @@ int main(int argc, char **argv)
    // Confirm valid program usage
    if (argc < 3)
    {
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n",
-      //       argv[0]);
-
-
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n",
              RED, argv[0], NORMAL);
       exit(0);
@@ -155,53 +151,8 @@ int main(int argc, char **argv)
       exit_flag = 0;
    }
    
-   // Primary execution loop
-   while(exit_flag)
-   {
-      // Add alias to send packet
-      //strcpy(tx_pkt.alias, name);
-      
-      // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
-      i = 0;
-      tx_pkt.buf[i] = getc(stdin);
-      while(tx_pkt.buf[i] != '\n' && tx_pkt.buf[i] != EOF)
-      {
-         tx_pkt.buf[++i] = getc(stdin);
-         // Automatically send message once it reaches 127 characters
-         if(i >= 126 || exit_flag == 0)
-         {
-            tx_pkt.buf[++i] = '\n';
-            break;
-         }
-      }
-      // If EOF is read, exit?
-      if(tx_pkt.buf[i] == EOF)
-      {
-         exit_flag = 0;
-      }
-      else // Otherwise Null terminate keyboard buffer
-      {
-         tx_pkt.buf[i] = '\0';
-      }
-      
-      // Transmit packet if input buffer is not empty
-      if(i > 0 && tx_pkt.buf[i] != EOF)
-      {
-         // Timestamp and send packet
-         tx_pkt.timestamp = time(NULL);
-         send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-      }
-      
-      //Handle 'EXIT' message
-      if(strcmp("EXIT", &(tx_pkt.buf)) == 0)
-      {
-         exit_flag = 0;
-      }
-      
-      // Wipe packet buffer clean
-      memset(&tx_pkt, 0, sizeof(packet));
-   }
-   
+   userInput(conn);  
+ 
    // Send EXIT message (ensure clean exit on CRTL+C)
    //strcpy(tx_pkt.alias, name);
    tx_pkt.timestamp = time(NULL);
@@ -219,6 +170,70 @@ int main(int argc, char **argv)
    exit(0);
 }
 
+
+void userCommand(int conn, packet tx_pkt) {
+    if (strncmp(tx_pkt.buf, "exit", sizeof("exit")) == 0) {
+        exit_flag = 0;
+    }
+    else if (strncmp(tx_pkt.buf, "register", sizeof("register")) == 0) {
+        // handle register here
+    }
+    else if (strncmp(tx_pkt.buf, "login", sizeof("login")) == 0) {
+        // handle register here
+    }
+    else {
+      printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
+    }
+}
+
+void userInput(int conn) {
+   int i;                            // Counter
+   // Initiliaze memory space for send packet
+   packet tx_pkt;
+
+   // Primary execution loop
+   while(exit_flag) {
+   
+      // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
+      i = 0;
+      tx_pkt.buf[i] = getc(stdin);
+      while(tx_pkt.buf[i] != '\n' && tx_pkt.buf[i] != EOF) {
+         tx_pkt.buf[++i] = getc(stdin);
+         // Automatically send message once it reaches 127 characters
+         if(i >= 126 || exit_flag == 0) {
+            tx_pkt.buf[++i] = '\n';
+            break;
+         }
+      }
+      // If EOF is read, exit?
+      if(tx_pkt.buf[i] == EOF) {
+         exit_flag = 0;
+      }
+      else { // Otherwise Null terminate keyboard buffer
+         tx_pkt.buf[i] = '\0';
+      }
+   
+      // Transmit packet if input buffer is not empty
+      if(i > 0 && tx_pkt.buf[i] != EOF) {
+
+         // Timestamp and send packet
+         tx_pkt.timestamp = time(NULL);
+  
+         //Handle user command message
+         if(strncmp("/", &(tx_pkt.buf), 1) == 0) {
+             memmove(tx_pkt.buf, tx_pkt.buf + 1, sizeof(tx_pkt.buf) - 1);
+             userCommand(conn, tx_pkt);
+         }
+         else {
+             send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+         }
+      }
+   
+   
+      // Wipe packet buffer clean
+      memset(&tx_pkt, 0, sizeof(packet));
+   }
+}
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num)
