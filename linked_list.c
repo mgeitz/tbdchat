@@ -1,37 +1,29 @@
 #include <string.h>
 #include "linked_list.h"
 #include <stdio.h>
-void insert(User **head, User *new_user)
-{
-   User *temp = *head;
-   if(*head == NULL)
-   {
-      new_user->next = NULL;
+void insert(User **head, User *new_user) {
+   if(*head == NULL) {
+      new_user->next = *head;
       *head = new_user;
-      return;
    } 
-
-   while(temp->next != NULL) 
-   {
-       temp = temp->next;
+   else {
+       User *curr = *head;
+       while(curr->next != NULL) { curr = curr->next; }
+       new_user->next = curr->next;
+       curr->next = new_user;
    }
-   temp->next = new_user;
-   new_user->next = NULL;
 }
 
-char *get_real_name(User **head, char *user)
-{
+char *get_real_name(User **head, char *user) {
    char *error = "ERROR";
-   User *temp = *head;
 
    if(*head == NULL) return error;
 
-   while(strcmp(user, temp->username) != 0)
-   {
-      if(temp->next == NULL) return error;
-      temp=temp->next;
+   User *curr = *head;
+   while(strcmp(user, curr->username) != 0 && curr->next != NULL) {
+      //if(curr->next == NULL) return error;
+      curr=curr->next;
    }
-
-   return temp->real_name;
+   return curr->real_name;
 }
 
