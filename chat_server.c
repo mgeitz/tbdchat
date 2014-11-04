@@ -127,10 +127,11 @@ int main(int argc, char **argv)
                   strcpy(clientA_name, pck.buf);
                   printf("Name is: %s\n", clientA_name);
                   
-                 User temp_user;
-                 strcpy(temp_user.username, clientA_usrID);
-                 strcpy(temp_user.real_name, clientA_name);
-                 insert(&user_list, &temp_user);
+                 User *temp_user = (User *)malloc(sizeof(User));
+                 temp_user->next = NULL;
+                 strcpy(temp_user->username, clientA_usrID);
+                 strcpy(temp_user->real_name, clientA_name);
+                 insert(&user_list, temp_user);
                //}
             }
             
@@ -162,10 +163,10 @@ int main(int argc, char **argv)
                //{
                   strcpy(clientB_name, pck2.buf);
                   printf("Name is: %s\n", clientB_name);
-                  User temp2;  
-                  strcpy(temp2.username, clientB_usrID);
-                  strcpy(temp2.real_name, clientB_name);
-                  insert(&user_list, &temp2);
+                  User *temp2 = (User *)malloc(sizeof(User));  
+                  strcpy(temp2->username, clientB_usrID);
+                  strcpy(temp2->real_name, clientB_name);
+                  insert(&user_list, temp2);
                //}
             }
             
