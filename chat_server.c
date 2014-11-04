@@ -23,7 +23,7 @@
 #include <sys/wait.h>
 #include <netdb.h>
 #include <pthread.h>
-
+#include "linked_list.h"
 #define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
 
@@ -91,7 +91,9 @@ int main(int argc, char **argv)
    
    // Packet
    packet pck;
-   
+   packet pck2; 
+   User *user_list = NULL;
+  
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
    
@@ -124,14 +126,18 @@ int main(int argc, char **argv)
                //{
                   strcpy(clientA_name, pck.buf);
                   printf("Name is: %s\n", clientA_name);
-                  // ADD TO LIST
+                  
+                 User temp_user;
+                 strcpy(temp_user.username, clientA_usrID);
+                 strcpy(temp_user.real_name, clientA_name);
+                 printf("Going to insert user\n");
+                 insert(&user_list, &temp_user);
                //}
             }
             
             // Login
             //if(username valid)
             //{
-               //FIND IN LIST
                
             //}
          //}
@@ -144,19 +150,23 @@ int main(int argc, char **argv)
          //while(!valid login)
          //{
             // Receive command and username
-            recv(clientB_sock_fd, &pck, sizeof(pck), 0);
-            strcpy(clientB_usrID, pck.buf);
-            printf("User ID is: %s", clientB_usrID);
-             
+            recv(clientB_sock_fd, &pck2, sizeof(pck2), 0);
+            strcpy(clientB_usrID, pck2.buf);
+
+            printf("User ID is: %s\n", clientB_usrID);
+ 
             // Register
-            if(pck.options == 0)
+            if(pck2.options == 0)
             {
-               recv(clientB_sock_fd, &pck, sizeof(pck), 0);
+               recv(clientB_sock_fd, &pck2, sizeof(pck), 0);
                //if(usrname valid)
                //{
-                  strcpy(clientB_name, pck.buf);
-                  printf("Name is: %s", clientB_name);
-                  // ADD TO LIST
+                  strcpy(clientB_name, pck2.buf);
+                  printf("Name is: %s\n", clientB_name);
+                  User temp2;  
+                  strcpy(temp2.username, clientB_usrID);
+                  strcpy(temp2.real_name, clientB_name);
+                  insert(&user_list, &temp2);
                //}
             }
             
