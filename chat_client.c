@@ -107,7 +107,6 @@ int main(int argc, char **argv)
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 1;
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-         loop_control = 0;
       }
 
       else if(selection == 0)
@@ -133,12 +132,19 @@ int main(int argc, char **argv)
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
 
 
-         loop_control = 0;
       }
 
       else
       {
          printf("Invalid input. Please try again\n");
+      }
+     
+      recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+      if(strcmp(tx_pkt.buf, "ERROR") == 0) printf("Invalid username. Please try again.\n");
+      else 
+      {
+          printf("Your name is: %s\n", tx_pkt.buf);
+          loop_control = 0; 
       }
    }
      

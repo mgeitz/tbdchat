@@ -53,11 +53,12 @@ int main(int argc, char **argv)
    while(1)
    {
       //Accept client connections
+      int A_loop = 1;
       clientA_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientA_sock_fd != -1)
       {
-         //while(!valid login)
-         //{
+         while(A_loop)
+         {
             // Receive command and username
             recv(clientA_sock_fd, &pck, sizeof(pck), 0);
             strcpy(clientA_usrID, pck.buf);
@@ -81,19 +82,20 @@ int main(int argc, char **argv)
             }
             
             // Login
-            //if(username valid)
-            //{
-                  strcpy(clientA_name, get_real_name(&user_list, &clientA_usrID));
-            //}
-         //}
+            strcpy(clientA_name, get_real_name(&user_list, &clientA_usrID));
+            if(strcmp(clientA_name, "ERROR") != 0) A_loop = 0;
+            strcpy(pck.buf, clientA_name);
+            send(clientA_sock_fd, &pck, sizeof(pck), 0);
+         }
          printf("%s connected as Client A at socket_fd %d\n", clientA_name, clientA_sock_fd);
       }
       
       clientB_sock_fd = accept_client(chat_serv_sock_fd);
+      int B_loop = 1;
       if(clientB_sock_fd != -1)
       {
-         //while(!valid login)
-         //{
+         while(B_loop)
+         {
             // Receive command and username
             recv(clientB_sock_fd, &pck2, sizeof(pck2), 0);
             strcpy(clientB_usrID, pck2.buf);
@@ -116,12 +118,12 @@ int main(int argc, char **argv)
             }
             
             // Login
-            //if(username valid)
-            //{
-                 strcpy(clientB_name, get_real_name(&user_list, &clientB_usrID));
+            strcpy(clientB_name, get_real_name(&user_list, &clientB_usrID));
+            if(strcmp(clientB_name, "ERROR") != 0) B_loop = 0;
+            strcpy(pck.buf, clientB_name);
+            send(clientB_sock_fd, &pck, sizeof(pck), 0);
                
-            //}
-         //}
+         }
          printf("%s connected as Client B at socket_fd %d\n", clientB_name, clientB_sock_fd);
       }
       
