@@ -130,7 +130,6 @@ int main(int argc, char **argv)
                  User temp_user;
                  strcpy(temp_user.username, clientA_usrID);
                  strcpy(temp_user.real_name, clientA_name);
-                 printf("Going to insert user\n");
                  insert(&user_list, &temp_user);
                //}
             }
@@ -138,10 +137,10 @@ int main(int argc, char **argv)
             // Login
             //if(username valid)
             //{
-               
+                  strcpy(clientA_name, get_real_name(&user_list, &clientA_usrID));
             //}
          //}
-         printf("%s connected as Client A at socket_fd %d\n", clientA_usrID, clientA_sock_fd);
+         printf("%s connected as Client A at socket_fd %d\n", clientA_name, clientA_sock_fd);
       }
       
       clientB_sock_fd = accept_client(chat_serv_sock_fd);
@@ -173,14 +172,14 @@ int main(int argc, char **argv)
             // Login
             //if(username valid)
             //{
-               //FIND IN LIST
+                 strcpy(clientB_name, get_real_name(&user_list, &clientB_usrID));
                
             //}
          //}
-         printf("%s connected as Client B at socket_fd %d\n", clientB_usrID, clientB_sock_fd);
+         printf("%s connected as Client B at socket_fd %d\n", clientB_name, clientB_sock_fd);
       }
       
-      start_subserver(clientA_sock_fd, clientB_sock_fd, &clientA_usrID, &clientB_usrID); 
+      start_subserver(clientA_sock_fd, clientB_sock_fd, &clientA_name, &clientB_name); 
    
    }
    

@@ -13,7 +13,6 @@ void insert(User **head, User *new_user)
 
    while(temp->next != NULL) 
    {
-       printf("%s\n", temp->username);
        temp = temp->next;
    }
    temp->next = new_user;
