@@ -34,9 +34,6 @@ int main(int argc, char **argv)
    char clientA_name[32];
    char clientB_name[32];
    
-   // Packet
-   packet pck;
-   packet pck2; 
    User *user_list = NULL;
   
    // Open server socket
@@ -53,77 +50,17 @@ int main(int argc, char **argv)
    while(1)
    {
       //Accept client connections
-      int A_loop = 1;
       clientA_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientA_sock_fd != -1)
       {
-         while(A_loop)
-         {
-            // Receive command and username
-            recv(clientA_sock_fd, &pck, sizeof(pck), 0);
-            strcpy(clientA_usrID, pck.buf);
-            printf("User ID is: %s\n", clientA_usrID);
-            
-            // Register
-            if(pck.options == 0)
-            {
-               recv(clientA_sock_fd, &pck, sizeof(pck), 0);
-               //if(usrname valid)
-               //{
-                  strcpy(clientA_name, pck.buf);
-                  printf("Name is: %s\n", clientA_name);
-                  
-                 User *temp_user = (User *)malloc(sizeof(User));
-                 temp_user->next = NULL;
-                 strcpy(temp_user->username, clientA_usrID);
-                 strcpy(temp_user->real_name, clientA_name);
-                 insert(&user_list, temp_user);
-               //}
-            }
-            
-            // Login
-            strcpy(clientA_name, get_real_name(&user_list, &clientA_usrID));
-            if(strcmp(clientA_name, "ERROR") != 0) A_loop = 0;
-            strcpy(pck.buf, clientA_name);
-            send(clientA_sock_fd, &pck, sizeof(pck), 0);
-         }
+         establish_identity(clientA_sock_fd, &clientA_usrID, &clientA_name, &user_list);
          printf("%s connected as Client A at socket_fd %d\n", clientA_name, clientA_sock_fd);
       }
       
       clientB_sock_fd = accept_client(chat_serv_sock_fd);
-      int B_loop = 1;
       if(clientB_sock_fd != -1)
       {
-         while(B_loop)
-         {
-            // Receive command and username
-            recv(clientB_sock_fd, &pck2, sizeof(pck2), 0);
-            strcpy(clientB_usrID, pck2.buf);
-
-            printf("User ID is: %s\n", clientB_usrID);
- 
-            // Register
-            if(pck2.options == 0)
-            {
-               recv(clientB_sock_fd, &pck2, sizeof(pck), 0);
-               //if(usrname valid)
-               //{
-                  strcpy(clientB_name, pck2.buf);
-                  printf("Name is: %s\n", clientB_name);
-                  User *temp2 = (User *)malloc(sizeof(User));  
-                  strcpy(temp2->username, clientB_usrID);
-                  strcpy(temp2->real_name, clientB_name);
-                  insert(&user_list, temp2);
-               //}
-            }
-            
-            // Login
-            strcpy(clientB_name, get_real_name(&user_list, &clientB_usrID));
-            if(strcmp(clientB_name, "ERROR") != 0) B_loop = 0;
-            strcpy(pck.buf, clientB_name);
-            send(clientB_sock_fd, &pck, sizeof(pck), 0);
-               
-         }
+         establish_identity(clientB_sock_fd, &clientB_usrID, &clientB_name, &user_list);
          printf("%s connected as Client B at socket_fd %d\n", clientB_name, clientB_sock_fd);
       }
       
@@ -378,3 +315,39 @@ void sigintHandler(int sig_num)
    close(chat_serv_sock_fd);
    exit(0);
 }
+
+void establish_identity(int fd, char *ID, char *name, User **user_list) {
+   packet pck;
+   int loop = 1;
+   while(loop)
+   {
+      // Receive command and username
+      recv(fd, &pck, sizeof(pck), 0);
+      strcpy(ID, pck.buf);
+      printf("User ID is: %s\n", ID);
+
+      // Register
+      if(pck.options == 0)
+      {
+         recv(fd, &pck, sizeof(pck), 0);
+         printf("received real name\n");
+         //if(usrname valid)
+         //{
+            strcpy(name, pck.buf);
+            printf("Name is: %s\n", name);
+
+            User *temp_user = (User *)malloc(sizeof(User));
+            temp_user->next = NULL;
+            strcpy(temp_user->username, ID);
+            strcpy(temp_user->real_name, name);
+            insert(user_list, temp_user);
+         //}
+      }
+
+      // Login
+      strcpy(name, get_real_name(user_list, ID));
+      if(strcmp(name, "ERROR") != 0) loop = 0;
+      strcpy(pck.buf, name);
+      send(fd, &pck, sizeof(pck), 0);
+   }
+}   
