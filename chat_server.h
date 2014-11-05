@@ -54,4 +54,4 @@ void *subserver(void *ptr);
 void end(session *ptr);
 void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);
 void sigintHandler(int sig_num);
-
+void establish_identity(int fd, char *ID, char *name, User **user_list);
