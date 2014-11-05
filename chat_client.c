@@ -49,6 +49,7 @@ void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
+void userInput(int conn);
 
 // Declare exit_flag as global volatile int
 int exit_flag = 1;
@@ -57,7 +58,6 @@ int main(int argc, char **argv)
 {
    pthread_t chat_rx_thread;         // Chat RX thread
    int conn;                         // Connection fd
-   int i;                            // Counter
    char fname[32];                    // User alias
    char lname[32];
    int selection;		     // User selection on startup
@@ -161,12 +161,39 @@ int main(int argc, char **argv)
       exit_flag = 0;
    }
    
+    // Primary execution loop
+    userInput(conn);
+
+   // Send EXIT message (ensure clean exit on CRTL+C)
+   //strcpy(tx_pkt.alias, name);
+   tx_pkt.timestamp = time(NULL);
+   strcpy(tx_pkt.buf, "EXIT\0");
+   send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+   
+   // Close connection
+   if(pthread_join(chat_rx_thread, NULL))
+   {
+      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
+      printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+   }
+   printf("Exiting.\n");
+   close(conn);
+   exit(0);
+}
+
+
+/* Primary execution loop */
+void userInput(int conn) {
+    int i;
+   // Initiliaze memory space for send packet
+   packet tx_pkt;
+
    // Primary execution loop
    while(exit_flag)
    {
       // Add alias to send packet
       //strcpy(tx_pkt.alias, name);
-      
+
       // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
       i = 0;
       tx_pkt.buf[i] = getc(stdin);
@@ -189,7 +216,7 @@ int main(int argc, char **argv)
       {
          tx_pkt.buf[i] = '\0';
       }
-      
+
       // Transmit packet if input buffer is not empty
       if(i > 0 && tx_pkt.buf[i] != EOF)
       {
@@ -197,34 +224,18 @@ int main(int argc, char **argv)
          tx_pkt.timestamp = time(NULL);
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
       }
-      
+
       //Handle 'EXIT' message
-      if(strcmp("EXIT", &(tx_pkt.buf)) == 0)
+      if(strcmp("EXIT", (void *)&(tx_pkt.buf)) == 0)
       {
          exit_flag = 0;
       }
-      
+
       // Wipe packet buffer clean
       memset(&tx_pkt, 0, sizeof(packet));
    }
-   
-   // Send EXIT message (ensure clean exit on CRTL+C)
-   //strcpy(tx_pkt.alias, name);
-   tx_pkt.timestamp = time(NULL);
-   strcpy(tx_pkt.buf, "EXIT\0");
-   send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-   
-   // Close connection
-   if(pthread_join(chat_rx_thread, NULL))
-   {
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
-      printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
-   }
-   printf("Exiting.\n");
-   close(conn);
-   exit(0);
-}
 
+}
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num)
@@ -254,7 +265,7 @@ void *chatRX(void *ptr)
       received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
       
       //Handle 'EXIT' message
-      if(strcmp("EXIT", &(rx_pkt.buf)) == 0)
+      if(strcmp("EXIT", (void *)&(rx_pkt.buf)) == 0)
       {
           printf("Other user disconnected.\n");
           close(*conn);
