@@ -28,6 +28,7 @@
 struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
+   char alias[50];
    int options;
 };
 // Declare structure type
@@ -38,4 +39,4 @@ void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
-void userInput(int conn);
+void userInput(int conn, char *name);

@@ -294,7 +294,7 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
    {
       // Receive command and username
       recv(fd, &pck, sizeof(pck), 0);
-      
+      printf("%d\n", pck.options);
       // Register
       if(pck.options == 0)
       {

@@ -19,6 +19,7 @@ int main(int argc, char **argv)
    int conn;                         // Connection fd
    char fname[32];                    // User alias
    char lname[32];
+   char full_name[50];
    int selection;		     // User selection on startup
    int loop_control = 1;
    
@@ -69,6 +70,7 @@ int main(int argc, char **argv)
          strcpy(tx_pkt.buf, fname);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 1;
+         printf("%d\n", tx_pkt.options);
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
          recv(conn, (void *)&tx_pkt, sizeof(packet),0);
          if(strcmp(tx_pkt.buf, "ERROR") == 0)
@@ -78,6 +80,7 @@ int main(int argc, char **argv)
          else
          {
             printf("Your name is: %s\n", tx_pkt.buf);
+            strcpy(full_name, tx_pkt.buf);
             loop_control = 0;
          }
       }
@@ -91,6 +94,7 @@ int main(int argc, char **argv)
          strcpy(tx_pkt.buf, fname);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 0;
+         printf("%d\n", tx_pkt.options);
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
          
          recv(conn, (void *)&tx_pkt, sizeof(packet),0);
@@ -130,7 +134,7 @@ int main(int argc, char **argv)
    }
    
    // Primary execution loop
-   userInput(conn);
+   userInput(conn, &full_name);
    
    // Send EXIT message (ensure clean exit on CRTL+C)
    //strcpy(tx_pkt.alias, name);
@@ -151,7 +155,7 @@ int main(int argc, char **argv)
 
 
 /* Primary execution loop */
-void userInput(int conn) {
+void userInput(int conn, char *name) {
     int i;
    // Initiliaze memory space for send packet
    packet tx_pkt;
@@ -160,7 +164,7 @@ void userInput(int conn) {
    while(exit_flag)
    {
       // Add alias to send packet
-      //strcpy(tx_pkt.alias, name);
+      strcpy(tx_pkt.alias, name);
       
       // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
       i = 0;
@@ -245,9 +249,7 @@ void *chatRX(void *ptr)
          // Format timestamp
          timestamp = asctime(localtime(&(rx_pkt.timestamp)));
          timestamp[strlen(timestamp) - 1] = '\0';
-         //printf("\a\x1b[31m\e[1m%s\x1b[0m | %s\e[0m: %s\n", timestamp,
-         //       rx_pkt.alias, rx_pkt.buf);
-         printf("\a%s%s [%s]:%s %s\n", RED, timestamp, partner_name,
+         printf("\a%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
                  NORMAL, rx_pkt.buf);
          memset(&rx_pkt, 0, sizeof(packet));
       }

@@ -20,6 +20,7 @@ struct Packet
 {
    time_t timestamp;
    char buf[BUFFERSIZE];
+   char alias[50];
    int options;
 };
 typedef struct Packet packet;
@@ -47,8 +48,7 @@ typedef struct chatSession session;
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
-void *clientA_thread(void *ptr);
-void *clientB_thread(void *ptr);
+void *client_thread(void *ptr);
 void *subserver(void *ptr);
 void end(session *ptr);
 void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);
