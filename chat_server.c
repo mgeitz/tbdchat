@@ -301,8 +301,9 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
          User *temp_user = (User *)malloc(sizeof(User));
          temp_user->next = NULL;
          strcpy(temp_user->username, pck.buf);
-         
-         if(strcmp(get_real_name(user_list, temp_user->username), "ERROR") == 1)
+         printf("%s %s", get_real_name(user_list, temp_user->username), 
+temp_user->username);
+         if(strcmp(get_real_name(user_list, temp_user->username), "ERROR") != 0)
          {
             printf("%sERROR - %sUsername %s is already taken", RED, NORMAL,
                    temp_user->username);
