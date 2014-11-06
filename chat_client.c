@@ -59,7 +59,7 @@ int main(int argc, char **argv)
    {  
       //Register or log in
       printf("Enter 0 to register or 1 to login: ");
-      scanf("%d", &selection);
+     scanf("%d", &selection); 
       
       if(selection == 1)
       {
@@ -121,6 +121,7 @@ int main(int argc, char **argv)
       else
       {
          printf("Invalid input. Please try again\n");
+         memset(&selection, 0, sizeof(selection));
       }
    }
      
@@ -134,7 +135,7 @@ int main(int argc, char **argv)
    }
    
    // Primary execution loop
-   userInput(conn, &full_name);
+   userInput(conn, (void *)&full_name);
    
    // Send EXIT message (ensure clean exit on CRTL+C)
    //strcpy(tx_pkt.alias, name);
