@@ -20,6 +20,7 @@ int main(int argc, char **argv)
    char fname[32];                    // User alias
    char lname[32];
    char full_name[50];
+   char username[32];
    int selection;		     // User selection on startup
    int loop_control = 1;
    
@@ -64,10 +65,10 @@ int main(int argc, char **argv)
       if(selection == 1)
       {
          printf("Enter your username: ");
-         scanf("%32s", fname); 
-         printf("Your username is: %s\n", fname);
+         scanf("%32s", username); 
+         printf("Your username is: %s\n", username);
          
-         strcpy(tx_pkt.buf, fname);
+         strcpy(tx_pkt.buf, username);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 1;
          printf("%d\n", tx_pkt.options);
@@ -88,10 +89,10 @@ int main(int argc, char **argv)
       else if(selection == 0)
       {
          printf("Enter your desired username: ");
-         scanf("%32s", fname);
-         printf("Your username is: %s\n", fname);
+         scanf("%32s", username);
+         printf("Your username is: %s\n", username);
          
-         strcpy(tx_pkt.buf, fname);
+         strcpy(tx_pkt.buf, username);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 0;
          printf("%d\n", tx_pkt.options);
@@ -135,7 +136,7 @@ int main(int argc, char **argv)
    }
    
    // Primary execution loop
-   userInput(conn, (void *)&full_name);
+   userInput(conn, username);
    
    // Send EXIT message (ensure clean exit on CRTL+C)
    //strcpy(tx_pkt.alias, name);
@@ -156,7 +157,7 @@ int main(int argc, char **argv)
 
 
 /* Primary execution loop */
-void userInput(int conn, char *name) {
+void userInput(int conn, char *username) {
     int i;
    // Initiliaze memory space for send packet
    packet tx_pkt;
@@ -165,7 +166,7 @@ void userInput(int conn, char *name) {
    while(exit_flag)
    {
       // Add alias to send packet
-      strcpy(tx_pkt.alias, name);
+      strcpy(tx_pkt.alias, username);
       
       // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
       i = 0;
@@ -250,7 +251,7 @@ void *chatRX(void *ptr)
          // Format timestamp
          timestamp = asctime(localtime(&(rx_pkt.timestamp)));
          timestamp[strlen(timestamp) - 1] = '\0';
-         printf("\a%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
+         printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
                  NORMAL, rx_pkt.buf);
          memset(&rx_pkt, 0, sizeof(packet));
       }
