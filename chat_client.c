@@ -62,14 +62,14 @@ int main(int argc, char **argv)
    char lname[32];
    int selection;		     // User selection on startup
    int loop_control = 1;
- 
+   
    // Confirm valid program usage
    if (argc < 3)
    {
       //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n",
       //       argv[0]);
-
-
+      
+      
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n",
              RED, argv[0], NORMAL);
       exit(0);
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
    
    // Initiliaze memory space for send packet
    packet tx_pkt;
- 
+   
    // Assign name as *nix username, maybe add ability to assign alias
    //strcpy(name, getlogin());
    
@@ -92,27 +92,37 @@ int main(int argc, char **argv)
       printf("%s --- Error:%s Connection failure.\n", RED, NORMAL);
       exit_flag = 0;
    }
-
+   
    printf("Connected.\n");
- 
+   
    while(loop_control) 
    {  
       //Register or log in
       printf("Enter 0 to register or 1 to login: ");
       scanf("%d", &selection);
-   
+      
       if(selection == 1)
       {
          printf("Enter your username: ");
          scanf("%32s", fname); 
          printf("Your username is: %s\n", fname);
-
+         
          strcpy(tx_pkt.buf, fname);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 1;
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+         recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+         if(strcmp(tx_pkt.buf, "ERROR") == 0)
+         {
+            printf("Invalid username. Please try again.\n");
+         }
+         else
+         {
+            printf("Your name is: %s\n", tx_pkt.buf);
+            loop_control = 0;
+         }
       }
-
+      
       else if(selection == 0)
       {
          printf("Enter your desired username: ");
@@ -123,32 +133,31 @@ int main(int argc, char **argv)
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 0;
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-
-         printf("Enter your first name: ");
-         scanf("%32s", fname);
-         printf("Enter your last name: ");
-         scanf("%32s", lname);
-
-         strcpy(tx_pkt.buf, fname);
-         strcat(tx_pkt.buf, " ");
-         strcat(tx_pkt.buf, lname); 
-         printf("your name is: %s\n", tx_pkt.buf);
-         send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-
-
+         
+         recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+         if(strcmp(tx_pkt.buf, "ERROR") == 0)
+         {
+            printf("%sERROR - %sUsername %s is already taken\n", RED, NORMAL, fname);
+         }
+         else
+         {
+            printf("Enter your first name: ");
+            scanf("%32s", fname);
+            printf("Enter your last name: ");
+            scanf("%32s", lname);
+            
+            strcpy(tx_pkt.buf, fname);
+            strcat(tx_pkt.buf, " ");
+            strcat(tx_pkt.buf, lname); 
+            printf("Your name is: %s\n", tx_pkt.buf);
+            send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+            loop_control = 0;
+         }
       }
-
+      
       else
       {
          printf("Invalid input. Please try again\n");
-      }
-     
-      recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-      if(strcmp(tx_pkt.buf, "ERROR") == 0) printf("Invalid username. Please try again.\n");
-      else 
-      {
-          printf("Your name is: %s\n", tx_pkt.buf);
-          loop_control = 0; 
       }
    }
      
@@ -161,9 +170,9 @@ int main(int argc, char **argv)
       exit_flag = 0;
    }
    
-    // Primary execution loop
-    userInput(conn);
-
+   // Primary execution loop
+   userInput(conn);
+   
    // Send EXIT message (ensure clean exit on CRTL+C)
    //strcpy(tx_pkt.alias, name);
    tx_pkt.timestamp = time(NULL);
@@ -187,13 +196,13 @@ void userInput(int conn) {
     int i;
    // Initiliaze memory space for send packet
    packet tx_pkt;
-
+   
    // Primary execution loop
    while(exit_flag)
    {
       // Add alias to send packet
       //strcpy(tx_pkt.alias, name);
-
+      
       // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
       i = 0;
       tx_pkt.buf[i] = getc(stdin);
@@ -216,7 +225,7 @@ void userInput(int conn) {
       {
          tx_pkt.buf[i] = '\0';
       }
-
+      
       // Transmit packet if input buffer is not empty
       if(i > 0 && tx_pkt.buf[i] != EOF)
       {
@@ -224,17 +233,16 @@ void userInput(int conn) {
          tx_pkt.timestamp = time(NULL);
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
       }
-
+      
       //Handle 'EXIT' message
       if(strcmp("EXIT", (void *)&(tx_pkt.buf)) == 0)
       {
          exit_flag = 0;
       }
-
+      
       // Wipe packet buffer clean
       memset(&tx_pkt, 0, sizeof(packet));
    }
-
 }
 
 /* Handle SIGINT (CTRL+C) */
@@ -254,11 +262,11 @@ void *chatRX(void *ptr)
    int *conn = (int *)ptr;
    char *timestamp;
    char partner_name[32];
- 
+   
    recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
    strcpy(partner_name, rx_pkt.buf);
    printf("Conversation started with %s.\n", partner_name);
-
+   
    while(exit_flag)
    {
       // Wait for message to arrive..

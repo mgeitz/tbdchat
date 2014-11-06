@@ -35,7 +35,7 @@ int main(int argc, char **argv)
    char clientB_name[32];
    
    User *user_list = NULL;
-  
+   
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
    
@@ -162,7 +162,7 @@ void *client_thread(void *ptr)
    char *timestamp;
    int received;
    int client = current_session->this_client;
-
+   
    strcpy(client_message.buf, current_session->aliases[client]);
    send(current_session->clients[1-client], (void *)&client_message, 
         sizeof(packet), 0); 
@@ -177,7 +177,7 @@ void *client_thread(void *ptr)
          current_session->running = 0;
          break;
       }
-
+      
       client_message.options = 0;
       //Format timestamp and remove \n
       timestamp = asctime(localtime(&(client_message.timestamp)));
@@ -267,7 +267,7 @@ void *subserver(void *ptr)
    strcpy(B_ptr->aliases[0], A_ptr->aliases[0]);
    strcpy(B_ptr->aliases[1], A_ptr->aliases[1]);
    B_ptr->running = A_ptr->running;
-
+   
    int iret1, iret2;
    
    iret1 = pthread_create(&client_A_thread, NULL, client_thread, (void *)A_ptr);
@@ -294,31 +294,47 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
    {
       // Receive command and username
       recv(fd, &pck, sizeof(pck), 0);
-      strcpy(ID, pck.buf);
-      printf("User ID is: %s\n", ID);
-
+      
       // Register
       if(pck.options == 0)
       {
-         recv(fd, &pck, sizeof(pck), 0);
-         printf("received real name\n");
-         //if(usrname valid)
-         //{
+         User *temp_user = (User *)malloc(sizeof(User));
+         temp_user->next = NULL;
+         strcpy(temp_user->username, pck.buf);
+         
+         if(strcmp(get_real_name(user_list, temp_user->username), "ERROR") == 1)
+         {
+            printf("%sERROR - %sUsername %s is already taken", RED, NORMAL,
+                   temp_user->username);
+            strcpy(pck.buf, "ERROR");
+            send(fd, &pck, sizeof(pck), 0);
+         }
+         else
+         {
+            send(fd, &pck, sizeof(pck), 0);
+            recv(fd, &pck, sizeof(pck), 0);
+            strcpy(temp_user->real_name, pck.buf);
+            strcpy(ID, temp_user->username);
+            insert(user_list, temp_user);
+            printf("User ID is: %s\n", ID);
             strcpy(name, pck.buf);
             printf("Name is: %s\n", name);
-
-            User *temp_user = (User *)malloc(sizeof(User));
-            temp_user->next = NULL;
-            strcpy(temp_user->username, ID);
-            strcpy(temp_user->real_name, name);
-            insert(user_list, temp_user);
-         //}
+            loop = 0;
+         }
       }
-
       // Login
-      strcpy(name, get_real_name(user_list, ID));
-      if(strcmp(name, "ERROR") != 0) loop = 0;
-      strcpy(pck.buf, name);
-      send(fd, &pck, sizeof(pck), 0);
+      else if(pck.options == 1)
+      {
+         strcpy(ID, pck.buf);
+         printf("User ID is: %s\n", ID);
+         strcpy(name, get_real_name(user_list, ID));
+         if(strcmp(name, "ERROR") != 0) loop = 0;
+         strcpy(pck.buf, name);
+         send(fd, &pck, sizeof(pck), 0);
+      }
+      else
+      {
+         printf("%sERROR - %sInvalid input received", RED, NORMAL);         
+      }
    }
-}   
+}
