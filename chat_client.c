@@ -44,6 +44,12 @@ struct Packet {
 // Declare structure type
 typedef struct Packet packet;
 
+struct session {
+     int serv_fd;
+     char user_name[32]
+};
+typedef struct session Session;
+
 // Function prototypes
 void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
@@ -62,7 +68,8 @@ int main(int argc, char **argv)
    char lname[32];
    int selection;		     // User selection on startup
    int loop_control = 1;
- 
+   Session s;
+
    // Confirm valid program usage
    if (argc < 3)
    {
@@ -81,14 +88,11 @@ int main(int argc, char **argv)
    // Initiliaze memory space for send packet
    packet tx_pkt;
  
-   // Assign name as *nix username, maybe add ability to assign alias
-   //strcpy(name, getlogin());
    
    // Establish connection with server1
    if((conn = get_server_connection(argv[1], argv[2])) == -1)
    {
       // If connection fails, exit
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
       printf("%s --- Error:%s Connection failure.\n", RED, NORMAL);
       exit_flag = 0;
    }
@@ -147,16 +151,17 @@ int main(int argc, char **argv)
       if(strcmp(tx_pkt.buf, "ERROR") == 0) printf("Invalid username. Please try again.\n");
       else 
       {
+          strcpy(s.user_name, tx_pkt.buf);
+          s.serv_fd = conn;
           printf("Your name is: %s\n", tx_pkt.buf);
           loop_control = 0; 
       }
    }
      
    // Start chat rx thread
-   if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn))
+   if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&s))
    {
       // If thread creation fails, exit
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not created.\n");
       printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
       exit_flag = 0;
    }
@@ -209,7 +214,6 @@ int main(int argc, char **argv)
    }
    
    // Send EXIT message (ensure clean exit on CRTL+C)
-   //strcpy(tx_pkt.alias, name);
    tx_pkt.timestamp = time(NULL);
    strcpy(tx_pkt.buf, "EXIT\0");
    send(conn, (void *)&tx_pkt, sizeof(packet), 0);
@@ -217,7 +221,6 @@ int main(int argc, char **argv)
    // Close connection
    if(pthread_join(chat_rx_thread, NULL))
    {
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
       printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
    }
    printf("Exiting.\n");
@@ -238,26 +241,29 @@ void sigintHandler(int sig_num)
 /* Print messages as they are received */
 void *chatRX(void *ptr)
 {
+   Session *sess  = (Session *)ptr;
    packet rx_pkt;
    int received;
-   int *conn = (int *)ptr;
+   int conn = sess->serv_fd;
    char *timestamp;
    char partner_name[32];
- 
-   recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
+   char my_name[32];
+
+   strcpy(my_name, sess->user_name);
+   recv(conn, (void *)&rx_pkt, sizeof(packet), 0);
    strcpy(partner_name, rx_pkt.buf);
    printf("Conversation started with %s.\n", partner_name);
 
    while(exit_flag)
    {
       // Wait for message to arrive..
-      received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
+      received = recv(conn, (void *)&rx_pkt, sizeof(packet), 0);
       
       //Handle 'EXIT' message
       if(strcmp("EXIT", &(rx_pkt.buf)) == 0)
       {
           printf("Other user disconnected.\n");
-          close(*conn);
+          close(conn);
           exit(0);
       }
       
@@ -267,10 +273,18 @@ void *chatRX(void *ptr)
          // Format timestamp
          timestamp = asctime(localtime(&(rx_pkt.timestamp)));
          timestamp[strlen(timestamp) - 1] = '\0';
-         //printf("\a\x1b[31m\e[1m%s\x1b[0m | %s\e[0m: %s\n", timestamp,
-         //       rx_pkt.alias, rx_pkt.buf);
-         printf("\a%s%s [%s]:%s %s\n", RED, timestamp, partner_name,
+
+         if(rx_pkt.options == 0)
+         {
+            printf("\a%s%s [%s]:%s %s\n", RED, timestamp, partner_name,
                  NORMAL, rx_pkt.buf);
+         }
+
+         else if(rx_pkt.options == 1)
+         {
+            printf("\a%s%s [%s]:%s %s\n", BLUE, timestamp, my_name,
+                NORMAL, rx_pkt.buf);
+         }
          memset(&rx_pkt, 0, sizeof(packet));
       }
    }

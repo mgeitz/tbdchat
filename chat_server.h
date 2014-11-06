@@ -26,10 +26,9 @@ typedef struct Packet packet;
 
 struct chatSession
 {
-   int clientA_fd;
-   int clientB_fd;
-   char aliasA[32];
-   char aliasB[32];
+   char aliases[2][32];
+   int clients[2];
+   int this_client;
    int running;
 };
 typedef struct chatSession session;

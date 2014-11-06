@@ -155,105 +155,65 @@ int accept_client(int serv_sock)
  *Main thread for client A.  Tracks both incoming 
  *and outgoing messages.
  */
-void *clientA_thread(void *ptr)
+void *client_thread(void *ptr)
 {
    session *current_session = (session *)ptr;
-   packet clientA_message;
+   packet client_message;
    char *timestamp;
    int received;
-   
-   strcpy(clientA_message.buf, current_session->aliasA);
-   send(current_session->clientB_fd, (void *)&clientA_message, 
-                     sizeof(packet), 0); 
+   int client = current_session->this_client;
+
+   strcpy(client_message.buf, current_session->aliases[client]);
+   send(current_session->clients[1-client], (void *)&client_message, 
+        sizeof(packet), 0); 
    
    while(current_session->running)
    {
       //Send client A message to client B
-      received = recv(current_session->clientA_fd, (void *)&clientA_message,
+      received = recv(current_session->clients[client], (void *)&client_message,
                              sizeof(packet), 0);
-      
+      if(received <= 0)
+      {
+         current_session->running = 0;
+         break;
+      }
+
+      client_message.options = 0;
       //Format timestamp and remove \n
-      timestamp = asctime(localtime(&(clientA_message.timestamp)));
+      timestamp = asctime(localtime(&(client_message.timestamp)));
       timestamp[strlen(timestamp) -1] = '\0';
-      
+     
       if(current_session->running)
       {
-         printf("%s%s [%s]:%s%s\n", RED, timestamp, current_session->aliasA,
-                NORMAL, clientA_message.buf);
+         printf("%s%s [%s]:%s%s\n", RED, timestamp, current_session->aliases[client],
+                NORMAL, client_message.buf);
       }
       
       //Handle "EXIT" message
-      if(strcmp(clientA_message.buf, "EXIT") == 0)
+      if(strcmp(client_message.buf, "EXIT") == 0)
       {
-         send(current_session->clientB_fd, (void *)&clientA_message, sizeof(packet), 0);
-         printf("Session between %d and %d ended.\n", current_session->clientA_fd,
-            current_session->clientB_fd);
+         send(current_session->clients[1-client], (void *)&client_message, sizeof(packet), 0);
+         printf("Session between %d and %d ended.\n", current_session->clients[0],
+            current_session->clients[1]);
          
          current_session->running = 0;
          break;
       }
       
       //Send message to client B
-      else if(send(current_session->clientB_fd, (void *)&clientA_message,
-                     sizeof(packet), 0) != -1)
-      {
-         printf("Client A message sent successfully\n");
-      }
-   }
-
-   end(current_session);
-   return NULL;
-}
-
-/*
- *Main thread for client B. Tracks both incoming and 
- *outgoing messages.
- */
-void *clientB_thread(void *ptr)
-{
-   session *current_session = (session *)ptr;
-   packet clientB_message;
-   char *timestamp;
-   int received; 
-   
-   strcpy(clientB_message.buf, current_session->aliasB);
-   send(current_session->clientA_fd, (void *)&clientB_message,
+      else {
+           send(current_session->clients[0], (void *)&client_message,
                      sizeof(packet), 0);
-   while(current_session->running)
-   {
-      //Send client B message to client A
-      received = recv(current_session->clientB_fd, (void *)&clientB_message,
-                             sizeof(packet), 0);
-      
-      //Format timestamp and remove \n
-      timestamp = asctime(localtime(&(clientB_message.timestamp)));
-      timestamp[strlen(timestamp) -1]  = '\0';
-      
-      if(current_session->running)
-      {
-         printf("%s%s [%s]:%s%s\n", BLUE, timestamp, current_session->aliasB,
-                NORMAL, clientB_message.buf);
-      }
-      
-      if(strcmp(clientB_message.buf, "EXIT") == 0)
-      {
-          send(current_session->clientA_fd, (void *)&clientB_message, sizeof(packet), 0);
-          printf("Session between %d and %d ended.\n", current_session->clientA_fd,
-                 current_session->clientB_fd);
-          
-          current_session->running = 0;
-          break;
-      }
-      else if(send(current_session->clientA_fd, (void *)&clientB_message,
-                     sizeof(packet), 0) != -1)
-      {
-         printf("Client B message sent successfully\n");
+           client_message.options = 1;
+           send(current_session->clients[1], (void *)&client_message,
+                     sizeof(packet), 0);
       }
    }
 
    end(current_session);
    return NULL;
 }
+
 
 /*
  *Used to safely end a chat session.  Closes the sockets
@@ -262,8 +222,8 @@ void *clientB_thread(void *ptr)
  */
 void end(session *ptr)
 {
-   close(ptr->clientA_fd);
-   close(ptr->clientB_fd);
+   close(ptr->clients[0]);
+   close(ptr->clients[1]);
    free(ptr);
 }
 
@@ -275,10 +235,10 @@ void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrI
 {
    //Set up struct to pass to subserver
    session *newSession = (session *)malloc(sizeof(session));
-   newSession->clientA_fd = A_fd;
-   newSession->clientB_fd = B_fd;
-   strcpy(newSession->aliasA, clientA_usrID);
-   strcpy(newSession->aliasB, clientB_usrID);
+   newSession->clients[0] = A_fd;
+   newSession->clients[1] = B_fd;
+   strcpy(newSession->aliases[0], clientA_usrID);
+   strcpy(newSession->aliases[1], clientB_usrID);
    newSession->running = 1;
    
    //Start subserver thread
@@ -297,10 +257,21 @@ void *subserver(void *ptr)
    // Threads
    pthread_t client_A_thread, client_B_thread;
    
+   session *A_ptr = (session *)ptr;
+   session *B_ptr = (session *)malloc(sizeof(session));
+   
+   A_ptr->this_client = 0;
+   B_ptr->this_client = 1;
+   B_ptr->clients[0] = A_ptr->clients[0];
+   B_ptr->clients[1] = A_ptr->clients[1];
+   strcpy(B_ptr->aliases[0], A_ptr->aliases[0]);
+   strcpy(B_ptr->aliases[1], A_ptr->aliases[1]);
+   B_ptr->running = A_ptr->running;
+
    int iret1, iret2;
    
-   iret1 = pthread_create(&client_A_thread, NULL, clientA_thread, ptr);
-   iret2 = pthread_create(&client_B_thread, NULL, clientB_thread, ptr);
+   iret1 = pthread_create(&client_A_thread, NULL, client_thread, (void *)A_ptr);
+   iret2 = pthread_create(&client_B_thread, NULL, client_thread, (void *)B_ptr);
    
    pthread_join(client_A_thread, NULL);
    pthread_join(client_B_thread, NULL);
