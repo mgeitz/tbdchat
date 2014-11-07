@@ -35,6 +35,8 @@ int main(int argc, char **argv)
    char clientB_name[32];
    
    User *user_list = NULL;
+   readUserFile(&user_list, "Users.txt");
+   //printList(&user_list);
    
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
@@ -323,14 +325,20 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
          }
          else
          {
+            // Send valid username message
             send(fd, &pck, sizeof(pck), 0);
+            
+            // Receive and save password
+            recv(fd, &pck, sizeof(pck), 0);
+            strcpy(temp_user->password, pck.buf);
+            
+            // Receive and save name
             recv(fd, &pck, sizeof(pck), 0);
             strcpy(temp_user->real_name, pck.buf);
+            
             strcpy(ID, temp_user->username);
             insert(user_list, temp_user);
-            //printf("User ID is: %s\n", ID);
             strcpy(name, pck.buf);
-            //printf("Name is: %s\n", name);
             printf("Client %d successfully registered with username %s and real name %s\n",
                    fd, ID, name);
             loop = 0;
@@ -340,17 +348,33 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
       else if(pck.options == 1)
       {
          strcpy(ID, pck.buf);
-         //printf("User ID is: %s\n", ID);
+         
+         strcpy(name, get_real_name(user_list, ID));
+         if(strcmp(name, "ERROR") != 0) loop = 0;
+         strcpy(pck.buf, name);
+         send(fd, &pck, sizeof(pck), 0);
+         
+         recv(fd, &pck, sizeof(pck), 0);
+         while(strcmp(pck.buf, get_password(user_list, ID)) != 0)
+         {
+            strcpy(pck.buf, "INVALID");
+            send(fd, &pck, sizeof(pck), 0);
+            recv(fd, &pck, sizeof(pck), 0);
+         }
+         strcpy(pck.buf, "VALID");
+         send(fd, &pck, sizeof(pck), 0);
+         
          strcpy(name, get_real_name(user_list, ID));
          if(strcmp(name, "ERROR") != 0) loop = 0;
          strcpy(pck.buf, name);
          send(fd, &pck, sizeof(pck), 0);
          printf("Client %d successfully logged in as %s\n",fd , ID);
-
       }
       else
       {
          printf("%sERROR - %sInvalid input received", RED, NORMAL);         
       }
    }
+   //printList(user_list);
+   writeUserFile(user_list, "Users.txt");
 }

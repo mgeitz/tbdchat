@@ -21,6 +21,8 @@ int main(int argc, char **argv)
    char lname[32];
    char full_name[50];
    char username[32];
+   char password[32];
+   char temp[32];
    int selection = -1;		     // User selection on startup
    int loop_control = 1;
    
@@ -72,6 +74,8 @@ int main(int argc, char **argv)
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 1;
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+         
+         // Receive [in]valid username message
          recv(conn, (void *)&tx_pkt, sizeof(packet),0);
          if(strcmp(tx_pkt.buf, "ERROR") == 0)
          {
@@ -79,8 +83,29 @@ int main(int argc, char **argv)
          }
          else
          {
-            printf("Your name is: %s\n", tx_pkt.buf);
             strcpy(full_name, tx_pkt.buf);
+            printf("Enter your password: ");
+            scanf("%32s", password);
+            // Insert encrypt password method
+            //encrypt(&password)
+            strcpy(tx_pkt.buf, password);
+            send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+            recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+            while(strcmp(tx_pkt.buf, "VALID") != 0)
+            {
+                printf("Invalid Password\n");
+                printf("Enter your password: ");
+                scanf("%32s", password);
+                // Insert encrypt password method
+                //encrypt(&password)
+                strcpy(tx_pkt.buf, password);
+                send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+                recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+            }
+            
+            recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+            printf("Your name is: %s\n", tx_pkt.buf);
+            //strcpy(full_name, tx_pkt.buf);
             loop_control = 0;
          }
       }
@@ -96,6 +121,7 @@ int main(int argc, char **argv)
          tx_pkt.options = 0;
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
          
+         // Receive [in]valid username
          recv(conn, (void *)&tx_pkt, sizeof(packet),0);
          if(strcmp(tx_pkt.buf, "ERROR") == 0)
          {
@@ -103,6 +129,23 @@ int main(int argc, char **argv)
          }
          else
          {
+            while(strcmp(temp, password) != 0)
+            {
+               //passPtr = getpass("Enter your password");
+               printf("Enter your password: ");
+               scanf("%32s", password);
+               printf("Re-enter your password: ");
+               scanf("%32s", temp);
+               if(strcmp(temp, password) != 0)
+               {
+                  printf("Passwords not identical");
+               }
+            }
+            // Insert encrypt password method
+            //encrypt(&password);
+            strcpy(tx_pkt.buf, password);
+            send(conn, (void *)&tx_pkt, sizeof(packet), 0);
+            
             printf("Enter your first name: ");
             scanf("%32s", fname);
             printf("Enter your last name: ");
@@ -182,6 +225,7 @@ void userInput(int conn, char *username) {
             break;
          }
       }
+      printf("\33[1A\33[J");
       // If EOF is read, exit?
       if(tx_pkt.buf[i] == EOF)
       {
