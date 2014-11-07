@@ -55,18 +55,18 @@ int main(int argc, char **argv)
       clientA_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientA_sock_fd != -1)
       {
-         establish_identity(clientA_sock_fd, &clientA_usrID, &clientA_name, &user_list);
+         establish_identity(clientA_sock_fd, (void *)&clientA_usrID, (void *)&clientA_name, &user_list);
          printf("%s connected as Client A at socket_fd %d\n", clientA_name, clientA_sock_fd);
       }
       
       clientB_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientB_sock_fd != -1)
       {
-         establish_identity(clientB_sock_fd, &clientB_usrID, &clientB_name, &user_list);
+         establish_identity(clientB_sock_fd, (void *)&clientB_usrID, (void *)&clientB_name, &user_list);
          printf("%s connected as Client B at socket_fd %d\n", clientB_name, clientB_sock_fd);
       }
       
-      start_subserver(clientA_sock_fd, clientB_sock_fd, &clientA_name, &clientB_name); 
+      start_subserver(clientA_sock_fd, clientB_sock_fd, (void *)&clientA_name, (void *)&clientB_name); 
    
    }
    
