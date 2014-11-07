@@ -29,10 +29,6 @@ int main(int argc, char **argv)
    // Confirm valid program usage
    if (argc < 3)
    {
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Usage: %s IP_ADDRESS PORT.\n",
-      //       argv[0]);
-      
-      
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n",
              RED, argv[0], NORMAL);
       exit(0);
@@ -44,16 +40,14 @@ int main(int argc, char **argv)
    // Initiliaze memory space for send packet
    packet tx_pkt;
    
-   // Assign name as *nix username, maybe add ability to assign alias
-   //strcpy(name, getlogin());
    
    // Establish connection with server1
    if((conn = get_server_connection(argv[1], argv[2])) == -1)
    {
       // If connection fails, exit
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Connection failure.\n");
-      printf("%s --- Error:%s Connection failure.\n", RED, NORMAL);
+      printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
       exit_flag = 0;
+      exit(1);
    }
    
    printf("Connected.\n");
@@ -64,6 +58,7 @@ int main(int argc, char **argv)
       printf("Enter 0 to register or 1 to login: ");
       scanf("%d", &selection); 
       
+      //Login
       if(selection == 1)
       {
          printf("Enter your username: ");
@@ -110,6 +105,7 @@ int main(int argc, char **argv)
          }
       }
       
+      //Register new user
       else if(selection == 0)
       {
          printf("Enter your desired username: ");
@@ -138,7 +134,7 @@ int main(int argc, char **argv)
                scanf("%32s", temp);
                if(strcmp(temp, password) != 0)
                {
-                  printf("Passwords not identical");
+                  printf("Passwords not identical\n");
                }
             }
             // Insert encrypt password method
@@ -166,6 +162,8 @@ int main(int argc, char **argv)
          printf("Invalid input. Please try again\n");
          //memset(&selection, 0, sizeof(selection));
       }
+     
+      //Clear extraneous input
       fseek(stdin, 0, SEEK_END);
       selection = -1;
    }
@@ -174,16 +172,15 @@ int main(int argc, char **argv)
    if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn))
    {
       // If thread creation fails, exit
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not created.\n");
       printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
       exit_flag = 0;
+      exit(1);
    }
    
    // Primary execution loop
    userInput(conn, full_name);
    
    // Send EXIT message (ensure clean exit on CRTL+C)
-   //strcpy(tx_pkt.alias, name);
    tx_pkt.timestamp = time(NULL);
    strcpy(tx_pkt.buf, "EXIT\0");
    send(conn, (void *)&tx_pkt, sizeof(packet), 0);
@@ -191,7 +188,6 @@ int main(int argc, char **argv)
    // Close connection
    if(pthread_join(chat_rx_thread, NULL))
    {
-      //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m chatRX thread not joining.\n");
       printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
    }
    printf("Exiting.\n");
@@ -261,6 +257,7 @@ void sigintHandler(int sig_num)
    //printf("\b\b\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Forced Exit.\n");
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
    exit_flag = 0;
+   exit(1);
 }
 
 
@@ -337,7 +334,6 @@ int get_server_connection(char *hostname, char *port)
    {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
       {
-         //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m socket socket \n");
          printf("%s --- Error:%s socket socket \n", RED, NORMAL);
          continue; // What is this error?
       }
@@ -345,7 +341,6 @@ int get_server_connection(char *hostname, char *port)
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1)
       {
          close(serverfd);
-         //printf("\e[1m\x1b[31m --- Error:\x1b[0m\e[0m socket connect \n");
          printf("%s --- Error:%s socket connect \n", RED, NORMAL);
          return -1;
       }

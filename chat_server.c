@@ -36,7 +36,6 @@ int main(int argc, char **argv)
    
    User *user_list = NULL;
    readUserFile(&user_list, "Users.txt");
-   //printList(&user_list);
    
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
@@ -154,7 +153,7 @@ int accept_client(int serv_sock)
 
 
 /*
- *Main thread for client A.  Tracks both incoming 
+ *Main thread for client execution.  Tracks both incoming 
  *and outgoing messages.
  */
 void *client_thread(void *ptr)
@@ -165,15 +164,17 @@ void *client_thread(void *ptr)
    int received;
    int client = current_session->this_client;
    
+   //Send username to other client
    strcpy(client_message.buf, current_session->aliases[client]);
    send(current_session->clients[1-client], (void *)&client_message, 
         sizeof(packet), 0); 
    
    while(current_session->running)
    {
-      //Send client A message to client B
       received = recv(current_session->clients[client], (void *)&client_message,
                              sizeof(packet), 0);
+     
+      //Check if other user has ended conversation
       if(received <= 0)
       {
          current_session->running = 0;
@@ -185,6 +186,7 @@ void *client_thread(void *ptr)
       timestamp = asctime(localtime(&(client_message.timestamp)));
       timestamp[strlen(timestamp) -1] = '\0';
       
+      //Print messages as they are recieved, each client in a different color
       if(current_session->running)
       {
          if(client == 0)
@@ -212,7 +214,8 @@ void *client_thread(void *ptr)
          break;
       }
       
-      //Send message to client B
+      //Send message to both clients, changing options to display
+      //correct username client-side
       else
       {
          client_message.options = 0;
@@ -301,6 +304,13 @@ void sigintHandler(int sig_num)
    exit(0);
 }
 
+/*
+ *Used in the login/registration process for each new connection. 
+ *Allows registration of a new user and login of an existing user.
+ *Registration: prompts user to enter their desired username, real name,
+ *and password.
+ *Login: prompts user to enter their username and password
+ */
 void establish_identity(int fd, char *ID, char *name, User **user_list) {
    packet pck;
    int loop = 1;
@@ -353,8 +363,10 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
          if(strcmp(name, "ERROR") != 0) loop = 0;
          strcpy(pck.buf, name);
          send(fd, &pck, sizeof(pck), 0);
-         
+
+         //Ensure correct password
          recv(fd, &pck, sizeof(pck), 0);
+  
          while(strcmp(pck.buf, get_password(user_list, ID)) != 0)
          {
             strcpy(pck.buf, "INVALID");
@@ -375,6 +387,5 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
          printf("%sERROR - %sInvalid input received", RED, NORMAL);         
       }
    }
-   //printList(user_list);
    writeUserFile(user_list, "Users.txt");
 }
