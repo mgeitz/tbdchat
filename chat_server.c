@@ -36,7 +36,7 @@ int main(int argc, char **argv)
    
    User *user_list = NULL;
    readUserFile(&user_list, "Users.txt");
-   
+   printList(&user_list);  
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
    

@@ -27,6 +27,8 @@ Known Bugs / Errors:
     - Client/Server - Certain input allows client to continue past registration without 
                       waiting for another user, which starts a conversation with "INVALID"
 
+                    -Passwords aren't working 100% of the time
+
 Future Plans:
     - Visual - Use Curses library to take over terminal window.  Plan to have the top portion of the
                screen show conversation and bottom allow user to input message
