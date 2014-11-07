@@ -21,7 +21,7 @@ int main(int argc, char **argv)
    char lname[32];
    char full_name[50];
    char username[32];
-   int selection;		     // User selection on startup
+   int selection = -1;		     // User selection on startup
    int loop_control = 1;
    
    // Confirm valid program usage
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
    {  
       //Register or log in
       printf("Enter 0 to register or 1 to login: ");
-     scanf("%d", &selection); 
+      scanf("%d", &selection); 
       
       if(selection == 1)
       {
@@ -71,7 +71,6 @@ int main(int argc, char **argv)
          strcpy(tx_pkt.buf, username);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 1;
-         printf("%d\n", tx_pkt.options);
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
          recv(conn, (void *)&tx_pkt, sizeof(packet),0);
          if(strcmp(tx_pkt.buf, "ERROR") == 0)
@@ -95,13 +94,12 @@ int main(int argc, char **argv)
          strcpy(tx_pkt.buf, username);
          tx_pkt.timestamp = time(NULL);
          tx_pkt.options = 0;
-         printf("%d\n", tx_pkt.options);
          send(conn, (void *)&tx_pkt, sizeof(packet), 0);
          
          recv(conn, (void *)&tx_pkt, sizeof(packet),0);
          if(strcmp(tx_pkt.buf, "ERROR") == 0)
          {
-            printf("%sERROR - %sUsername %s is already taken\n", RED, NORMAL, fname);
+            printf("%sERROR - %sUsername %s is already taken\n", RED, NORMAL, username);
          }
          else
          {
@@ -114,6 +112,7 @@ int main(int argc, char **argv)
             strcat(tx_pkt.buf, " ");
             strcat(tx_pkt.buf, lname); 
             printf("Your name is: %s\n", tx_pkt.buf);
+            strcpy(full_name, tx_pkt.buf);
             send(conn, (void *)&tx_pkt, sizeof(packet), 0);
             loop_control = 0;
          }
@@ -122,8 +121,10 @@ int main(int argc, char **argv)
       else
       {
          printf("Invalid input. Please try again\n");
-         memset(&selection, 0, sizeof(selection));
+         //memset(&selection, 0, sizeof(selection));
       }
+      fseek(stdin, 0, SEEK_END);
+      selection = -1;
    }
      
    // Start chat rx thread
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
    }
    
    // Primary execution loop
-   userInput(conn, username);
+   userInput(conn, full_name);
    
    // Send EXIT message (ensure clean exit on CRTL+C)
    //strcpy(tx_pkt.alias, name);
@@ -251,8 +252,16 @@ void *chatRX(void *ptr)
          // Format timestamp
          timestamp = asctime(localtime(&(rx_pkt.timestamp)));
          timestamp[strlen(timestamp) - 1] = '\0';
-         printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
-                 NORMAL, rx_pkt.buf);
+         if(rx_pkt.options == 0)
+         {
+            printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
+                   NORMAL, rx_pkt.buf);
+         }
+         else
+         {
+            printf("%s%s [%s]:%s %s\n", BLUE, timestamp, rx_pkt.alias,
+                   NORMAL, rx_pkt.buf);
+         }
          memset(&rx_pkt, 0, sizeof(packet));
       }
    }

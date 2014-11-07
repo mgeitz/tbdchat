@@ -182,17 +182,27 @@ void *client_thread(void *ptr)
       //Format timestamp and remove \n
       timestamp = asctime(localtime(&(client_message.timestamp)));
       timestamp[strlen(timestamp) -1] = '\0';
-     
+      
       if(current_session->running)
       {
-         printf("%s%s [%s]:%s%s\n", RED, timestamp, current_session->aliases[client],
-                NORMAL, client_message.buf);
+         if(client == 0)
+         {
+            printf("%s%s [%s]:%s%s\n", RED, timestamp, current_session->aliases[client],
+                   NORMAL, client_message.buf);
+         }
+         else if(client == 1)
+         {
+            printf("%s%s [%s]:%s%s\n", BLUE, timestamp, current_session->aliases[client],
+                   NORMAL, client_message.buf);
+         }
       }
       
       //Handle "EXIT" message
       if(strcmp(client_message.buf, "EXIT") == 0)
       {
-         send(current_session->clients[1-client], (void *)&client_message, sizeof(packet), 0);
+         client_message.options = -1;
+         send(current_session->clients[1-client], (void *)&client_message, 
+              sizeof(packet), 0);
          printf("Session between %d and %d ended.\n", current_session->clients[0],
             current_session->clients[1]);
          
@@ -201,12 +211,14 @@ void *client_thread(void *ptr)
       }
       
       //Send message to client B
-      else {
-           send(current_session->clients[0], (void *)&client_message,
-                     sizeof(packet), 0);
-           client_message.options = 1;
-           send(current_session->clients[1], (void *)&client_message,
-                     sizeof(packet), 0);
+      else
+      {
+         client_message.options = 0;
+         send(current_session->clients[client], (void *)&client_message,
+              sizeof(packet), 0);
+         client_message.options = 1;
+         send(current_session->clients[1 - client], (void *)&client_message,
+              sizeof(packet), 0);
       }
    }
 
@@ -294,18 +306,17 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
    {
       // Receive command and username
       recv(fd, &pck, sizeof(pck), 0);
-      printf("%d\n", pck.options);
+      
       // Register
       if(pck.options == 0)
       {
          User *temp_user = (User *)malloc(sizeof(User));
          temp_user->next = NULL;
          strcpy(temp_user->username, pck.buf);
-         printf("%s %s", get_real_name(user_list, temp_user->username), 
-              temp_user->username);
+         
          if(strcmp(get_real_name(user_list, temp_user->username), "ERROR") != 0)
          {
-            printf("%sERROR - %sUsername %s is already taken", RED, NORMAL,
+            printf("%sERROR - %sUsername %s is already taken\n", RED, NORMAL,
                    temp_user->username);
             strcpy(pck.buf, "ERROR");
             send(fd, &pck, sizeof(pck), 0);
@@ -317,9 +328,11 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
             strcpy(temp_user->real_name, pck.buf);
             strcpy(ID, temp_user->username);
             insert(user_list, temp_user);
-            printf("User ID is: %s\n", ID);
+            //printf("User ID is: %s\n", ID);
             strcpy(name, pck.buf);
-            printf("Name is: %s\n", name);
+            //printf("Name is: %s\n", name);
+            printf("Client %d successfully registered with username %s and real name %s\n",
+                   fd, ID, name);
             loop = 0;
          }
       }
@@ -327,11 +340,13 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
       else if(pck.options == 1)
       {
          strcpy(ID, pck.buf);
-         printf("User ID is: %s\n", ID);
+         //printf("User ID is: %s\n", ID);
          strcpy(name, get_real_name(user_list, ID));
          if(strcmp(name, "ERROR") != 0) loop = 0;
          strcpy(pck.buf, name);
          send(fd, &pck, sizeof(pck), 0);
+         printf("Client %d successfully logged in as %s\n",fd , ID);
+
       }
       else
       {
