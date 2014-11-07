@@ -313,9 +313,12 @@ void sigintHandler(int sig_num)
  */
 void establish_identity(int fd, char *ID, char *name, User **user_list) {
    packet pck;
+   int loginAttempts;
    int loop = 1;
    while(loop)
    {
+      loginAttempts = 0;
+      
       // Receive command and username
       recv(fd, &pck, sizeof(pck), 0);
       
@@ -360,27 +363,46 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
          strcpy(ID, pck.buf);
          
          strcpy(name, get_real_name(user_list, ID));
-         if(strcmp(name, "ERROR") != 0) loop = 0;
-         strcpy(pck.buf, name);
-         send(fd, &pck, sizeof(pck), 0);
-
-         //Ensure correct password
-         recv(fd, &pck, sizeof(pck), 0);
-  
-         while(strcmp(pck.buf, get_password(user_list, ID)) != 0)
+         if(strcmp(name, "ERROR") == 0)
          {
-            strcpy(pck.buf, "INVALID");
+            strcpy(pck.buf, name);
             send(fd, &pck, sizeof(pck), 0);
-            recv(fd, &pck, sizeof(pck), 0);
          }
-         strcpy(pck.buf, "VALID");
-         send(fd, &pck, sizeof(pck), 0);
-         
-         strcpy(name, get_real_name(user_list, ID));
-         if(strcmp(name, "ERROR") != 0) loop = 0;
-         strcpy(pck.buf, name);
-         send(fd, &pck, sizeof(pck), 0);
-         printf("Client %d successfully logged in as %s\n",fd , ID);
+         else
+         {
+            strcpy(pck.buf, name);
+            send(fd, &pck, sizeof(pck), 0);
+            
+            //Ensure correct password
+            recv(fd, &pck, sizeof(pck), 0);
+            
+            loginAttempts ++;
+            while(strcmp(pck.buf, get_password(user_list, ID)) != 0 && loginAttempts < 5)
+            {
+               strcpy(pck.buf, "INVALID");
+               send(fd, &pck, sizeof(pck), 0);
+               recv(fd, &pck, sizeof(pck), 0);
+               loginAttempts ++;
+            }
+            if(loginAttempts >= 5)
+            {
+               strcpy(pck.buf, "INVALID");
+               send(fd, &pck, sizeof(pck), 0);
+               printf("Login attempts exceeded\n");
+            }
+            else
+            {
+               strcpy(pck.buf, "VALID");
+               send(fd, &pck, sizeof(pck), 0);
+               
+               strcpy(name, get_real_name(user_list, ID));
+               if(strcmp(name, "ERROR") != 0) loop = 0;
+               strcpy(pck.buf, name);
+               send(fd, &pck, sizeof(pck), 0);
+               printf("Client %d successfully logged in as %s\n",fd , ID);
+               loop = 0;
+            }
+         }
       }
       else
       {

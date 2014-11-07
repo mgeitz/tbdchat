@@ -25,6 +25,7 @@ int main(int argc, char **argv)
    char temp[32];
    int selection = -1;		     // User selection on startup
    int loop_control = 1;
+   int loginAttempts;
    
    // Confirm valid program usage
    if (argc < 3)
@@ -54,6 +55,8 @@ int main(int argc, char **argv)
    
    while(loop_control) 
    {  
+      loginAttempts = 0;
+      
       //Register or log in
       printf("Enter 0 to register or 1 to login: ");
       scanf("%d", &selection); 
@@ -86,7 +89,8 @@ int main(int argc, char **argv)
             strcpy(tx_pkt.buf, password);
             send(conn, (void *)&tx_pkt, sizeof(packet), 0);
             recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-            while(strcmp(tx_pkt.buf, "VALID") != 0)
+            loginAttempts ++;
+            while(strcmp(tx_pkt.buf, "VALID") != 0 && loginAttempts < 5)
             {
                 printf("Invalid Password\n");
                 printf("Enter your password: ");
@@ -96,12 +100,20 @@ int main(int argc, char **argv)
                 strcpy(tx_pkt.buf, password);
                 send(conn, (void *)&tx_pkt, sizeof(packet), 0);
                 recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+                loginAttempts ++;
             }
             
-            recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-            printf("Your name is: %s\n", tx_pkt.buf);
-            //strcpy(full_name, tx_pkt.buf);
-            loop_control = 0;
+            if(loginAttempts >= 5)
+            {
+               printf("Login attempts exceeded\n");
+            }
+            else
+            {
+               recv(conn, (void *)&tx_pkt, sizeof(packet),0);
+               printf("Your name is: %s\n", tx_pkt.buf);
+               //strcpy(full_name, tx_pkt.buf);
+               loop_control = 0;
+            }
          }
       }
       
