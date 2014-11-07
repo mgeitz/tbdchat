@@ -1,3 +1,13 @@
+#include <string.h>
+#include "linked_list.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
+
 struct user {
    char username[50];
    char real_name[64];
