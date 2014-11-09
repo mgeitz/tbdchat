@@ -15,12 +15,20 @@
 #include "linked_list.h"
 #define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
+#define CONNECT 0
+#define REGISTER 1
+#define SETPASS 2
+#define SETNAME 3
+#define LOGIN 4
+#define EXIT 5
+#define INVITE 6
+#define JOIN 7
 
 struct Packet
 {
    time_t timestamp;
    char buf[BUFFERSIZE];
-   char alias[50];
+   char alias[64];
    int options;
 };
 typedef struct Packet packet;
@@ -31,6 +39,7 @@ struct chatSession
    int clients[2];
    int this_client;
    int running;
+   //mutex
 };
 typedef struct chatSession session;
 

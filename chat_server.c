@@ -35,6 +35,8 @@ int main(int argc, char **argv)
    char clientB_name[32];
    
    User *user_list = NULL;
+   User *active_users = NULL;
+
    readUserFile(&user_list, "Users.txt");
    printList(&user_list);  
    // Open server socket
@@ -50,6 +52,8 @@ int main(int argc, char **argv)
    //Main execution loop   
    while(1)
    {
+      //Accept a connection, start a thread
+
       //Accept client connections
       clientA_sock_fd = accept_client(chat_serv_sock_fd);
       if(clientA_sock_fd != -1)
@@ -153,8 +157,10 @@ int accept_client(int serv_sock)
 
 
 /*
- *Main thread for client execution.  Tracks both incoming 
- *and outgoing messages.
+ * 
+ *Receives all messages from client. Needs to check
+ *if the message is a command or goes to all connected
+ *users.
  */
 void *client_thread(void *ptr)
 {
@@ -388,4 +394,48 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
       }
    }
    writeUserFile(user_list, "Users.txt");
+}
+
+
+/*
+ *Register
+ */
+void register(Packet *pkt) {
+
+}
+
+/*
+ *Login
+ */
+void login(Packet *pkt) {
+
+}
+
+/*
+ *Invite
+ */
+void invite(Packet *pkt) {
+
+}
+
+/*
+ *Exit
+ */
+void exit(Packet *pkt) {
+
+}
+
+/*
+ *Send Message
+ */
+void send_message(Packet *pkt) {
+
+}
+
+
+/*
+ *Get active users
+ */
+void get_active_users(int fd) {
+
 }

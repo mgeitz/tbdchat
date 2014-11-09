@@ -12,6 +12,14 @@
 #include <pthread.h>
 
 #define BUFFERSIZE 128
+#define CONNECT 0
+#define REGISTER 1
+#define SETPASS 2 
+#define SETNAME 3
+#define LOGIN 4
+#define EXIT 5
+#define INVITE 6
+#define JOIN 7
 
 // Defined color constants
 #define NORMAL "\x1B[0m"
@@ -28,7 +36,7 @@
 struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
-   char alias[50];
+   char alias[64];
    int options;
 };
 // Declare structure type
