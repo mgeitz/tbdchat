@@ -23,6 +23,8 @@
 #define EXIT 5
 #define INVITE 6
 #define JOIN 7
+#define GETUSERS 8
+#define RECFAIL 100
 
 struct Packet
 {
@@ -63,3 +65,4 @@ void end(session *ptr);
 void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);
 void sigintHandler(int sig_num);
 void establish_identity(int fd, char *ID, char *name, User **user_list);
+void *client_receive(void *ptr);

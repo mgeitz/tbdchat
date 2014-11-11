@@ -20,6 +20,8 @@
 #define EXIT 5
 #define INVITE 6
 #define JOIN 7
+#define GETUSERS 8
+#define RECFAIL 100
 
 // Defined color constants
 #define NORMAL "\x1B[0m"

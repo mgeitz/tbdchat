@@ -53,24 +53,11 @@ int main(int argc, char **argv)
    while(1)
    {
       //Accept a connection, start a thread
-
-      //Accept client connections
-      clientA_sock_fd = accept_client(chat_serv_sock_fd);
-      if(clientA_sock_fd != -1)
-      {
-         establish_identity(clientA_sock_fd, (void *)&clientA_usrID, (void *)&clientA_name, &user_list);
-         printf("%s connected as Client A at socket_fd %d\n", clientA_name, clientA_sock_fd);
+      int new_client = accept_client(chat_serv_sock_fd);
+      if(new_client != -1) {
+         pthread_t new_client_thread;
+         int iret = pthread_create(&new_client_thread, NULL, client_recieve, (void *)&new_client);
       }
-      
-      clientB_sock_fd = accept_client(chat_serv_sock_fd);
-      if(clientB_sock_fd != -1)
-      {
-         establish_identity(clientB_sock_fd, (void *)&clientB_usrID, (void *)&clientB_name, &user_list);
-         printf("%s connected as Client B at socket_fd %d\n", clientB_name, clientB_sock_fd);
-      }
-      
-      start_subserver(clientA_sock_fd, clientB_sock_fd, (void *)&clientA_name, (void *)&clientB_name); 
-   
    }
    
    close(chat_serv_sock_fd);
@@ -398,16 +385,49 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
 
 
 /*
+ *Main thread for each client.  Receives all messages
+ *and passes the data off to the correct function.  Receives
+ *a pointer to the file descriptor for the socket the thread
+ *should listen on
+ */
+void *client_receive(void *ptr) {
+   int client = *ptr;
+   Packet in_pkt;
+
+   recv(client, &in_pkt, sizeof(in_pkt), 0);
+
+   //Handle command messages
+   if(in_pkt.options == REGISTER) register(&in_pkt, client);
+   else if(in_pkt.options == SETPASS) set_pass(&in_pkt, client);
+   else if(in_pkt.options == SETNAME) set_name(&in_pkt, client);
+   else if(in_pkt.options == LOGIN) login(&in_pkt, client);
+   else if(in_pkt.options == EXIT) exit(&in_pkt);
+   else if(in_pkt.options == INVITE) invite(&in_pkt);
+   else if(in_pkt.options == JOIN) join(&in_pkt);
+   else if(in_pkt.options == GETUSERS) get_active_users(client);
+   
+   //Handle conversation message
+   else if(in_pkt.options >= 1000) send_message(&in_pkt);
+
+   //Unrecognized command, send client a failure message
+   else {
+      Packet ret;
+      ret.options = RECFAIL;
+      strcpy(ret.buf, "Invalid Command");
+      send(client, ret, sizeof(ret), 0);
+   }
+
+/*
  *Register
  */
-void register(Packet *pkt) {
+void register(Packet *pkt, int fd) {
 
 }
 
 /*
  *Login
  */
-void login(Packet *pkt) {
+void login(Packet *pkt, int fd) {
 
 }
 
