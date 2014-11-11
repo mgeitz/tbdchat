@@ -181,6 +181,7 @@ int serverRegistration(packet *buf) {
 /* Set user password */
 int setPassword(char *pwd1, char *pwd2) {
    //compare pwd strings, maybe hash them if valid
+   if strcmp()
 }
 
 
@@ -210,7 +211,7 @@ void *chatRX(void *ptr)
    strcpy(partner_name, rx_pkt.buf);
    printf("Conversation started with %s.\n", partner_name);
    
-   while(exit_flag)
+   while(1)
    {
       // Wait for message to arrive..
       received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
