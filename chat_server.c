@@ -12,7 +12,9 @@
 #include "chat_server.h"
 
 int chat_serv_sock_fd; //server socket
-
+User *user_list;
+User *active_users;
+ 
 int main(int argc, char **argv)
 {
    
@@ -28,14 +30,8 @@ int main(int argc, char **argv)
    //Client Sockets
    int clientA_sock_fd, clientB_sock_fd;
    
-   // User IDs
-   char clientA_usrID[32];
-   char clientB_usrID[32];
-   char clientA_name[32];
-   char clientB_name[32];
-   
-   User *user_list = NULL;
-   User *active_users = NULL;
+   user_list = NULL;
+   active_users = NULL;
 
    readUserFile(&user_list, "Users.txt");
    printList(&user_list);  
@@ -237,58 +233,6 @@ void end(session *ptr)
    free(ptr);
 }
 
-/*
- *Sets up necessary information to start a subserver
- *for a chat session.
- */
-void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID) 
-{
-   //Set up struct to pass to subserver
-   session *newSession = (session *)malloc(sizeof(session));
-   newSession->clients[0] = A_fd;
-   newSession->clients[1] = B_fd;
-   strcpy(newSession->aliases[0], clientA_usrID);
-   strcpy(newSession->aliases[1], clientB_usrID);
-   newSession->running = 1;
-   
-   //Start subserver thread
-   pthread_t new_session_thread;
-   int iret;
-   
-   iret = pthread_create(&new_session_thread, NULL, subserver, (void *)newSession);
-}
-
-/*
- *Subserver thread for a conversation.  Starts the main
- *threads for each client.
- */
-void *subserver(void *ptr)
-{
-   // Threads
-   pthread_t client_A_thread, client_B_thread;
-   
-   session *A_ptr = (session *)ptr;
-   session *B_ptr = (session *)malloc(sizeof(session));
-   
-   A_ptr->this_client = 0;
-   B_ptr->this_client = 1;
-   B_ptr->clients[0] = A_ptr->clients[0];
-   B_ptr->clients[1] = A_ptr->clients[1];
-   strcpy(B_ptr->aliases[0], A_ptr->aliases[0]);
-   strcpy(B_ptr->aliases[1], A_ptr->aliases[1]);
-   B_ptr->running = A_ptr->running;
-   
-   int iret1, iret2;
-   
-   iret1 = pthread_create(&client_A_thread, NULL, client_thread, (void *)A_ptr);
-   iret2 = pthread_create(&client_B_thread, NULL, client_thread, (void *)B_ptr);
-   
-   pthread_join(client_A_thread, NULL);
-   pthread_join(client_B_thread, NULL);
-   
-   return NULL;
-}
-
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num)
 {
@@ -430,7 +374,7 @@ void register(Packet *pkt, int fd) {
 
    //Pull username
    args[1] = strsep(pkt->buf, " \t");
-   if(strcmp(get_real_name(user_list, args[1]), "ERROR") ==0) {
+   if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
       Packet ret;
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
@@ -442,7 +386,7 @@ void register(Packet *pkt, int fd) {
    args[2] = strsep(pkt->buf, " \t");
    strcpy(temp_user->username, args[1]);
    strcpy(temp_user->password, args[2]);
-   insert(user_list, temp_user);
+   insert(&user_list, temp_user);
 }
 
 /*
@@ -457,7 +401,7 @@ void login(Packet *pkt, int fd) {
 
    //Pull username and check valid
    args[1] = strsep(pkt->buf, " \t"
-   if(strcmp(get_real_name(user_list, args[1]), "ERROR" ==0) {
+   if(strcmp(get_real_name(&user_list, args[1]), "ERROR" ==0) {
       ret.options = LOGFAIL;
       strcpy(ret.buf, "Username not found.");
       send(fd, ret, sizeof(ret), 0);
@@ -466,7 +410,7 @@ void login(Packet *pkt, int fd) {
 
    //Pull password and check if it is valid
    args[2] = strsep(pkt->buf, " \t");
-   if(strcmp(args[2], get_password(user_list, args[1]) != 0) {
+   if(strcmp(args[2], get_password(&user_list, args[1]) != 0) {
      ret.options = LOGFAIL;
      strcpy(ret.buf, "Incorrect password.");
      send(fd, ret, sizeof(ret, 0);
@@ -475,7 +419,7 @@ void login(Packet *pkt, int fd) {
 
    //Login successful, send username to client
    ret.options = LOGSUC;
-   strcpy(ret.buf, get_real_name(user_list, args[1]));
+   strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, ret, sizeof(ret, 0);
 }
 
