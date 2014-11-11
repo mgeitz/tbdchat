@@ -23,6 +23,8 @@
 #define GETUSERS 8
 #define RECFAIL 100
 #define REGFAIL 101
+#define LOGFAIL 102 
+#define LOGSUC 103
 
 // Defined color constants
 #define NORMAL "\x1B[0m"

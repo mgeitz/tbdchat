@@ -449,7 +449,34 @@ void register(Packet *pkt, int fd) {
  *Login
  */
 void login(Packet *pkt, int fd) {
+   char *args[3]
+   Packet ret;
 
+   //Pull command
+   args[0] = strsep(pkt->buf, " \t");
+
+   //Pull username and check valid
+   args[1] = strsep(pkt->buf, " \t"
+   if(strcmp(get_real_name(user_list, args[1]), "ERROR" ==0) {
+      ret.options = LOGFAIL;
+      strcpy(ret.buf, "Username not found.");
+      send(fd, ret, sizeof(ret), 0);
+      return;
+   }
+
+   //Pull password and check if it is valid
+   args[2] = strsep(pkt->buf, " \t");
+   if(strcmp(args[2], get_password(user_list, args[1]) != 0) {
+     ret.options = LOGFAIL;
+     strcpy(ret.buf, "Incorrect password.");
+     send(fd, ret, sizeof(ret, 0);
+     return;
+   }
+
+   //Login successful, send username to client
+   ret.options = LOGSUC;
+   strcpy(ret.buf, get_real_name(user_list, args[1]));
+   send(fd, ret, sizeof(ret, 0);
 }
 
 /*
