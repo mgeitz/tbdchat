@@ -60,6 +60,19 @@ char *get_password(User **head, char *user)
    return temp->password;
 }
 
+User *get_user(User **head, char *user) {
+   User *temp = *head;
+
+   if(*head == NULL) return NULL;
+
+   while(strcmp(user, temp->username) != 0) {
+      if(temp->next == NULL) return NULL;
+      temp = temp->next;
+   }
+
+   return temp;
+}
+
 void readUserFile(User **head, char *filename)
 {
    int fd = open(filename, O_RDONLY);

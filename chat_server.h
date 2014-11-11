@@ -69,3 +69,11 @@ void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrI
 void sigintHandler(int sig_num);
 void establish_identity(int fd, char *ID, char *name, User **user_list);
 void *client_receive(void *ptr);
+void register(Packet *pkt, int fd);
+void login(Packet *pkt, int fd);
+void invite(Packet *pkt);
+void exit(Packet *pkt);
+void send_message(Packet *pkt);
+void get_active_users(int fd);
+
+

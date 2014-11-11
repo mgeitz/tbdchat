@@ -386,6 +386,7 @@ void register(Packet *pkt, int fd) {
    args[2] = strsep(pkt->buf, " \t");
    strcpy(temp_user->username, args[1]);
    strcpy(temp_user->password, args[2]);
+   temp_user->sock = fd;
    insert(&user_list, temp_user);
 }
 
@@ -417,7 +418,11 @@ void login(Packet *pkt, int fd) {
      return;
    }
 
-   //Login successful, send username to client
+   //Login successful, send username to client and add to active_users
+   User *user = get_user(&user_list, args[1]);
+   user->sock = fd;
+   insert(&active_users, user);
+
    ret.options = LOGSUC;
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, ret, sizeof(ret, 0);
