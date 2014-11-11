@@ -1,5 +1,5 @@
 /* Program:             Simple Chat Client
-   Authors:             Matthew Owens, Michale Geitz, Shayne Wierbowski
+   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
    Date:                10/23/2014
    File Name:           chat_client.c
    Compile:             gcc -o chat_client chat_client.c -l pthread
@@ -9,254 +9,195 @@
 
 */
 #include "chat_client.h"
+int serverfd;
 
-// Declare exit_flag as global volatile int
-int exit_flag = 1;
-
-int main(int argc, char **argv)
-{
-   pthread_t chat_rx_thread;         // Chat RX thread
-   int conn;                         // Connection fd
-   char fname[32];                    // User alias
-   char lname[32];
-   char full_name[50];
-   char username[32];
-   char password[32];
-   char temp[32];
-   int selection = -1;		     // User selection on startup
-   int loop_control = 1;
-   
-   // Confirm valid program usage
-   if (argc < 3)
-   {
-      printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n",
-             RED, argv[0], NORMAL);
-      exit(0);
-   }
+int main() {
+   pthread_t chat_rx_thread;
+   int bufSize, send;
+   char username[64];
+   char alias[32];
    
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
-   // Initiliaze memory space for send packet
    packet tx_pkt;
    
-   
-   // Establish connection with server1
-   if((conn = get_server_connection(argv[1], argv[2])) == -1)
-   {
-      // If connection fails, exit
-      printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
-      exit_flag = 0;
-      exit(1);
-   }
-   
-   printf("Connected.\n");
-   
-   while(loop_control) 
-   {  
-      //Register or log in
-      printf("Enter 0 to register or 1 to login: ");
-      scanf("%d", &selection); 
-      
-      //Login
-      if(selection == 1)
-      {
-         printf("Enter your username: ");
-         scanf("%32s", username); 
-         printf("Your username is: %s\n", username);
-         
-         strcpy(tx_pkt.buf, username);
-         tx_pkt.timestamp = time(NULL);
-         tx_pkt.options = 1;
-         send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-         
-         // Receive [in]valid username message
-         recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-         if(strcmp(tx_pkt.buf, "ERROR") == 0)
-         {
-            printf("Invalid username. Please try again.\n");
-         }
-         else
-         {
-            strcpy(full_name, tx_pkt.buf);
-            printf("Enter your password: ");
-            scanf("%32s", password);
-            // Insert encrypt password method
-            //encrypt(&password)
-            strcpy(tx_pkt.buf, password);
-            send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-            recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-            while(strcmp(tx_pkt.buf, "VALID") != 0)
-            {
-                printf("Invalid Password\n");
-                printf("Enter your password: ");
-                scanf("%32s", password);
-                // Insert encrypt password method
-                //encrypt(&password)
-                strcpy(tx_pkt.buf, password);
-                send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-                recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-            }
-            
-            recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-            printf("Your name is: %s\n", tx_pkt.buf);
-            //strcpy(full_name, tx_pkt.buf);
-            loop_control = 0;
-         }
-      }
-      
-      //Register new user
-      else if(selection == 0)
-      {
-         printf("Enter your desired username: ");
-         scanf("%32s", username);
-         printf("Your username is: %s\n", username);
-         
-         strcpy(tx_pkt.buf, username);
-         tx_pkt.timestamp = time(NULL);
-         tx_pkt.options = 0;
-         send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-         
-         // Receive [in]valid username
-         recv(conn, (void *)&tx_pkt, sizeof(packet),0);
-         if(strcmp(tx_pkt.buf, "ERROR") == 0)
-         {
-            printf("%sERROR - %sUsername %s is already taken\n", RED, NORMAL, username);
-         }
-         else
-         {
-            while(strcmp(temp, password) != 0)
-            {
-               //passPtr = getpass("Enter your password");
-               printf("Enter your password: ");
-               scanf("%32s", password);
-               printf("Re-enter your password: ");
-               scanf("%32s", temp);
-               if(strcmp(temp, password) != 0)
-               {
-                  printf("Passwords not identical\n");
-               }
-            }
-            // Insert encrypt password method
-            //encrypt(&password);
-            strcpy(tx_pkt.buf, password);
-            send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-            
-            printf("Enter your first name: ");
-            scanf("%32s", fname);
-            printf("Enter your last name: ");
-            scanf("%32s", lname);
-            
-            strcpy(tx_pkt.buf, fname);
-            strcat(tx_pkt.buf, " ");
-            strcat(tx_pkt.buf, lname); 
-            printf("Your name is: %s\n", tx_pkt.buf);
-            strcpy(full_name, tx_pkt.buf);
-            send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-            loop_control = 0;
-         }
-      }
-      
-      else
-      {
-         printf("Invalid input. Please try again\n");
-         //memset(&selection, 0, sizeof(selection));
-      }
-     
-      //Clear extraneous input
-      fseek(stdin, 0, SEEK_END);
-      selection = -1;
-   }
-     
-   // Start chat rx thread
-   if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn))
-   {
-      // If thread creation fails, exit
-      printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
-      exit_flag = 0;
-      exit(1);
-   }
-   
-   // Primary execution loop
-   userInput(conn, full_name);
-   
-   // Send EXIT message (ensure clean exit on CRTL+C)
-   tx_pkt.timestamp = time(NULL);
-   strcpy(tx_pkt.buf, "EXIT\0");
-   send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-   
-   // Close connection
-   if(pthread_join(chat_rx_thread, NULL))
-   {
-      printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
-   }
-   printf("Exiting.\n");
-   close(conn);
-   exit(0);
-}
-
-
-/* Primary execution loop */
-void userInput(int conn, char *username) {
-    int i;
-   // Initiliaze memory space for send packet
-   packet tx_pkt;
-   
-   // Primary execution loop
-   while(exit_flag)
-   {
-      // Add alias to send packet
+   while (1) {
       strcpy(tx_pkt.alias, username);
-      
-      // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
-      i = 0;
-      tx_pkt.buf[i] = getc(stdin);
-      while(tx_pkt.buf[i] != '\n' && tx_pkt.buf[i] != EOF)
-      {
-         tx_pkt.buf[++i] = getc(stdin);
-         // Automatically send message once it reaches 127 characters
-         if(i >= 126 || exit_flag == 0)
-         {
-            tx_pkt.buf[++i] = '\n';
-            break;
+      bufSize = userInput(&tx_pkt.buf);
+      send = 1;
+      if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
+         if(strncmp("/", (void *)tx_pkt.buf, 1) == 0) {
+             send = userCommand(&tx_pkt);
          }
+      if (send && serverfd)
+            tx_pkt.timestamp = time(NULL);
+            send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
       }
-      printf("\33[1A\33[J");
-      // If EOF is read, exit?
-      if(tx_pkt.buf[i] == EOF)
-      {
-         exit_flag = 0;
-      }
-      else // Otherwise Null terminate keyboard buffer
-      {
-         tx_pkt.buf[i] = '\0';
-      }
-      
-      // Transmit packet if input buffer is not empty
-      if(i > 0 && tx_pkt.buf[i] != EOF)
-      {
-         // Timestamp and send packet
-         tx_pkt.timestamp = time(NULL);
-         send(conn, (void *)&tx_pkt, sizeof(packet), 0);
-      }
-      
-      //Handle 'EXIT' message
-      if(strcmp("EXIT", (void *)&(tx_pkt.buf)) == 0)
-      {
-         exit_flag = 0;
-      }
-      
-      // Wipe packet buffer clean
+      // Wipe packet
       memset(&tx_pkt, 0, sizeof(packet));
    }
+
+
+   
+   // Close connection
+   //if(pthread_join(chat_rx_thread, NULL))
+   //{
+   //   printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+   //}
+   //printf("Exiting.\n");
+   //close(conn);
+   //exit(0);
 }
 
+/* Process user commands and mutate buffer accordingly */
+void userCommand(packet *tx_pkt) {
+   int i = 0;
+   char *argv[16];
+   char *tmp;
+
+   tmp = tx_pkt.buf; // Required for strsep
+
+   // Handle exit command
+   if (strncmp((void *)tx_pkt.buf, "/exit", strlen("/exit")) == 0) {
+       exit(1);
+   }
+   // Handle help command
+   else if (strncmp((void *)tx_pkt.buf, "/help", strlen("/help")) == 0) {
+       showHelp();
+       return 0;
+   }
+   // Handle connect command
+   else if (strncmp((void *)tx_pkt.buf, "/connect", strlen("/connect")) == 0) {
+      if (!newServerConnection(&tx_pkt.buf)) {
+          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
+      }
+      return 0;
+   }
+   // Handle register command
+   else if (strncmp((void *)tx_pkt.buf, "/register", strlen("/register")) == 0) {
+      if (!serverRegistration(&tx_pkt)) {
+          printf("%s --- Error:%s Server registration failed.\n", RED, NORMAL);
+         return 0;
+      }
+      else {
+         return 1;
+      }
+   }
+   // Handle login command
+   else if (strncmp((void *)tx_pkt.buf, "/login", strlen("/login")) == 0) {
+      // change option and remove /login from buffer
+      return 1;
+   }
+  // If it wasn't any of that, invalid command
+  else {
+      printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
+      return 0;
+  }
+}
+
+
+/* Read keyboard input into buffer */
+int userInput(char *buf) {
+   int i;
+      
+   // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
+   i = 0;
+   *buf[i] = getc(stdin);
+   while(*buf[i] != '\n' && *buf[i] != EOF) {
+      *buf[++i] = getc(stdin);
+      // Automatically send message once it reaches 127 characters
+      if (i >= 126) {
+         *buf[++i] = '\n';
+         break;
+      }
+   }
+   //printf("\33[1A\33[J");
+   // If EOF is read, exit?
+   if(*buf[i] == EOF) {
+      exit(1);
+   }
+   else { 
+      buf[i] = '\0';
+   }
+   return i;
+}
+
+
+/* Connect to a new server */
+int newServerConnection(char *buf) {
+   int i = 0;
+   char *argv[16];
+   char *tmp;
+
+   tmp = *buf;
+
+   argv[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
+       argv[++i] = strsep(&tmp, " \t");
+   }
+   if (i == 3) {
+      if((serverfd = get_server_connection(argv[1], argv[2])) == -1) {
+         // If connection fails, exit
+         printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
+         return 0;
+      }
+      if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&conn)) {
+         // If thread creation fails, exit
+         printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
+         return 0;
+      }
+      printf("Connected.\n");
+      return 1;
+   }
+   else {
+       printf("%s --- Error:%s Usage: /connect address port\n", RED, NORMAL);
+       return 0;
+   }
+}
+
+
+/* Handle registration for server  */
+int serverRegistration(packet *tx_pkt) {
+   int i = 0;
+   char *argv[16];
+   char *tmp;
+   int pwdMatch = 0;
+
+   tmp = *buf;
+
+   argv[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
+       argv[++i] = strsep(&tmp, " \t");
+   }
+   if (i == 4) {
+      pwdMatch = setPassword(argv[2], argv[3]);
+      if (pwdMatch) {
+         //change buffer
+         *tx.pkt.options = REGISTER;
+      } 
+   }
+   else {
+       printf("%s --- Error:%s Usage: /register username password password\n", RED, NORMAL);
+   }
+}
+
+
+/* Set user password */
+int setPassword(char *pwd1, char *pwd2) {
+   //compare pwd strings, maybe hash them if valid
+}
+
+
+/* Set user real name */
+void setName(char *name) {
+  //stub
+}
+
+
 /* Handle SIGINT (CTRL+C) */
-void sigintHandler(int sig_num)
-{
-   //printf("\b\b\e[1m\x1b[31m --- Error:\x1b[0m\e[0m Forced Exit.\n");
+void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
-   exit_flag = 0;
    exit(1);
 }
 
@@ -385,3 +326,13 @@ void print_ip( struct addrinfo *ai)
       printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
    }
 }
+
+
+/* Print helpful and unhelpful things */
+void showHelp() {
+   printf("%s\t/help%s\t\t | Display a list of commands.\n", YELLOW, NORMAL);
+   printf("%s\t/exit%s\t\t | Exit the client.\n", YELLOW, NORMAL);
+   printf("%s\t/register%s\t | Usage: /register username firstname lastname\n", YELLOW, NORMAL);
+   printf("%s\t/login%s\t\t | Usage: /login username.\n", YELLOW, NORMAL);
+}
+
