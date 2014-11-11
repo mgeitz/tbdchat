@@ -30,7 +30,7 @@ int main() {
          if(strncmp("/", (void *)tx_pkt.buf, 1) == 0) {
              send = userCommand(&tx_pkt);
          }
-      if (send && serverfd)
+      if (send && serverfd) {
             tx_pkt.timestamp = time(NULL);
             send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
       }
@@ -52,11 +52,6 @@ int main() {
 
 /* Process user commands and mutate buffer accordingly */
 void userCommand(packet *tx_pkt) {
-   int i = 0;
-   char *argv[16];
-   char *tmp;
-
-   tmp = tx_pkt.buf; // Required for strsep
 
    // Handle exit command
    if (strncmp((void *)tx_pkt.buf, "/exit", strlen("/exit")) == 0) {
@@ -158,7 +153,7 @@ int newServerConnection(char *buf) {
 
 
 /* Handle registration for server  */
-int serverRegistration(packet *tx_pkt) {
+int serverRegistration(packet *buf) {
    int i = 0;
    char *argv[16];
    char *tmp;
