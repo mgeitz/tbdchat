@@ -421,7 +421,28 @@ void *client_receive(void *ptr) {
  *Register
  */
 void register(Packet *pkt, int fd) {
+   User *temp_user = (User *)malloc(sizeof(User));
+   temp_user->next = NULL;
+   char *args[5];
 
+   //Pull command
+   args[0] = strsep(pkt->buf, " \t");
+
+   //Pull username
+   args[1] = strsep(pkt->buf, " \t");
+   if(strcmp(get_real_name(user_list, args[1]), "ERROR") ==0) {
+      Packet ret;
+      ret.options = REGFAIL;
+      strcpy(ret.buf, "Username taken.");
+      send(fd, ret, sizeof(ret), 0);
+      return;
+   }
+  
+   //Pull password
+   args[2] = strsep(pkt->buf, " \t");
+   strcpy(temp_user->username, args[1]);
+   strcpy(temp_user->password, args[2]);
+   insert(user_list, temp_user);
 }
 
 /*

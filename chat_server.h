@@ -25,6 +25,7 @@
 #define JOIN 7
 #define GETUSERS 8
 #define RECFAIL 100
+#define REGFAIL 101
 
 struct Packet
 {
