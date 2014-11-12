@@ -13,6 +13,7 @@ int serverfd;
 char username[64];
 pthread_t chat_rx_thread;
 
+
 int main() {
    int bufSize, send_flag;
    packet tx_pkt;
@@ -50,6 +51,7 @@ int main() {
    close(serverfd);
    exit(0);
 }
+
 
 /* Process user commands and mutate buffer accordingly */
 int userCommand(packet *tx_pkt) {
@@ -105,6 +107,16 @@ int userCommand(packet *tx_pkt) {
       else {
          return 1;
       }
+   }
+   // Handle invite command
+   if (strncmp((void *)tx_pkt->buf, "/invite ", strlen("/invite ")) == 0) {
+       tx_pkt->options = JOIN;
+       return 1;;
+   }
+   // Handle join command
+   else if (strncmp((void *)tx_pkt->buf, "/join ", strlen("/join ")) == 0) {
+       tx_pkt->options = INVITE;
+       return 1;;
    }
    // If it wasn't any of that, invalid command
    else {
