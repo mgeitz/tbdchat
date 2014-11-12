@@ -48,6 +48,15 @@ struct chatSession
 };
 typedef struct chatSession session;
 
+struct client {
+   pthread_t thread_ID;
+   int sockfd;
+   int logged_in;
+   int currentRoom;
+   struct client *next;
+};
+typedef struct client clientInfo;
+
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -62,7 +71,7 @@ typedef struct chatSession session;
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
-void *client_thread(void *ptr);
+//void *client_thread(void *ptr);
 void *subserver(void *ptr);
 void end(session *ptr);
 void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);

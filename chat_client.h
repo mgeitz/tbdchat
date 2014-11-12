@@ -21,10 +21,10 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
-#define REGAUTH 100
-#define REGFAIL 101
-#define LOGFAIL 102 
-#define LOGAUTH 103
+#define REGAUTH 100	// Registration success
+#define REGFAIL 101	// Registration failed
+#define LOGFAIL 102 	// Login attempt failed
+#define LOGAUTH 103	// Login successful
 
 // Defined color constants
 #define NORMAL "\x1B[0m"

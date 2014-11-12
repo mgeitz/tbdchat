@@ -15,11 +15,8 @@ int chat_serv_sock_fd; //server socket
 User *user_list;
 User *active_users;
  
-int main(int argc, char **argv)
-{
-   
-   if(argc < 3)
-   {
+int main(int argc, char **argv) {
+   if(argc < 3) {
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n", RED, NORMAL, argv[0]);
       exit(0);
    }
@@ -37,15 +34,30 @@ int main(int argc, char **argv)
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
    
    // step 3: get ready to accept connections
-   if(start_server(chat_serv_sock_fd, BACKLOG) == -1)
-   {
+   if(start_server(chat_serv_sock_fd, BACKLOG) == -1) {
       printf("start server error\n");
       exit(1);
    }	
-   
+   /*while (1) {
+      // Initialize memory space for new clientInfo node
+      clientInfo newClient;
+      // Store client sockfd in clientInfo  node
+      newClient.sockfd = accept_client(chat_serv_sock_fd);
+      if(newClient.sockfd != -1) {
+         int iret;
+         // Set newClient default logged in value
+         newClient.logged_in = 0;
+         // Set newClient default room
+         newClient.currentRoom = 0;
+         // Probably should insert newClient node into list of clients (in default room maybe)
+
+         // Launch client recaive thread
+         iret  = pthread_create(&newClient.thread_ID, NULL, client_receive, (void *)&newClient);
+     }
+      
+   }*/
    //Main execution loop   
-   while(1)
-   {
+   while(1) {
       //Accept a connection, start a thread
       int new_client = accept_client(chat_serv_sock_fd);
       if(new_client != -1) {
@@ -144,10 +156,10 @@ int accept_client(int serv_sock)
  *if the message is a command or goes to all connected
  *users.
  */
+/*
 void *client_thread(void *ptr)
 {
    session *current_session = (session *)ptr;
-   packet client_message, *client_message_ptr;
    char *timestamp;
    int received;
    int client = current_session->this_client;
@@ -155,11 +167,10 @@ void *client_thread(void *ptr)
    //Send username to other client
    strcpy(client_message.buf, current_session->aliases[client]);
    send(current_session->clients[1-client], (void *)&client_message, 
-        sizeof(packet), 0); 
-   while(current_session->running) {
+       sizeof(packet), 0); 
+   while(1) {
       received = recv(current_session->clients[client], (void *)&client_message,
                              sizeof(packet), 0);
-      debugPacket(client_message_ptr);     
       //Check if other user has ended conversation
       if(received <= 0)
       {
@@ -215,7 +226,7 @@ void *client_thread(void *ptr)
 
    end(current_session);
    return NULL;
-}
+}*/
 
 
 /* Dump contents of received packet from client */
@@ -343,30 +354,63 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
  *should listen on
  */
 void *client_receive(void *ptr) {
-   int client = *(int *)ptr;
-   packet in_pkt;
-
-   recv(client, &in_pkt, sizeof(in_pkt), 0);
+   int client = *(int *) ptr;
+   int received;
+   packet in_pkt, *client_message_ptr = &in_pkt;
+   while (1) {
+   received = recv(client, &in_pkt, sizeof(packet), 0);
+   // Just for testing
+   if (received) { 
+      debugPacket(client_message_ptr); 
+      //printf("Client Info: %lu %d %d %d", (unsigned long)client.thread_ID, client.sockfd, client.logged_in, client.currentRoom);
+   }
 
    //Handle command messages
-   if(in_pkt.options == REGISTER) register_user(&in_pkt, client); 
-   else if(in_pkt.options == SETPASS) set_pass(&in_pkt, client);
-   else if(in_pkt.options == SETNAME) set_name(&in_pkt, client);
-   else if(in_pkt.options == LOGIN) login(&in_pkt, client);
-   else if(in_pkt.options == EXIT) exit_client(&in_pkt);
-   else if(in_pkt.options == INVITE) invite(&in_pkt);
-   else if(in_pkt.options == JOIN) join(&in_pkt);
-   else if(in_pkt.options == GETUSERS) get_active_users(client);
-   
+   if(in_pkt.options == REGISTER) { 
+      printf("register\n");
+      register_user(&in_pkt, client);
+   }
+   else if(in_pkt.options == SETPASS) {
+      printf("setpass\n");
+      set_pass(&in_pkt, client);
+   }
+   else if(in_pkt.options == SETNAME) {
+      printf("setname\n");
+      set_name(&in_pkt, client);
+   }
+   else if(in_pkt.options == LOGIN) {
+      printf("login\n");
+      login(&in_pkt, client);
+   }
+   else if(in_pkt.options == EXIT) {
+      printf("exit\n");
+      exit_client(&in_pkt);
+   }
+   else if(in_pkt.options == INVITE) {
+      printf("invite\n");
+      invite(&in_pkt);
+   }
+   else if(in_pkt.options == JOIN) { 
+      printf("join\n");
+      join(&in_pkt);
+   }
+   else if(in_pkt.options == GETUSERS) {
+      printf("getusers\n");
+      get_active_users(client);
+   }
    //Handle conversation message
-   else if(in_pkt.options >= 1000) send_message(&in_pkt);
-
+   else if(in_pkt.options >= 1000) { 
+      printf("message\n");
+      send_message(&in_pkt);
+   }
    //Unrecognized command, send client a failure message
-   else {
-      packet ret;
-      ret.options = RECFAIL;
-      strcpy(ret.buf, "Invalid Command");
-      send(client, &ret, sizeof(ret), 0);
+   //else {
+   //   packet ret;
+   //   ret.options = RECFAIL;
+   //   strcpy(ret.buf, "Invalid Command");
+   //   send(client, &ret, sizeof(ret), 0);
+   //}
+   memset(&in_pkt, 0, sizeof(packet));
    }
    return NULL;
 }
@@ -416,7 +460,7 @@ void login(packet *pkt, int fd) {
       ret.options = LOGFAIL;
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
-      return;
+      //return;
    }
 
    //Pull password and check if it is valid
@@ -426,7 +470,7 @@ void login(packet *pkt, int fd) {
      ret.options = LOGFAIL;
      strcpy(ret.buf, "Incorrect password.");
      send(fd, &ret, sizeof(ret), 0);
-     return;
+     //return;
    }
 
    //Login successful, send username to client and add to active_users
@@ -437,7 +481,7 @@ void login(packet *pkt, int fd) {
    ret.options = LOGSUC;
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
-}
+} 
 
 /*
  *Invite
