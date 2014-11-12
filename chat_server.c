@@ -147,7 +147,7 @@ int accept_client(int serv_sock)
 void *client_thread(void *ptr)
 {
    session *current_session = (session *)ptr;
-   packet client_message;
+   packet client_message, *client_message_ptr;
    char *timestamp;
    int received;
    int client = current_session->this_client;
@@ -156,12 +156,10 @@ void *client_thread(void *ptr)
    strcpy(client_message.buf, current_session->aliases[client]);
    send(current_session->clients[1-client], (void *)&client_message, 
         sizeof(packet), 0); 
-   
-   while(current_session->running)
-   {
+   while(current_session->running) {
       received = recv(current_session->clients[client], (void *)&client_message,
                              sizeof(packet), 0);
-     
+      debugPacket(client_message_ptr);     
       //Check if other user has ended conversation
       if(received <= 0)
       {
@@ -217,6 +215,17 @@ void *client_thread(void *ptr)
 
    end(current_session);
    return NULL;
+}
+
+
+/* Dump contents of received packet from client */
+void debugPacket(packet *rx_pkt) {
+   printf("%s --------------------- TPS REPORT --------------------- %s\n", CYAN, NORMAL);
+   printf("%s Timestamp: %s%lu\n", MAGENTA, NORMAL, rx_pkt->timestamp);
+   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->alias);
+   printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
+   printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
+   printf("%s ------------------------------------------------------- %s\n", CYAN, NORMAL);
 }
 
 

@@ -78,4 +78,4 @@ void get_active_users(int fd);
 void set_pass(packet *pkt, int fd);
 void set_name(packet *pkt, int fd);
 void join(packet *pkt);
-
+void debugPacket(packet *rx_pkt);
