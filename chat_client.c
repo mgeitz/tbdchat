@@ -9,6 +9,7 @@
 
 */
 #include "chat_client.h"
+
 int serverfd;
 char username[64];
 pthread_t chat_rx_thread;
@@ -310,19 +311,15 @@ void *chatRX(void *ptr)
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == REGAUTH) {
       printf("%s --- Success:%s Registration completed successfully.\n", GREEN, NORMAL);
-
    }
    else if (rx_pkt->options == REGFAIL) {
       printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
-
    }
    else if (rx_pkt->options == LOGFAIL) {
       printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
-
    }
    else if (rx_pkt->options == LOGAUTH) {
       printf("%s --- Success:%s Login successful.\n", GREEN, NORMAL);
-
    }
    else {
       printf("%s --- Error:%s Unknown message from server.\n", RED, NORMAL);
@@ -335,8 +332,6 @@ int get_server_connection(char *hostname, char *port) {
    int serverfd;
    struct addrinfo hints, *servinfo, *p;
    int status;
-   
-   /* How much of this do we need? */
    
    memset(&hints, 0, sizeof hints);
    hints.ai_family = PF_UNSPEC;
@@ -351,7 +346,7 @@ int get_server_connection(char *hostname, char *port) {
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
          printf("%s --- Error:%s socket socket \n", RED, NORMAL);
-         continue; // What is this error?
+         continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
@@ -367,7 +362,7 @@ int get_server_connection(char *hostname, char *port) {
 }
 
 
-/* Copied wholesale from bi example */
+/* Print new connection information */
 void print_ip( struct addrinfo *ai) {
    struct addrinfo *p;
    void *addr;
@@ -405,4 +400,3 @@ void showHelp() {
    printf("%s\t/register%s\t | Usage: /register username firstname lastname\n", YELLOW, NORMAL);
    printf("%s\t/login%s\t\t | Usage: /login username.\n", YELLOW, NORMAL);
 }
-
