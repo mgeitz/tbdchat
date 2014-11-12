@@ -58,5 +58,5 @@ int serverLogin(packet *tx_pkt);
 int serverRegistration(packet *tx_pkt);
 int newServerConnection(char *buf);
 void showHelp();
-//int setPassword(char *pwd1, char*pwd2);
-//void setName(char *name);
+int setPassword(packet *tx_pkt);
+void setName(packet *tx_pkt);
