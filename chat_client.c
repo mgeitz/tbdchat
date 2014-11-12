@@ -118,6 +118,11 @@ int userCommand(packet *tx_pkt) {
        tx_pkt->options = INVITE;
        return 1;;
    }
+   // Handle who command
+   else if (strncmp((void *)tx_pkt->buf, "/who ", strlen("/who ")) == 0) {
+       tx_pkt->options = GETUSERS;
+       return 1;;
+   }
    // If it wasn't any of that, invalid command
    else {
       printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
@@ -260,49 +265,68 @@ void sigintHandler(int sig_num) {
 /* Print messages as they are received */
 void *chatRX(void *ptr)
 {
-   packet rx_pkt;
+   packet rx_pkt, *rx_pkt_ptr;
    int received;
-   int *conn = (int *)ptr;
+   int *serverfd = (int *)ptr;
    char *timestamp;
-   char partner_name[32];
+   //char partner_name[32];
    
-   recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
-   strcpy(partner_name, rx_pkt.buf);
-   printf("Conversation started with %s.\n", partner_name);
+   // recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
+   // strcpy(partner_name, rx_pkt.buf);
+   // printf("Conversation started with %s.\n", partner_name);
    
-   while(1)
-   {
+   while(1) {
       // Wait for message to arrive..
-      received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
+      received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
       //Handle 'EXIT' message
-      if(strcmp("EXIT", (void *)&(rx_pkt.buf)) == 0)
-      {
-          printf("Other user disconnected.\n");
-          close(*conn);
-          exit(0);
-      }
+      //if(strcmp("EXIT", (void *)&(rx_pkt.buf)) == 0)
+      //{
+      //    printf("Other user disconnected.\n");
+      //    close(*conn);
+      //    exit(0);
+      //}
       
       // Print if not empty
-      if(received > 0)
-      {
-         // Format timestamp
-         timestamp = asctime(localtime(&(rx_pkt.timestamp)));
-         timestamp[strlen(timestamp) - 1] = '\0';
-         if(rx_pkt.options == 0)
-         {
+      if(received) {
+         if (rx_pkt.options >= 1000) {
+            // Format timestamp
+            timestamp = asctime(localtime(&(rx_pkt.timestamp)));
+            timestamp[strlen(timestamp) - 1] = '\0';
             printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
                    NORMAL, rx_pkt.buf);
          }
-         else
-         {
-            printf("%s%s [%s]:%s %s\n", BLUE, timestamp, rx_pkt.alias,
-                   NORMAL, rx_pkt.buf);
+         else {
+            serverResponse(rx_pkt_ptr);
          }
          memset(&rx_pkt, 0, sizeof(packet));
       }
    }
    return NULL;
+}
+
+
+/* Handle non message packets from server */
+void serverResponse(packet *rx_pkt) {
+   if (rx_pkt->options == REGAUTH) {
+      printf("%s --- Success:%s Registration completed successfully.\n", GREEN, NORMAL);
+
+   }
+   else if (rx_pkt->options == REGFAIL) {
+      printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
+
+   }
+   else if (rx_pkt->options == LOGFAIL) {
+      printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
+
+   }
+   else if (rx_pkt->options == LOGAUTH) {
+      printf("%s --- Success:%s Login successful.\n", GREEN, NORMAL);
+
+   }
+   else {
+      printf("%s --- Error:%s Unknown message from server.\n", RED, NORMAL);
+   }
 }
 
 
