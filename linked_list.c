@@ -1,7 +1,6 @@
 #include "linked_list.h"
 
-int insert(User **head, User *new_user)
-{
+int insert(User **head, User *new_user){
    User *temp = *head;
    if(*head == NULL)
    {
