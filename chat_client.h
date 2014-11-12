@@ -21,10 +21,10 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
-#define RECFAIL 100
+#define REGAUTH 100
 #define REGFAIL 101
 #define LOGFAIL 102 
-#define LOGSUC 103
+#define LOGAUTH 103
 
 // Defined color constants
 #define NORMAL "\x1B[0m"
@@ -58,5 +58,6 @@ int serverLogin(packet *tx_pkt);
 int serverRegistration(packet *tx_pkt);
 int newServerConnection(char *buf);
 void showHelp();
-//int setPassword(char *pwd1, char*pwd2);
-//void setName(char *name);
+int setPassword(packet *tx_pkt);
+void setName(packet *tx_pkt);
+void serverResponse(packet *rx_pkt);

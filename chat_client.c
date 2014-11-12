@@ -9,20 +9,22 @@
 
 */
 #include "chat_client.h"
+
 int serverfd;
 char username[64];
 pthread_t chat_rx_thread;
+
 
 int main() {
    int bufSize, send_flag;
    packet tx_pkt;
    packet *tx_pkt_ptr = &tx_pkt;
    
-   
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
    while (1) {
+      strcpy(tx_pkt.alias, username);
       bufSize = userInput(tx_pkt_ptr);
       send_flag = 1;
       if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
@@ -31,30 +33,34 @@ int main() {
          }
       }
       if (send_flag && serverfd) {
-            strcpy(tx_pkt.alias, username);
             tx_pkt.timestamp = time(NULL);
             send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
+            // Print own message here
+      }
+      if (tx_pkt.options == EXIT) {
+         break;
       }
       // Wipe packet
       memset(&tx_pkt, 0, sizeof(packet));
-      }
+   }
    
    // Close connection
-   //if(pthread_join(chat_rx_thread, NULL))
-   //{
-   //   printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
-   //}
-   //printf("Exiting.\n");
-   //close(conn);
-   //exit(0);
+   if(pthread_join(chat_rx_thread, NULL)) {
+      printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+   }
+   printf("Exiting.\n");
+   close(serverfd);
+   exit(0);
 }
+
 
 /* Process user commands and mutate buffer accordingly */
 int userCommand(packet *tx_pkt) {
 
    // Handle exit command
    if (strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) {
-       exit(1);
+       tx_pkt->options = EXIT;
+       return 1;;
    }
    // Handle help command
    else if (strncmp((void *)tx_pkt->buf, "/help", strlen("/help")) == 0) {
@@ -62,14 +68,14 @@ int userCommand(packet *tx_pkt) {
        return 0;
    }
    // Handle connect command
-   else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/connect ", strlen("/connect ")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
           printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
       }
       return 0;
    }
    // Handle register command
-   else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/register ", strlen("/register ")) == 0) {
       if (!serverRegistration(tx_pkt)) {
          printf("%s --- Error:%s Server registration failed.\n", RED, NORMAL);
          return 0;
@@ -79,18 +85,50 @@ int userCommand(packet *tx_pkt) {
       }
    }
    // Handle login command
-   else if (strncmp((void *)tx_pkt->buf, "/login", strlen("/login")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/login ", strlen("/login ")) == 0) {
       if (!serverLogin(tx_pkt)) {
          printf("%s --- Error:%s Server login failed.\n", RED, NORMAL);
          return 0;
       }
+      else {
+         return 1;
+      }
+   }
+   // Handle setname command
+   else if (strncmp((void *)tx_pkt->buf, "/setname ", strlen("/setname ")) == 0) {
+      setName(tx_pkt);
       return 1;
    }
-  // If it wasn't any of that, invalid command
-  else {
+   // Handle setpass command
+   else if (strncmp((void *)tx_pkt->buf, "/setpass ", strlen("/setpass ")) == 0) {
+      if (!setPassword(tx_pkt)) {
+         printf("%s --- Error:%s Password mismatch.\n", RED, NORMAL);
+         return 0;
+      }
+      else {
+         return 1;
+      }
+   }
+   // Handle invite command
+   if (strncmp((void *)tx_pkt->buf, "/invite ", strlen("/invite ")) == 0) {
+       tx_pkt->options = JOIN;
+       return 1;;
+   }
+   // Handle join command
+   else if (strncmp((void *)tx_pkt->buf, "/join ", strlen("/join ")) == 0) {
+       tx_pkt->options = INVITE;
+       return 1;;
+   }
+   // Handle who command
+   else if (strncmp((void *)tx_pkt->buf, "/who ", strlen("/who ")) == 0) {
+       tx_pkt->options = GETUSERS;
+       return 1;;
+   }
+   // If it wasn't any of that, invalid command
+   else {
       printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
       return 0;
-  }
+   }
 }
 
 
@@ -132,7 +170,6 @@ int newServerConnection(char *buf) {
    int i = 0;
    char *argv[16];
    char *tmp;
-
    tmp = buf;
 
    argv[i] = strsep(&tmp, " \t");
@@ -191,16 +228,32 @@ int serverRegistration(packet *tx_pkt) {
 
 
 /* Set user password */
-//int setPassword(char *pwd1, char *pwd2) {
-   //compare pwd strings, maybe hash them if valid
-//   return 1;
-//}
+int setPassword(packet *tx_pkt) {
+   int i = 0;
+   char *argv[16];
+   char *tmp;
+   tmp = tx_pkt->buf;
+
+   // Split command args
+   argv[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
+       argv[++i] = strsep(&tmp, " \t");
+   }
+   if (strcmp(argv[1], argv[2])  == 0) {
+      tx_pkt->options = SETPASS;
+      return 1;
+   }
+   else {
+      return 0;
+   }
+}
 
 
 /* Set user real name */
-//void setName(char *name) {
-  //stub
-//}
+void setName(packet *tx_pkt) {
+   strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
+   tx_pkt->options = SETNAME;
+}
 
 
 /* Handle SIGINT (CTRL+C) */
@@ -213,44 +266,39 @@ void sigintHandler(int sig_num) {
 /* Print messages as they are received */
 void *chatRX(void *ptr)
 {
-   packet rx_pkt;
+   packet rx_pkt, *rx_pkt_ptr;
    int received;
-   int *conn = (int *)ptr;
+   int *serverfd = (int *)ptr;
    char *timestamp;
-   char partner_name[32];
+   //char partner_name[32];
    
-   recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
-   strcpy(partner_name, rx_pkt.buf);
-   printf("Conversation started with %s.\n", partner_name);
+   // recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
+   // strcpy(partner_name, rx_pkt.buf);
+   // printf("Conversation started with %s.\n", partner_name);
    
-   while(1)
-   {
+   while(1) {
       // Wait for message to arrive..
-      received = recv(*conn, (void *)&rx_pkt, sizeof(packet), 0);
+      received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
       //Handle 'EXIT' message
-      if(strcmp("EXIT", (void *)&(rx_pkt.buf)) == 0)
-      {
-          printf("Other user disconnected.\n");
-          close(*conn);
-          exit(0);
-      }
+      //if(strcmp("EXIT", (void *)&(rx_pkt.buf)) == 0)
+      //{
+      //    printf("Other user disconnected.\n");
+      //    close(*conn);
+      //    exit(0);
+      //}
       
       // Print if not empty
-      if(received > 0)
-      {
-         // Format timestamp
-         timestamp = asctime(localtime(&(rx_pkt.timestamp)));
-         timestamp[strlen(timestamp) - 1] = '\0';
-         if(rx_pkt.options == 0)
-         {
+      if(received) {
+         if (rx_pkt.options >= 1000) {
+            // Format timestamp
+            timestamp = asctime(localtime(&(rx_pkt.timestamp)));
+            timestamp[strlen(timestamp) - 1] = '\0';
             printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
                    NORMAL, rx_pkt.buf);
          }
-         else
-         {
-            printf("%s%s [%s]:%s %s\n", BLUE, timestamp, rx_pkt.alias,
-                   NORMAL, rx_pkt.buf);
+         else {
+            serverResponse(rx_pkt_ptr);
          }
          memset(&rx_pkt, 0, sizeof(packet));
       }
@@ -259,13 +307,31 @@ void *chatRX(void *ptr)
 }
 
 
+/* Handle non message packets from server */
+void serverResponse(packet *rx_pkt) {
+   if (rx_pkt->options == REGAUTH) {
+      printf("%s --- Success:%s Registration completed successfully.\n", GREEN, NORMAL);
+   }
+   else if (rx_pkt->options == REGFAIL) {
+      printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
+   }
+   else if (rx_pkt->options == LOGFAIL) {
+      printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
+   }
+   else if (rx_pkt->options == LOGAUTH) {
+      printf("%s --- Success:%s Login successful.\n", GREEN, NORMAL);
+   }
+   else {
+      printf("%s --- Error:%s Unknown message from server.\n", RED, NORMAL);
+   }
+}
+
+
 /* Establish server connection */
 int get_server_connection(char *hostname, char *port) {
    int serverfd;
    struct addrinfo hints, *servinfo, *p;
    int status;
-   
-   /* How much of this do we need? */
    
    memset(&hints, 0, sizeof hints);
    hints.ai_family = PF_UNSPEC;
@@ -280,7 +346,7 @@ int get_server_connection(char *hostname, char *port) {
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
          printf("%s --- Error:%s socket socket \n", RED, NORMAL);
-         continue; // What is this error?
+         continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
@@ -296,7 +362,7 @@ int get_server_connection(char *hostname, char *port) {
 }
 
 
-/* Copied wholesale from bi example */
+/* Print new connection information */
 void print_ip( struct addrinfo *ai) {
    struct addrinfo *p;
    void *addr;
@@ -334,4 +400,3 @@ void showHelp() {
    printf("%s\t/register%s\t | Usage: /register username firstname lastname\n", YELLOW, NORMAL);
    printf("%s\t/login%s\t\t | Usage: /login username.\n", YELLOW, NORMAL);
 }
-

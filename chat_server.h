@@ -24,10 +24,10 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
-#define RECFAIL 100
+#define REGAUTH 100
 #define REGFAIL 101
 #define LOGFAIL 102
-#define LOGSUC 103
+#define LOGAUTH 103
 
 struct Packet
 {
