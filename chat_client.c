@@ -285,6 +285,7 @@ void *chatRX(void *ptr) {
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
       if(received) {
+         debugPacket(rx_pkt_ptr);
          if (rx_pkt.options >= 1000) {
             // Format timestamp
             pthread_mutex_lock(&roomMutex);
@@ -307,6 +308,17 @@ void *chatRX(void *ptr) {
    return NULL;
 }
 
+
+/* Dump contents of received packet from server */
+void debugPacket(packet *rx_pkt) {
+   printf("%s --------------------- PACKET REPORT --------------------- %s\n", CYAN, NORMAL);
+   printf("%s Timestamp: %s%lu\n", MAGENTA, NORMAL, rx_pkt->timestamp);
+   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->alias);
+   printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
+   printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
+   printf("%s --------------------------------------------------------- %s\n", CYAN, NORMAL);
+
+}
 
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {

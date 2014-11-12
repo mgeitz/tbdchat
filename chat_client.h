@@ -61,3 +61,4 @@ void showHelp();
 int setPassword(packet *tx_pkt);
 void setName(packet *tx_pkt);
 void serverResponse(packet *rx_pkt);
+void debugPacket(packet *rx_pkt);
