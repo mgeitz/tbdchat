@@ -279,25 +279,11 @@ void *chatRX(void *ptr) {
    int received;
    int *serverfd = (int *)ptr;
    char *timestamp;
-   //char partner_name[32];
-   
-   // recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
-   // strcpy(partner_name, rx_pkt.buf);
-   // printf("Conversation started with %s.\n", partner_name);
    
    while(1) {
       // Wait for message to arrive..
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
-      //Handle 'EXIT' message
-      //if(strcmp("EXIT", (void *)&(rx_pkt.buf)) == 0)
-      //{
-      //    printf("Other user disconnected.\n");
-      //    close(*conn);
-      //    exit(0);
-      //}
-      
-      // Print if not empty
       if(received) {
          if (rx_pkt.options >= 1000) {
             // Format timestamp
@@ -337,7 +323,7 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- Success:%s Login successful.\n", GREEN, NORMAL);
    }
    else {
-      printf("%s --- Error:%s Unknown message from server.\n", RED, NORMAL);
+      printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
    }
 }
 
@@ -371,7 +357,6 @@ int get_server_connection(char *hostname, char *port) {
       }
       break;
    }
-   
    freeaddrinfo(servinfo);
    return serverfd;
 }
@@ -419,4 +404,5 @@ void showHelp() {
    printf("%s\t/room%s\t\t | Usage: /join room.\n", YELLOW, NORMAL);
    printf("%s\t/setpass%s\t\t | Usage: /setpass password password.\n", YELLOW, NORMAL);
    printf("%s\t/setname%s\t\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
+   printf("%s\t/connect%s\t\t | Usage: /connect address port.\n", YELLOW, NORMAL);
 }
