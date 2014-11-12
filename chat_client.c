@@ -37,6 +37,7 @@ int main() {
          }
       }
       if (send_flag && serverfd) {
+            tx_pkt.timestamp = time(NULL);
             if (tx_pkt.options == MESSAGE) {
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
                       NORMAL, tx_pkt.buf);
@@ -44,7 +45,6 @@ int main() {
                tx_pkt.options = currentRoom;
                pthread_mutex_unlock(&roomMutex);
             }
-            tx_pkt.timestamp = time(NULL);
             send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
       }
       if (tx_pkt.options == EXIT) {
@@ -402,7 +402,7 @@ void showHelp() {
    printf("%s\t/who%s\t\t | Return a list of other users.\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username.\n", YELLOW, NORMAL);
    printf("%s\t/room%s\t\t | Usage: /join room.\n", YELLOW, NORMAL);
-   printf("%s\t/setpass%s\t\t | Usage: /setpass password password.\n", YELLOW, NORMAL);
-   printf("%s\t/setname%s\t\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
-   printf("%s\t/connect%s\t\t | Usage: /connect address port.\n", YELLOW, NORMAL);
+   printf("%s\t/setpass%s\t | Usage: /setpass password password.\n", YELLOW, NORMAL);
+   printf("%s\t/setname%s\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
+   printf("%s\t/connect%s\t | Usage: /connect address port.\n", YELLOW, NORMAL);
 }
