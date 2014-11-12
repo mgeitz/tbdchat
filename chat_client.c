@@ -46,7 +46,6 @@ int main() {
             }
             tx_pkt.timestamp = time(NULL);
             send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
-            // Print own message here
       }
       if (tx_pkt.options == EXIT) {
          break;
@@ -413,6 +412,11 @@ void print_ip( struct addrinfo *ai) {
 void showHelp() {
    printf("%s\t/help%s\t\t | Display a list of commands.\n", YELLOW, NORMAL);
    printf("%s\t/exit%s\t\t | Exit the client.\n", YELLOW, NORMAL);
-   printf("%s\t/register%s\t | Usage: /register username firstname lastname\n", YELLOW, NORMAL);
-   printf("%s\t/login%s\t\t | Usage: /login username.\n", YELLOW, NORMAL);
+   printf("%s\t/register%s\t | Usage: /register username password password\n", YELLOW, NORMAL);
+   printf("%s\t/login%s\t\t | Usage: /login username password.\n", YELLOW, NORMAL);
+   printf("%s\t/who%s\t\t | Return a list of other users.\n", YELLOW, NORMAL);
+   printf("%s\t/invite%s\t\t | Usage: /invite username.\n", YELLOW, NORMAL);
+   printf("%s\t/room%s\t\t | Usage: /join room.\n", YELLOW, NORMAL);
+   printf("%s\t/setpass%s\t\t | Usage: /setpass password password.\n", YELLOW, NORMAL);
+   printf("%s\t/setname%s\t\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
 }
