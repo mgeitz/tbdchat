@@ -22,4 +22,4 @@ char *get_password(User **head, char *user);
 void readUserFile(User **head, char *filename);
 void writeUserFile(User **head, char *filename);
 void printList(User **head);
-User *get_user(User **head, char *user)
+User *get_user(User **head, char *user);

@@ -27,8 +27,6 @@ int main(int argc, char **argv)
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
-   //Client Sockets
-   int clientA_sock_fd, clientB_sock_fd;
    
    user_list = NULL;
    active_users = NULL;
@@ -52,7 +50,8 @@ int main(int argc, char **argv)
       int new_client = accept_client(chat_serv_sock_fd);
       if(new_client != -1) {
          pthread_t new_client_thread;
-         int iret = pthread_create(&new_client_thread, NULL, client_recieve, (void *)&new_client);
+         int iret;
+         iret  = pthread_create(&new_client_thread, NULL, client_receive, (void *)&new_client);
       }
    }
    
@@ -335,17 +334,17 @@ void establish_identity(int fd, char *ID, char *name, User **user_list) {
  *should listen on
  */
 void *client_receive(void *ptr) {
-   int client = *ptr;
-   Packet in_pkt;
+   int client = *(int *)ptr;
+   packet in_pkt;
 
    recv(client, &in_pkt, sizeof(in_pkt), 0);
 
    //Handle command messages
-   if(in_pkt.options == REGISTER) register(&in_pkt, client);
+   if(in_pkt.options == REGISTER) register_user(&in_pkt, client); 
    else if(in_pkt.options == SETPASS) set_pass(&in_pkt, client);
    else if(in_pkt.options == SETNAME) set_name(&in_pkt, client);
    else if(in_pkt.options == LOGIN) login(&in_pkt, client);
-   else if(in_pkt.options == EXIT) exit(&in_pkt);
+   else if(in_pkt.options == EXIT) exit_client(&in_pkt);
    else if(in_pkt.options == INVITE) invite(&in_pkt);
    else if(in_pkt.options == JOIN) join(&in_pkt);
    else if(in_pkt.options == GETUSERS) get_active_users(client);
@@ -355,35 +354,37 @@ void *client_receive(void *ptr) {
 
    //Unrecognized command, send client a failure message
    else {
-      Packet ret;
+      packet ret;
       ret.options = RECFAIL;
       strcpy(ret.buf, "Invalid Command");
-      send(client, ret, sizeof(ret), 0);
+      send(client, &ret, sizeof(ret), 0);
    }
+   return NULL;
+}
 
 /*
  *Register
  */
-void register(Packet *pkt, int fd) {
+void register_user(packet *pkt, int fd) {
    User *temp_user = (User *)malloc(sizeof(User));
    temp_user->next = NULL;
    char *args[5];
 
    //Pull command
-   args[0] = strsep(pkt->buf, " \t");
+   args[0] = strsep((void *)(pkt->buf), " \t");
 
    //Pull username
-   args[1] = strsep(pkt->buf, " \t");
+   args[1] = strsep((void *)(pkt->buf), " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
-      Packet ret;
+      packet ret;
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
-      send(fd, ret, sizeof(ret), 0);
+      send(fd, &ret, sizeof(ret), 0);
       return;
    }
   
    //Pull password
-   args[2] = strsep(pkt->buf, " \t");
+   args[2] = strsep((void *)(pkt->buf), " \t");
    strcpy(temp_user->username, args[1]);
    strcpy(temp_user->password, args[2]);
    temp_user->sock = fd;
@@ -393,28 +394,29 @@ void register(Packet *pkt, int fd) {
 /*
  *Login
  */
-void login(Packet *pkt, int fd) {
-   char *args[3]
-   Packet ret;
+void login(packet *pkt, int fd) {
+   char *args[3];
+   packet ret;
 
    //Pull command
-   args[0] = strsep(pkt->buf, " \t");
+   args[0] = strsep((void *)(pkt->buf), " \t");
 
    //Pull username and check valid
-   args[1] = strsep(pkt->buf, " \t"
-   if(strcmp(get_real_name(&user_list, args[1]), "ERROR" ==0) {
+   args[1] = strsep((void *)(pkt->buf), " \t");
+   if(strcmp(get_real_name(&user_list, args[1]), "ERROR" ==0)) {
       ret.options = LOGFAIL;
       strcpy(ret.buf, "Username not found.");
-      send(fd, ret, sizeof(ret), 0);
+      send(fd, &ret, sizeof(ret), 0);
       return;
    }
 
    //Pull password and check if it is valid
-   args[2] = strsep(pkt->buf, " \t");
-   if(strcmp(args[2], get_password(&user_list, args[1]) != 0) {
+   args[2] = strsep((void *)(pkt->buf), " \t");
+   char *password = get_password(&user_list, args[1]);
+   if(strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      strcpy(ret.buf, "Incorrect password.");
-     send(fd, ret, sizeof(ret, 0);
+     send(fd, &ret, sizeof(ret), 0);
      return;
    }
 
@@ -425,27 +427,27 @@ void login(Packet *pkt, int fd) {
 
    ret.options = LOGSUC;
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
-   send(fd, ret, sizeof(ret, 0);
+   send(fd, &ret, sizeof(ret), 0);
 }
 
 /*
  *Invite
  */
-void invite(Packet *pkt) {
+void invite(packet *pkt) {
 
 }
 
 /*
  *Exit
  */
-void exit(Packet *pkt) {
+void exit_client(packet *pkt) {
 
 }
 
 /*
  *Send Message
  */
-void send_message(Packet *pkt) {
+void send_message(packet *pkt) {
 
 }
 
@@ -454,5 +456,39 @@ void send_message(Packet *pkt) {
  *Get active users
  */
 void get_active_users(int fd) {
+    User *temp = active_users;
+    packet pkt;
+
+    while(temp != NULL ) {
+     strcpy(pkt.buf, temp->username);
+     send(fd, &pkt, sizeof(pkt), 0);
+    }
+
+    strcpy(pkt.buf, "END");
+    send(fd, &pkt, sizeof(pkt), 0);
+
+}
+
+/*
+ *Set user password
+ */
+void set_pass(packet *pkt, int fd) {
+
+
+}
+
+/*
+ *Set user real name
+ */
+void set_name(packet *pkt, int fd) {
+
+
+}
+
+/*
+ *Join a chat room
+ */
+void join(packet *pkt) {
+
 
 }
