@@ -11,13 +11,16 @@
 #include "chat_client.h"
 
 int serverfd;
+volatile int currentRoom;
 char username[64];
 pthread_t chat_rx_thread;
+pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 int main() {
    int bufSize, send_flag;
    packet tx_pkt;
+   char *timestamp;
    packet *tx_pkt_ptr = &tx_pkt;
    
    // Handle CTRL+C
@@ -25,6 +28,7 @@ int main() {
    
    while (1) {
       strcpy(tx_pkt.alias, username);
+      tx_pkt.options = MESSAGE;
       bufSize = userInput(tx_pkt_ptr);
       send_flag = 1;
       if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
@@ -33,6 +37,13 @@ int main() {
          }
       }
       if (send_flag && serverfd) {
+            if (tx_pkt.options == MESSAGE) {
+               printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
+                      NORMAL, tx_pkt.buf);
+               pthread_mutex_lock(&roomMutex);
+               tx_pkt.options = currentRoom;
+               pthread_mutex_unlock(&roomMutex);
+            }
             tx_pkt.timestamp = time(NULL);
             send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
             // Print own message here
@@ -146,7 +157,7 @@ int userInput(packet *tx_pkt) {
          break;
       }
    }
-   //printf("\33[1A\33[J");
+   printf("\33[1A\33[J");
    // If EOF is read, exit?
    if(tx_pkt->buf[i] == EOF) {
       exit(1);
@@ -264,8 +275,7 @@ void sigintHandler(int sig_num) {
 
 
 /* Print messages as they are received */
-void *chatRX(void *ptr)
-{
+void *chatRX(void *ptr) {
    packet rx_pkt, *rx_pkt_ptr;
    int received;
    int *serverfd = (int *)ptr;
@@ -292,6 +302,12 @@ void *chatRX(void *ptr)
       if(received) {
          if (rx_pkt.options >= 1000) {
             // Format timestamp
+            pthread_mutex_lock(&roomMutex);
+            if (rx_pkt.options != currentRoom) {
+               currentRoom = rx_pkt.options;
+               printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
+            }
+            pthread_mutex_unlock(&roomMutex);
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
             printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
