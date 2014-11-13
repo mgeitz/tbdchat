@@ -179,12 +179,13 @@ int serverLogin(packet *tx_pkt) {
 int newServerConnection(char *buf) {
    int i = 0;
    char *argv[16];
-   char *tmp;
-   strcpy(tmp, buf);
+   char tmp[128];
+   char *tmp_ptr = &tmp;
+   strcpy(tmp_ptr, buf);
    
-   argv[i] = strsep(&tmp, " \t");
+   argv[i] = strsep(&tmp_ptr, " \t");
    while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
-       argv[++i] = strsep(&tmp, " \t");
+       argv[++i] = strsep(&tmp_ptr, " \t");
    }
    if (i == 3) {
       if((serverfd = get_server_connection(argv[1], argv[2])) == -1) {
@@ -211,7 +212,8 @@ int newServerConnection(char *buf) {
 int serverRegistration(packet *tx_pkt) {
    int i = 0;
    char *argv[16];
-   char *tmp;
+   char tmp_arr[128];
+   char *tmp = &tmp_arr;
    strcpy(tmp, tx_pkt->buf);
    
    // Split command args
@@ -241,7 +243,8 @@ int serverRegistration(packet *tx_pkt) {
 int setPassword(packet *tx_pkt) {
    int i = 0;
    char *argv[16];
-   char *tmp;
+   char tmp_arr[128];
+   char *tmp = &tmp_arr;
    strcpy(tmp, tx_pkt->buf);
    
    // Split command args
