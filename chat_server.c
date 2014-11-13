@@ -237,7 +237,7 @@ void *client_receive(void *ptr) {
    //Handle conversation message
    else if(in_pkt.options >= 1000) { 
       printf("message\n");
-      send_message(&in_pkt);
+      send_message(&in_pkt, client);
    }
    //Unrecognized command, send client a failure message
    //else {
@@ -371,12 +371,14 @@ void exit_client(packet *pkt) {
 /*
  *Send Message
  */
-void send_message(packet *pkt) {
+void send_message(packet *pkt, int clientfd) {
     User *tmp = active_users;
-    pkt->options = 1001;
+    //pkt->options = 1000;
     while(tmp != NULL) {
-       send(tmp->sock, pkt, sizeof(pkt), 0);
-       printf("Sent to %s\n", tmp->username);
+       if (clientfd != tmp->sock) {
+          send(tmp->sock, (void *)pkt, sizeof(packet), 0);
+          printf("Sent to %s\n", tmp->username);
+       }
        tmp = tmp->next;
     }
 }

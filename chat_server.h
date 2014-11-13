@@ -85,7 +85,7 @@ void register_user(packet *pkt, int fd);
 void login(packet *pkt, int fd);
 void invite(packet *pkt);
 void exit_client(packet *pkt);
-void send_message(packet *pkt);
+void send_message(packet *pkt, int clientfd);
 void get_active_users(int fd);
 void set_pass(packet *pkt, int fd);
 void set_name(packet *pkt, int fd);
