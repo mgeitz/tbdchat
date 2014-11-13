@@ -410,19 +410,21 @@ void set_pass(packet *pkt, int fd) {
  *Set user real name
  */
 void set_name(packet *pkt, int fd) {
-   char *tmp = pkt->buf;
-   char *arr[3];
+   //char *tmp = pkt->buf;
+   //char *arr[3];
    char name[64];
 
    //Separate string
-   arr[0] = strsep(&tmp, " \t");
-   arr[1] = strsep(&tmp, " \t");
-   arr[2] = strsep(&tmp, " \t");
+   //arr[0] = strsep(&tmp, " \t");
+   //arr[1] = strsep(&tmp, " \t");
+   //arr[2] = strsep(&tmp, " \t");
 
    //Copy string to name field
-   strcpy(name, arr[1]);
-   strcat(name, " ");
-   strcat(name, arr[2]);
+   //strcpy(name, arr[1]);
+   //strcat(name, " ");
+   //strcat(name, arr[2]);
+
+   memmove(name, pkt->buf + strlen("/setname "), 64);
 
    //Submit name change to user list, write list
    User *user = get_user(&user_list, pkt->alias);
