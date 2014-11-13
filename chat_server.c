@@ -396,10 +396,6 @@ void get_active_users(int fd) {
      send(fd, &pkt, sizeof(pkt), 0);
      temp = temp->next;
     }
-
-    strcpy(pkt.buf, "END");
-    send(fd, &pkt, sizeof(pkt), 0);
-
 }
 
 /*
