@@ -12,10 +12,12 @@
 
 int serverfd;
 volatile int currentRoom;
+volatile int debugMode;
 char username[64];
 pthread_t chat_rx_thread;
 pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 int main(int argc, char **argv) {
@@ -86,6 +88,17 @@ int userCommand(packet *tx_pkt) {
    // Handle help command
    else if (strncmp((void *)tx_pkt->buf, "/help", strlen("/help")) == 0) {
        showHelp();
+       return 0;
+   }
+   else if (strncmp((void *)tx_pkt->buf, "/debug", strlen("/debug")) == 0) {
+       pthread_mutex_lock(&debugModeMutex);
+       if (debugMode) {
+         debugMode = 0;
+       }
+       else {
+          debugMode = 1;
+       }
+       pthread_mutex_unlock(&debugModeMutex);
        return 0;
    }
    // Handle connect command
@@ -324,7 +337,11 @@ void *chatRX(void *ptr) {
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
       if(received) {
-         debugPacket(rx_pkt_ptr);
+         pthread_mutex_lock(&debugModeMutex);
+         if (debugMode) {
+            debugPacket(rx_pkt_ptr);
+         }
+         pthread_mutex_unlock(&debugModeMutex);
          if (rx_pkt.options >= 1000) {
             // Format timestamp
             pthread_mutex_lock(&roomMutex);
@@ -356,7 +373,6 @@ void debugPacket(packet *rx_pkt) {
    printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
    printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
    printf("%s --------------------------------------------------------- %s\n", CYAN, NORMAL);
-
 }
 
 /* Handle non message packets from server */
@@ -470,4 +486,5 @@ void showHelp() {
    printf("%s\t/setpass%s\t | Usage: /setpass password password.\n", YELLOW, NORMAL);
    printf("%s\t/setname%s\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
    printf("%s\t/connect%s\t | Usage: /connect address port.\n", YELLOW, NORMAL);
+   printf("%s\t/debug%s\t | Toggle debug mode.\n", YELLOW, NORMAL);
 }
