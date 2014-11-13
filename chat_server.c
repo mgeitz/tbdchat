@@ -419,15 +419,20 @@ void *client_receive(void *ptr) {
  *Register
  */
 void register_user(packet *pkt, int fd) {
+   printf("Got to register\n");
    User *temp_user = (User *)malloc(sizeof(User));
    temp_user->next = NULL;
    char *args[5];
+   char *tmp;
+   tmp = pkt->buf;
 
+   printf("Attempting string separation\n");
    //Pull command
-   args[0] = strsep((void *)(pkt->buf), " \t");
+   args[0] = strsep(&tmp, " \t");
 
+   printf("pulling username\n");
    //Pull username
-   args[1] = strsep((void *)(pkt->buf), " \t");
+   args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
       packet ret;
       ret.options = REGFAIL;
@@ -436,10 +441,12 @@ void register_user(packet *pkt, int fd) {
       return;
    }
   
+   printf("Pulling password\n");
    //Pull password
-   args[2] = strsep((void *)(pkt->buf), " \t");
+   args[2] = strsep(&tmp, " \t");
    strcpy(temp_user->username, args[1]);
    strcpy(temp_user->password, args[2]);
+   printf("Going to insert\n");
    temp_user->sock = fd;
    insert(&user_list, temp_user);
 }
@@ -450,12 +457,14 @@ void register_user(packet *pkt, int fd) {
 void login(packet *pkt, int fd) {
    char *args[3];
    packet ret;
+   char *tmp;
+   tmp = pkt->buf;
 
    //Pull command
-   args[0] = strsep((void *)(pkt->buf), " \t");
+   args[0] = strsep(&tmp, " \t");
 
    //Pull username and check valid
-   args[1] = strsep((void *)(pkt->buf), " \t");
+   args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR" ==0)) {
       ret.options = LOGFAIL;
       strcpy(ret.buf, "Username not found.");
@@ -464,7 +473,7 @@ void login(packet *pkt, int fd) {
    }
 
    //Pull password and check if it is valid
-   args[2] = strsep((void *)(pkt->buf), " \t");
+   args[2] = strsep(&tmp, " \t");
    char *password = get_password(&user_list, args[1]);
    if(strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
