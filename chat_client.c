@@ -18,7 +18,7 @@ pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-int main() {
+int main(int argc, char **argv) {
    int bufSize, send_flag;
    packet tx_pkt;
    char *timestamp;
@@ -28,6 +28,7 @@ int main() {
    signal(SIGINT, sigintHandler);
 
    printf("Fancy ascii logo splash. Use /help to view a list of available commands.\n");
+
    
    while (1) {
       pthread_mutex_lock(&unameMutex);
@@ -43,12 +44,12 @@ int main() {
          if (send_flag && serverfd) {
             tx_pkt.timestamp = time(NULL);
             pthread_mutex_lock(&roomMutex);
-            if (currentRoom >= 1000 && tx_pkt.options == -1) {
+            if (currentRoom > 999 && tx_pkt.options == -1) {
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
                       NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
-            pthread_mutex_unlock(&roomMutex);
             }
+            pthread_mutex_unlock(&roomMutex);
             if (tx_pkt.options > 0) {
                send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
             }
@@ -184,7 +185,7 @@ int serverLogin(packet *tx_pkt) {
    char cpy[64];
    int i;
    strcpy(cpy, tx_pkt->buf);
-   char *tmp = &cpy;
+   char *tmp = cpy;
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -368,7 +369,7 @@ void serverResponse(packet *rx_pkt) {
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&unameMutex);
-      strncpy(username, rx_pkt->buf, 64);
+      strcpy(username, rx_pkt->buf);
       pthread_mutex_unlock(&unameMutex);
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room

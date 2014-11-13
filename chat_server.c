@@ -346,9 +346,9 @@ void login(packet *pkt, int fd) {
    //printList(&active_users);
    ret.options = LOGSUC;
    ret.timestamp = time(NULL);
+   strcpy(ret.alias, "SERVER");
    //strcpy(ret.buf, "SERVER");
    //printf("---------BEFORE LAST GET REAL NAME--------\n");
-   printf("%s\n",get_real_name(&user_list, args[1]));
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
    printf("User logged in\n");
