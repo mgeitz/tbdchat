@@ -180,19 +180,26 @@ int userInput(packet *tx_pkt) {
 
 /* Connect to a new server */
 int serverLogin(packet *tx_pkt) {
-   char *args[3];
-   char arr[64];
-   strcpy(arr, tx_pkt->buf);
-   char *tmp = &arr;
-   //pull command
-   args[0] = strsep(&tmp, " \t");
-   //pull username
-   args[1] = strsep(&tmp, " \t");
-   pthread_mutex_lock(&unameMutex);
-   strcpy(username, args[1]);
-   pthread_mutex_unlock(&unameMutex);
-   tx_pkt->options = LOGIN;
-   return 1;
+   char *args[16];
+   char cpy[64];
+   int i;
+   strcpy(cpy, tx_pkt->buf);
+   char *tmp = &cpy;
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i == 3) {
+      pthread_mutex_lock(&unameMutex);
+      strcpy(username, args[1]);
+      pthread_mutex_unlock(&unameMutex);
+      tx_pkt->options = LOGIN;
+      return 1;
+   }
+   else {
+      printf("%s --- Error:%s Usage: /login username password\n", RED, NORMAL);
+      return 0;
+   }
 }
 
 
