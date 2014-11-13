@@ -180,8 +180,8 @@ int newServerConnection(char *buf) {
    int i = 0;
    char *argv[16];
    char *tmp;
-   tmp = buf;
-
+   strcpy(tmp, buf);
+   
    argv[i] = strsep(&tmp, " \t");
    while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
        argv[++i] = strsep(&tmp, " \t");
@@ -212,8 +212,8 @@ int serverRegistration(packet *tx_pkt) {
    int i = 0;
    char *argv[16];
    char *tmp;
-   tmp = tx_pkt->buf;
-
+   strcpy(tmp, tx_pkt->buf);
+   
    // Split command args
    argv[i] = strsep(&tmp, " \t");
    while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
@@ -242,8 +242,8 @@ int setPassword(packet *tx_pkt) {
    int i = 0;
    char *argv[16];
    char *tmp;
-   tmp = tx_pkt->buf;
-
+   strcpy(tmp, tx_pkt->buf);
+   
    // Split command args
    argv[i] = strsep(&tmp, " \t");
    while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
