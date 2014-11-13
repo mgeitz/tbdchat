@@ -468,31 +468,50 @@ void login(packet *pkt, int fd) {
    //Pull command
    args[0] = strsep(&tmp, " \t");
 
+   printf("-------BEFORE FIRST LOOKUP-------\n");
+   printList(&user_list);
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
       ret.options = LOGFAIL;
+      printf("-------IN ERROR--------\n");
+      printList(&user_list);
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
-      //return;
+      return;
    }
-
+   printf("-------AFTER FIRST LOOKU---------\n");
+   printList(&user_list);
    //Pull password and check if it is valid
    args[2] = strsep(&tmp, " \t");
+   printf("--------BEFORE GET PASS--------\n");
+   printList(&user_list);
+
    char *password = get_password(&user_list, args[1]);
+   printf("---------AFTER GETPASS--------\n");
+   printList(&user_list);
    if(strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      strcpy(ret.buf, "Incorrect password.");
      send(fd, &ret, sizeof(ret), 0);
-     //return;
+     return;
    }
-
+   printf("--------BEFORE GET USER--------\n");
+   printList(&user_list);
    //Login successful, send username to client and add to active_users
-   User *user = get_user(&user_list, args[1]);
+   User *user = (User *)malloc(sizeof(User));
+   strcpy(user->username, args[1]);
+   user->sock = fd;
+   user->next = NULL;
+   printf("----------AFTER GET USER--------\n");
+   printList(&user_list);
    user->sock = fd;
    insert(&active_users, user);
-
+   printf("--------ACTIVE USERS--------\n");
+   printList(&active_users);
    ret.options = LOGSUC;
+   printf("---------BEFORE LAST GET REAL NAME--------\n");
+   printList(&user_list);
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
 } 
