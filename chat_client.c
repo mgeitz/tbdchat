@@ -177,6 +177,15 @@ int userInput(packet *tx_pkt) {
 
 /* Connect to a new server */
 int serverLogin(packet *tx_pkt) {
+   char *args[3];
+   char arr[64];
+   strcpy(arr, tx_pkt->buf);
+   char *tmp = &arr;
+   //pull command
+   args[0] = strsep(&tmp, " \t");
+   //pull username
+   args[1] = strsep(&tmp, " \t");
+   strcpy(username, args[1]);
    tx_pkt->options = LOGIN;
    return 1;
 }

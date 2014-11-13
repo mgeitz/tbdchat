@@ -410,17 +410,31 @@ void set_pass(packet *pkt, int fd) {
  *Set user real name
  */
 void set_name(packet *pkt, int fd) {
+   char *tmp = pkt->buf;
+   char *arr[3];
+   char name[64];
+
+   //Separate string
+   arr[0] = strsep(&tmp, " \t");
+   arr[1] = strsep(&tmp, " \t");
+   arr[2] = strsep(&tmp, " \t");
+
+   //Copy string to name field
+   strcpy(name, arr[1]);
+   strcat(name, " ");
+   strcat(name, arr[2]);
+
    //Submit name change to user list, write list
    User *user = get_user(&user_list, pkt->alias);
    if(user != NULL) {
-      strcpy(user->real_name, pkt->buf);
+      strcpy(user->real_name, name);
       writeUserFile(&user_list, "Users.bin");
    }
    
    //Submit name change to active users
    user = get_user(&active_users, pkt->alias);
    if(user != NULL) {
-      strcpy(user->real_name, pkt->buf);
+      strcpy(user->real_name, name);
    }
 }
 
