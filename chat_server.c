@@ -576,8 +576,18 @@ void set_pass(packet *pkt, int fd) {
  *Set user real name
  */
 void set_name(packet *pkt, int fd) {
-
-
+   //Submit name change to user list, write list
+   User *user = get_user(&user_list, pkt->alias);
+   if(user != NULL) {
+      strcpy(user->real_name, pkt->buf);
+      writeUserFile(&user_list, "Users.bin");
+   }
+   
+   //Submit name change to active users
+   user = get_user(&active_users, pkt->alias);
+   if(user != NULL) {
+      strcpy(user->real_name, pkt->buf);
+   }
 }
 
 /*
