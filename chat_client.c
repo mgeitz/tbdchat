@@ -25,27 +25,34 @@ int main() {
    
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
+
+   printf("Fancy ascii logo splash. Use /help to see a list of available commands.\n");
    
    while (1) {
       strcpy(tx_pkt.alias, username);
-      tx_pkt.options = MESSAGE;
+      tx_pkt.options = -1;
       bufSize = userInput(tx_pkt_ptr);
       send_flag = 1;
       if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
          if(strncmp("/", (void *)tx_pkt.buf, 1) == 0) {
              send_flag = userCommand(tx_pkt_ptr);
          }
-      }
-      if (send_flag && serverfd) {
+         if (send_flag && serverfd) {
             tx_pkt.timestamp = time(NULL);
-            if (tx_pkt.options == 1001) {
+            pthread_mutex_lock(&roomMutex);
+            if (currentRoom >= 1000 && tx_pkt.options == -1) {
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
                       NORMAL, tx_pkt.buf);
-               pthread_mutex_lock(&roomMutex);
                tx_pkt.options = currentRoom;
-               pthread_mutex_unlock(&roomMutex);
+            pthread_mutex_unlock(&roomMutex);
             }
-            send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
+            if (tx_pkt.options > 0) {
+               send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
+            }
+         }
+         if (send_flag && !serverfd)  {
+            printf("%s --- Error:%s Not connected to any server. See /help for command usage.\n", RED, NORMAL);
+         } 
       }
       if (tx_pkt.options == EXIT) {
          break;
@@ -180,7 +187,7 @@ int newServerConnection(char *buf) {
    int i = 0;
    char *argv[16];
    char tmp[128];
-   char *tmp_ptr = &tmp;
+   char *tmp_ptr = tmp;
    strcpy(tmp_ptr, buf);
    
    argv[i] = strsep(&tmp_ptr, " \t");
@@ -213,7 +220,7 @@ int serverRegistration(packet *tx_pkt) {
    int i = 0;
    char *argv[16];
    char tmp_arr[128];
-   char *tmp = &tmp_arr;
+   char *tmp = tmp_arr;
    strcpy(tmp, tx_pkt->buf);
    
    // Split command args
@@ -244,7 +251,7 @@ int setPassword(packet *tx_pkt) {
    int i = 0;
    char *argv[16];
    char tmp_arr[128];
-   char *tmp = &tmp_arr;
+   char *tmp = tmp_arr;
    strcpy(tmp, tx_pkt->buf);
    
    // Split command args
@@ -278,7 +285,8 @@ void sigintHandler(int sig_num) {
 
 /* Print messages as they are received */
 void *chatRX(void *ptr) {
-   packet rx_pkt, *rx_pkt_ptr;
+   packet rx_pkt;
+   packet *rx_pkt_ptr = &rx_pkt;
    int received;
    int *serverfd = (int *)ptr;
    char *timestamp;
@@ -305,8 +313,8 @@ void *chatRX(void *ptr) {
          else {
             serverResponse(rx_pkt_ptr);
          }
-         memset(&rx_pkt, 0, sizeof(packet));
       }
+      memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
 }
@@ -325,17 +333,17 @@ void debugPacket(packet *rx_pkt) {
 
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
-   if (rx_pkt->options == REGAUTH) {
-      printf("%s --- Success:%s Registration completed successfully.\n", GREEN, NORMAL);
-   }
-   else if (rx_pkt->options == REGFAIL) {
+   if (rx_pkt->options == REGFAIL) {
       printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
    }
    else if (rx_pkt->options == LOGFAIL) {
       printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
    }
    else if (rx_pkt->options == LOGAUTH) {
-      printf("%s --- Success:%s Login successful.\n", GREEN, NORMAL);
+      //pthread_mutex_lock(&roomMutex);
+      //memcpy(&currentRoom, &rx_pkt->buf, sizeof(rx_pkt->buf));
+      printf("%s --- Success:%s Login successful! Joined lobby room.\n", GREEN, NORMAL);
+      //pthread_mutex_unlock(&roomMutex);
    }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
