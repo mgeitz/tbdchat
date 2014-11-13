@@ -9,7 +9,7 @@ int insert(User **head, User *new_user){
       return 1;
    } 
    
-   if(strcmp(temp->username, new_user->username) == 1)
+   if(strcmp(temp->username, new_user->username) == 0)
    {
       return 0;
    }
@@ -17,7 +17,7 @@ int insert(User **head, User *new_user){
    while(temp->next != NULL) 
    {
       temp = temp->next;
-      if(strcmp(temp->username, new_user->username) == 1)
+      if(strcmp(temp->username, new_user->username) == 0)
       {
          return 0;
       }

@@ -419,22 +419,18 @@ void *client_receive(void *ptr) {
  *Register
  */
 void register_user(packet *pkt, int fd) {
-   printf("Got to register\n");
    User *temp_user = (User *)malloc(sizeof(User));
    temp_user->next = NULL;
    char *args[5];
    char *tmp;
    tmp = pkt->buf;
 
-   printf("Attempting string separation\n");
    //Pull command
    args[0] = strsep(&tmp, " \t");
 
-   printf("pulling username\n");
    //Pull username
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") !=0) {
-      printf("Got into if statement\n");
       packet ret;
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
@@ -444,16 +440,15 @@ void register_user(packet *pkt, int fd) {
       return;
    }
   
-   printf("Pulling password\n");
    //Pull password
    args[2] = strsep(&tmp, " \t");
    strcpy(temp_user->username, args[1]);
    strcpy(temp_user->password, args[2]);
-   printf("Going to insert\n");
    temp_user->sock = fd;
    insert(&user_list, temp_user);
  
    writeUserFile(&user_list, "Users.bin");
+   printf("New User Registered\n");
 }
 
 /*
@@ -468,8 +463,8 @@ void login(packet *pkt, int fd) {
    //Pull command
    args[0] = strsep(&tmp, " \t");
 
-   printf("-------BEFORE FIRST LOOKUP-------\n");
-   printList(&user_list);
+   //printf("-------BEFORE FIRST LOOKUP-------\n");
+   //printList(&user_list);
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
@@ -480,40 +475,41 @@ void login(packet *pkt, int fd) {
       send(fd, &ret, sizeof(ret), 0);
       return;
    }
-   printf("-------AFTER FIRST LOOKU---------\n");
-   printList(&user_list);
+   //printf("-------AFTER FIRST LOOKU---------\n");
+   //printList(&user_list);
    //Pull password and check if it is valid
    args[2] = strsep(&tmp, " \t");
-   printf("--------BEFORE GET PASS--------\n");
-   printList(&user_list);
+   //printf("--------BEFORE GET PASS--------\n");
+   //printList(&user_list);
 
    char *password = get_password(&user_list, args[1]);
-   printf("---------AFTER GETPASS--------\n");
-   printList(&user_list);
+   //printf("---------AFTER GETPASS--------\n");
+   //printList(&user_list);
    if(strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      strcpy(ret.buf, "Incorrect password.");
      send(fd, &ret, sizeof(ret), 0);
      return;
    }
-   printf("--------BEFORE GET USER--------\n");
-   printList(&user_list);
+   //printf("--------BEFORE GET USER--------\n");
+   //printList(&user_list);
    //Login successful, send username to client and add to active_users
    User *user = (User *)malloc(sizeof(User));
    strcpy(user->username, args[1]);
    user->sock = fd;
    user->next = NULL;
-   printf("----------AFTER GET USER--------\n");
-   printList(&user_list);
+   //printf("----------AFTER GET USER--------\n");
+   //printList(&user_list);
    user->sock = fd;
    insert(&active_users, user);
-   printf("--------ACTIVE USERS--------\n");
-   printList(&active_users);
+   //printf("--------ACTIVE USERS--------\n");
+   //printList(&active_users);
    ret.options = LOGSUC;
-   printf("---------BEFORE LAST GET REAL NAME--------\n");
-   printList(&user_list);
+   //printf("---------BEFORE LAST GET REAL NAME--------\n");
+   //printList(&user_list);
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
+   printf("User logged in\n");
 } 
 
 /*
