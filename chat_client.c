@@ -403,6 +403,13 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == GETUSERS) {
       printf("%s\n", rx_pkt->buf);
    }
+
+   else if(rx_pkt->options == PASSFAIL) {
+      printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
+   }
+   else if(rx_pkt->options == PASSSUC) {
+      printf("%s --- Succes:%s Password change successful!\n", GREEN, NORMAL);
+   }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
    }

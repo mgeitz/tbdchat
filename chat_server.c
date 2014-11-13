@@ -404,7 +404,35 @@ void get_active_users(int fd) {
  *Set user password
  */
 void set_pass(packet *pkt, int fd) {
+   char *args[3];
+   char *tmp = pkt->buf;
 
+   //Pull command, old pw, new pw
+   args[0] = strsep(&tmp, " \t");
+   args[1] = strsep(&tmp, " \t");
+   args[2] = strsep(&tmp, " \t");
+
+   User *user = get_user(&user_list, pkt->alias);
+   if(user != NULL) {
+    //  if(strcmp(user->password, args[1]) == 0) {
+         memset(user->password, 0, 32);
+         strcpy(user->password, args[2]);
+         writeUserFile(&user_list, "Users.bin");
+
+         pkt->options = PASSSUC;
+ //     }
+   }
+
+
+   else {
+      pkt->options = PASSFAIL;
+   }
+
+
+   send(fd, (void *)pkt, sizeof(packet), 0);
+
+  
+   
 
 }
 

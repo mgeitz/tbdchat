@@ -31,6 +31,8 @@
 #define LOGFAIL 102
 #define LOGSUC 103
 #define REGSUC 104
+#define PASSSUC 105
+#define PASSFAIL 106
 
 struct Packet
 {

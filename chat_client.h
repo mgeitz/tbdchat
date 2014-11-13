@@ -26,6 +26,8 @@
 #define LOGFAIL 102 	// Login attempt failed
 #define LOGSUC 103	// Login successful
 #define REGSUC 104	// Login successful
+#define PASSSUC 105
+#define PASSFAIL 106
 
 // Defined color constants
 #define NORMAL "\x1B[0m"
