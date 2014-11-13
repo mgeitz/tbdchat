@@ -432,9 +432,11 @@ void register_user(packet *pkt, int fd) {
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") !=0) {
       packet ret;
+      ret.timestamp = time(NULL);
+      strcpy(ret.alias, "SERVER");
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
-      printf("Sending error message\n");
+      debugPacket(&ret);
       send(fd, &ret, sizeof(ret), 0);
       printf("sent\n");
       return;
@@ -469,8 +471,8 @@ void login(packet *pkt, int fd) {
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
       ret.options = LOGFAIL;
-      printf("-------IN ERROR--------\n");
-      printList(&user_list);
+      ret.timestamp = time(NULL);
+      strcpy(ret.alias, "SERVER");
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
       return;
@@ -487,6 +489,8 @@ void login(packet *pkt, int fd) {
    //printList(&user_list);
    if(strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
+     ret.timestamp = time(NULL);
+     strcpy(ret.alias, "SERVER");
      strcpy(ret.buf, "Incorrect password.");
      send(fd, &ret, sizeof(ret), 0);
      return;
@@ -505,6 +509,8 @@ void login(packet *pkt, int fd) {
    //printf("--------ACTIVE USERS--------\n");
    //printList(&active_users);
    ret.options = LOGSUC;
+   ret.timestamp = time(NULL);
+   strcpy(ret.buf, "SERVER");
    //printf("---------BEFORE LAST GET REAL NAME--------\n");
    //printList(&user_list);
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
@@ -546,8 +552,9 @@ void send_message(packet *pkt) {
 void get_active_users(int fd) {
     User *temp = active_users;
     packet pkt;
-
+    strcpy(pkt.alias, "SERVER");
     while(temp != NULL ) {
+     pkt.timestamp = time(NULL);
      strcpy(pkt.buf, temp->username);
      send(fd, &pkt, sizeof(pkt), 0);
     }
