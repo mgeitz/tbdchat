@@ -530,7 +530,13 @@ void exit_client(packet *pkt) {
  *Send Message
  */
 void send_message(packet *pkt) {
-
+    User *tmp = active_users;
+    pkt->options = 1001;
+    while(tmp != NULL) {
+       send(tmp->sock, pkt, sizeof(pkt), 0);
+       printf("Sent to %s\n", tmp->username);
+       tmp = tmp->next;
+    }
 }
 
 
