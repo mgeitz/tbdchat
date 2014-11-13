@@ -388,11 +388,13 @@ void send_message(packet *pkt) {
 void get_active_users(int fd) {
     User *temp = active_users;
     packet pkt;
+    pkt.options = GETUSERS;
     strcpy(pkt.alias, "SERVER");
     while(temp != NULL ) {
      pkt.timestamp = time(NULL);
      strcpy(pkt.buf, temp->username);
      send(fd, &pkt, sizeof(pkt), 0);
+     temp = temp->next;
     }
 
     strcpy(pkt.buf, "END");

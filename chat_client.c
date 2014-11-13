@@ -137,7 +137,7 @@ int userCommand(packet *tx_pkt) {
        return 1;;
    }
    // Handle who command
-   else if (strncmp((void *)tx_pkt->buf, "/who ", strlen("/who ")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
        tx_pkt->options = GETUSERS;
        return 1;;
    }
@@ -344,6 +344,9 @@ void serverResponse(packet *rx_pkt) {
       //memcpy(&currentRoom, &rx_pkt->buf, sizeof(rx_pkt->buf));
       printf("%s --- Success:%s Login successful! Joined lobby room.\n", GREEN, NORMAL);
       //pthread_mutex_unlock(&roomMutex);
+   }
+   else if(rx_pkt->options == GETUSERS) {
+      printf("%s\n", rx_pkt->buf);
    }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
