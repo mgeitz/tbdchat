@@ -38,7 +38,7 @@ int main() {
       }
       if (send_flag && serverfd) {
             tx_pkt.timestamp = time(NULL);
-            if (tx_pkt.options == MESSAGE) {
+            if (tx_pkt.options == 1001) {
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
                       NORMAL, tx_pkt.buf);
                pthread_mutex_lock(&roomMutex);
