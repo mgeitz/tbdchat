@@ -12,7 +12,7 @@
 #include <pthread.h>
 
 #define BUFFERSIZE 128
-#define MESSAGE 0
+#define MESSAGE 1000
 #define REGISTER 1
 #define SETPASS 2 
 #define SETNAME 3
