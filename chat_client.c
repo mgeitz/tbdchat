@@ -206,17 +206,17 @@ int serverLogin(packet *tx_pkt) {
 /* Connect to a new server */
 int newServerConnection(char *buf) {
    int i = 0;
-   char *argv[16];
-   char tmp[128];
-   char *tmp_ptr = tmp;
-   strcpy(tmp_ptr, buf);
+   char *args[16];
+   char cpy[128];
+   char *tmp = cpy;
+   strcpy(tmp, buf);
    
-   argv[i] = strsep(&tmp_ptr, " \t");
-   while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
-       argv[++i] = strsep(&tmp_ptr, " \t");
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
    }
    if (i == 3) {
-      if((serverfd = get_server_connection(argv[1], argv[2])) == -1) {
+      if((serverfd = get_server_connection(args[1], args[2])) == -1) {
          // If connection fails, exit
          printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
          return 0;
@@ -239,23 +239,23 @@ int newServerConnection(char *buf) {
 /* Handle registration for server  */
 int serverRegistration(packet *tx_pkt) {
    int i = 0;
-   char *argv[16];
-   char tmp_arr[128];
-   char *tmp = tmp_arr;
+   char *args[16];
+   char cpy[128];
+   char *tmp = cpy;
    strcpy(tmp, tx_pkt->buf);
    
    // Split command args
-   argv[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
-       argv[++i] = strsep(&tmp, " \t");
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
    }
    if (i == 4) {
       // if the passwords patch mark options
-      if (strcmp(argv[2], argv[3]) == 0) {
+      if (strcmp(args[2], args[3]) == 0) {
          tx_pkt->options = REGISTER;
-         strcpy(tx_pkt->alias, argv[1]);
+         strcpy(tx_pkt->alias, args[1]);
          pthread_mutex_lock(&unameMutex);
-         strcpy(username, argv[1]);
+         strcpy(username, args[1]);
          pthread_mutex_unlock(&unameMutex);
          return 1;
       } 
@@ -274,17 +274,17 @@ int serverRegistration(packet *tx_pkt) {
 /* Set user password */
 int setPassword(packet *tx_pkt) {
    int i = 0;
-   char *argv[16];
-   char tmp_arr[128];
-   char *tmp = tmp_arr;
+   char *args[16];
+   char cpy[128];
+   char *tmp = cpy;
    strcpy(tmp, tx_pkt->buf);
    
    // Split command args
-   argv[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(argv) - 1) && (argv[i] != '\0')) {
-       argv[++i] = strsep(&tmp, " \t");
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
    }
-   if (strcmp(argv[1], argv[2])  == 0) {
+   if (strcmp(args[1], args[2])  == 0) {
       tx_pkt->options = SETPASS;
       return 1;
    }
