@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
    user_list = NULL;
    active_users = NULL;
 
-   readUserFile(&user_list, "Users.txt");
+   readUserFile(&user_list, "Users.bin");
    printList(&user_list);  
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
@@ -433,11 +433,14 @@ void register_user(packet *pkt, int fd) {
    printf("pulling username\n");
    //Pull username
    args[1] = strsep(&tmp, " \t");
-   if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
+   if(strcmp(get_real_name(&user_list, args[1]), "ERROR") !=0) {
+      printf("Got into if statement\n");
       packet ret;
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
+      printf("Sending error message\n");
       send(fd, &ret, sizeof(ret), 0);
+      printf("sent\n");
       return;
    }
   
@@ -449,6 +452,8 @@ void register_user(packet *pkt, int fd) {
    printf("Going to insert\n");
    temp_user->sock = fd;
    insert(&user_list, temp_user);
+ 
+   writeUserFile(&user_list, "Users.bin");
 }
 
 /*
