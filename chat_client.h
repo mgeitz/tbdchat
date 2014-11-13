@@ -12,7 +12,7 @@
 #include <pthread.h>
 
 #define BUFFERSIZE 128
-#define MESSAGE 1000
+#define CONNECT 0
 #define REGISTER 1
 #define SETPASS 2 
 #define SETNAME 3
@@ -21,10 +21,11 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
-#define REGAUTH 100	// Registration success
+#define RECFAIL 100	// Registration success
 #define REGFAIL 101	// Registration failed
 #define LOGFAIL 102 	// Login attempt failed
-#define LOGAUTH 103	// Login successful
+#define LOGSUC 103	// Login successful
+#define REGSUC 104	// Login successful
 
 // Defined color constants
 #define NORMAL "\x1B[0m"

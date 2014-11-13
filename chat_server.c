@@ -305,7 +305,7 @@ void login(packet *pkt, int fd) {
    //printList(&user_list);
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
-   if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
+   if (strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
       ret.options = LOGFAIL;
       ret.timestamp = time(NULL);
       strcpy(ret.alias, "SERVER");
@@ -317,13 +317,13 @@ void login(packet *pkt, int fd) {
    //printList(&user_list);
    //Pull password and check if it is valid
    args[2] = strsep(&tmp, " \t");
+   char *password = get_password(&user_list, args[1]);
    //printf("--------BEFORE GET PASS--------\n");
    //printList(&user_list);
 
-   char *password = get_password(&user_list, args[1]);
    //printf("---------AFTER GETPASS--------\n");
    //printList(&user_list);
-   if(strcmp(args[2], password) != 0) {
+   if (strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
      strcpy(ret.alias, "SERVER");
@@ -346,9 +346,9 @@ void login(packet *pkt, int fd) {
    //printList(&active_users);
    ret.options = LOGSUC;
    ret.timestamp = time(NULL);
-   strcpy(ret.buf, "SERVER");
+   //strcpy(ret.buf, "SERVER");
    //printf("---------BEFORE LAST GET REAL NAME--------\n");
-   //printList(&user_list);
+   printf("%s\n",get_real_name(&user_list, args[1]));
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
    printf("User logged in\n");

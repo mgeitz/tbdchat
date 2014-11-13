@@ -13,8 +13,10 @@
 #include <netdb.h>
 #include <pthread.h>
 #include "linked_list.h"
+
 #define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
+
 #define CONNECT 0
 #define REGISTER 1
 #define SETPASS 2
@@ -28,6 +30,7 @@
 #define REGFAIL 101
 #define LOGFAIL 102
 #define LOGSUC 103
+#define REGSUC 104
 
 struct Packet
 {
