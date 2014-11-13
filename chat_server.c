@@ -429,6 +429,7 @@ void set_name(packet *pkt, int fd) {
    //Submit name change to user list, write list
    User *user = get_user(&user_list, pkt->alias);
    if(user != NULL) {
+      memset(user->real_name, 0, 64);
       strcpy(user->real_name, name);
       writeUserFile(&user_list, "Users.bin");
    }
@@ -436,6 +437,7 @@ void set_name(packet *pkt, int fd) {
    //Submit name change to active users
    user = get_user(&active_users, pkt->alias);
    if(user != NULL) {
+      memset(user->real_name, 0, 64);
       strcpy(user->real_name, name);
    }
 }
