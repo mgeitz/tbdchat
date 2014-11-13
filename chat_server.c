@@ -470,7 +470,7 @@ void login(packet *pkt, int fd) {
 
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
-   if(strcmp(get_real_name(&user_list, args[1]), "ERROR" ==0)) {
+   if(strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
       ret.options = LOGFAIL;
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
