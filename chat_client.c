@@ -498,8 +498,8 @@ void showHelp() {
    printf("%s\t/who%s\t\t | Return a list of other users.\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username.\n", YELLOW, NORMAL);
    printf("%s\t/room%s\t\t | Usage: /join room.\n", YELLOW, NORMAL);
-   printf("%s\t/setpass%s\t | Usage: /setpass password password.\n", YELLOW, NORMAL);
+   printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword.\n", YELLOW, NORMAL);
    printf("%s\t/setname%s\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
    printf("%s\t/connect%s\t | Usage: /connect address port.\n", YELLOW, NORMAL);
-   printf("%s\t/debug%s\t | Toggle debug mode.\n", YELLOW, NORMAL);
+   printf("%s\t/debug%s\t\t | Toggle debug mode.\n", YELLOW, NORMAL);
 }
