@@ -239,13 +239,6 @@ void *client_receive(void *ptr) {
       printf("message\n");
       send_message(&in_pkt, client);
    }
-   //Unrecognized command, send client a failure message
-   //else {
-   //   packet ret;
-   //   ret.options = RECFAIL;
-   //   strcpy(ret.buf, "Invalid Command");
-   //   send(client, &ret, sizeof(ret), 0);
-   //}
    memset(&in_pkt, 0, sizeof(packet));
    }
    return NULL;
@@ -308,8 +301,6 @@ void login(packet *pkt, int fd) {
    //Pull command
    args[0] = strsep(&tmp, " \t");
 
-   //printf("-------BEFORE FIRST LOOKUP-------\n");
-   //printList(&user_list);
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
    if (strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
@@ -320,16 +311,10 @@ void login(packet *pkt, int fd) {
       send(fd, &ret, sizeof(ret), 0);
       return;
    }
-   //printf("-------AFTER FIRST LOOKU---------\n");
-   //printList(&user_list);
    //Pull password and check if it is valid
    args[2] = strsep(&tmp, " \t");
    char *password = get_password(&user_list, args[1]);
-   //printf("--------BEFORE GET PASS--------\n");
-   //printList(&user_list);
 
-   //printf("---------AFTER GETPASS--------\n");
-   //printList(&user_list);
    if (strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
@@ -338,24 +323,16 @@ void login(packet *pkt, int fd) {
      send(fd, &ret, sizeof(ret), 0);
      return;
    }
-   //printf("--------BEFORE GET USER--------\n");
-   //printList(&user_list);
    //Login successful, send username to client and add to active_users
    User *user = (User *)malloc(sizeof(User));
    strcpy(user->username, args[1]);
    user->sock = fd;
    user->next = NULL;
-   //printf("----------AFTER GET USER--------\n");
-   //printList(&user_list);
    user->sock = fd;
    insert(&active_users, user);
-   //printf("--------ACTIVE USERS--------\n");
-   //printList(&active_users);
    ret.options = LOGSUC;
    ret.timestamp = time(NULL);
    strcpy(ret.alias, "SERVER");
-   //strcpy(ret.buf, "SERVER");
-   //printf("---------BEFORE LAST GET REAL NAME--------\n");
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
    printf("User logged in\n");
@@ -380,11 +357,9 @@ void exit_client(packet *pkt) {
  */
 void send_message(packet *pkt, int clientfd) {
     User *tmp = active_users;
-    //pkt->options = 1000;
     while(tmp != NULL) {
        if (clientfd != tmp->sock) {
           send(tmp->sock, (void *)pkt, sizeof(packet), 0);
-          printf("Sent to %s\n", tmp->username);
        }
        tmp = tmp->next;
     }
@@ -447,19 +422,7 @@ void set_pass(packet *pkt, int fd) {
  *Set user real name
  */
 void set_name(packet *pkt, int fd) {
-   //char *tmp = pkt->buf;
-   //char *arr[3];
    char name[64];
-
-   //Separate string
-   //arr[0] = strsep(&tmp, " \t");
-   //arr[1] = strsep(&tmp, " \t");
-   //arr[2] = strsep(&tmp, " \t");
-
-   //Copy string to name field
-   //strcpy(name, arr[1]);
-   //strcat(name, " ");
-   //strcat(name, arr[2]);
 
    memmove(name, pkt->buf + strlen("/setname "), 64);
 
