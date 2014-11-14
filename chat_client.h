@@ -1,3 +1,7 @@
+#ifndef CHAT_CLIENT_H
+#define CHAT_CLIENT_H
+
+/* System Header Files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,7 +15,10 @@
 #include <signal.h>
 #include <pthread.h>
 
+/* Preprocessor Macros */
+// Client buffer size
 #define BUFFERSIZE 128
+// Client options
 #define INVALID -1
 #define CONNECT 0
 #define REGISTER 1
@@ -22,15 +29,15 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
-#define RECFAIL 100	// Registration success
-#define REGFAIL 101	// Registration failed
-#define LOGFAIL 102 	// Login attempt failed
-#define LOGSUC 103	// Login successful
-#define REGSUC 104	// Login successful
+// Server responses
+#define RECFAIL 100 
+#define REGFAIL 101
+#define LOGFAIL 102
+#define LOGSUC 103
+#define REGSUC 104
 #define PASSSUC 105
 #define PASSFAIL 106
-
-// Defined color constants
+// Predefined colors
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
 #define RED "\x1B[31;1m"
@@ -41,37 +48,31 @@
 #define CYAN "\x1B[36;1m"
 #define WHITE "\x1B[37;1m"
 
-// Structure to be sent to server containing the send time, username, and message
+/* Structures */
 struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
    char alias[64];
    int options;
 };
-// Declare structure type
 typedef struct Packet packet;
 
-// Function prototypes
+/* Function Prototypes */
+// chat_client.c
 void sigintHandler(int sig_num);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
 int userInput(packet *tx_pkt);
+// client_commands.c
 int userCommand(packet *tx_pkt);
-//int serverLogin(packet *tx_pkt);
-//int serverRegistration(packet *tx_pkt);
 int newServerConnection(char *buf);
-//void showHelp();
-//int setPassword(packet *tx_pkt);
-//void setName(packet *tx_pkt);
-//void serverResponse(packet *rx_pkt);
-//void debugPacket(packet *rx_pkt);
+int serverLogin(packet *tx_pkt);
+int serverRegistration(packet *tx_pkt);
+int setPassword(packet *tx_pkt);
+int setName(packet *tx_pkt);
+void serverResponse(packet *rx_pkt);
+void debugPacket(packet *rx_pkt);
+void showHelp();
 
-// Client mutexes and globals
-pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
-volatile int currentRoom;
-volatile int debugMode;
-char username[64];
-
+#endif

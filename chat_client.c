@@ -8,12 +8,15 @@
    The client program for a simple two way chat utility
 
 */
-#include "client_commands.h"
+#include "chat_client.h"
 
 int serverfd;
-//volatile int currentRoom;
-//volatile int debugMode;
-//char username[64];
+pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
+volatile int currentRoom;
+volatile int debugMode;
+char username[64];
 pthread_t chat_rx_thread;
 
 
@@ -75,101 +78,6 @@ int main(int argc, char **argv) {
       printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
    }
    exit(0);
-}
-
-
-/* Handle SIGINT (CTRL+C) */
-void sigintHandler(int sig_num) {
-   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
-   exit(1);
-}
-
-
-/* Process user commands and mutate buffer accordingly */
-int userCommand(packet *tx_pkt) {
-   
-   // Handle exit command
-   if (strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) {
-       tx_pkt->options = EXIT;
-       return 1;;
-   }
-   // Handle help command
-   else if (strncmp((void *)tx_pkt->buf, "/help", strlen("/help")) == 0) {
-       showHelp();
-       return 0;
-   }
-   else if (strncmp((void *)tx_pkt->buf, "/debug", strlen("/debug")) == 0) {
-       pthread_mutex_lock(&debugModeMutex);
-       if (debugMode) {
-         debugMode = 0;
-       }
-       else {
-          debugMode = 1;
-       }
-       pthread_mutex_unlock(&debugModeMutex);
-       return 0;
-   }
-   // Handle connect command
-   else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
-      if (!newServerConnection((void *)tx_pkt->buf)) {
-          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
-      }
-      return 0;
-   }
-   // Handle register command
-   else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
-      if (!serverRegistration(tx_pkt)) {
-         printf("%s --- Error:%s Server registration failed.\n", RED, NORMAL);
-         return 0;
-      }
-      else {
-         return 1;
-      }
-   }
-   // Handle login command
-   else if (strncmp((void *)tx_pkt->buf, "/login", strlen("/login")) == 0) {
-      if (!serverLogin(tx_pkt)) {
-         printf("%s --- Error:%s Server login failed.\n", RED, NORMAL);
-         return 0;
-      }
-      else {
-         return 1;
-      }
-   }
-   // Handle setname command
-   else if (strncmp((void *)tx_pkt->buf, "/setname", strlen("/setname")) == 0) {
-      return setName(tx_pkt);
-   }
-   // Handle setpass command
-   else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
-      if (!setPassword(tx_pkt)) {
-         printf("%s --- Error:%s Password mismatch.\n", RED, NORMAL);
-         return 0;
-      }
-      else {
-         return 1;
-      }
-   }
-   // Handle invite command
-   if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
-       tx_pkt->options = JOIN;
-       return 1;;
-   }
-   // Handle join command
-   else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
-       tx_pkt->options = INVITE;
-       return 1;;
-   }
-   // Handle who command
-   else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
-       tx_pkt->options = GETUSERS;
-       return 1;;
-   }
-   // If it wasn't any of that, invalid command
-   else {
-      printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
-      return 0;
-   }
 }
 
 
@@ -240,35 +148,43 @@ void *chatRX(void *ptr) {
 }
 
 
-/* Connect to a new server */
-int newServerConnection(char *buf) {
-   int i = 0;
-   char *args[16];
-   char cpy[128];
-   char *tmp = cpy;
-   strcpy(tmp, buf);
-   
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       args[++i] = strsep(&tmp, " \t");
+/* Handle non message packets from server */
+void serverResponse(packet *rx_pkt) {
+   if (rx_pkt->options == REGFAIL) {
+      printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
    }
-   if (i == 3) {
-      if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         // If connection fails, exit
-         printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
-         return 0;
-      }
-      if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         // If thread creation fails, exit
-         printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
-         return 0;
-      }
-      printf("Connected.\n");
-      return 1;
+   else if (rx_pkt->options == LOGFAIL) {
+      printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
+   }
+   else if (rx_pkt->options == LOGSUC) {
+      pthread_mutex_lock(&unameMutex);
+      strcpy(username, rx_pkt->buf);
+      pthread_mutex_unlock(&unameMutex);
+      pthread_mutex_lock(&roomMutex);
+      // Hardcoded lobby room
+      currentRoom = 1000;
+      pthread_mutex_unlock(&roomMutex);
+      printf("%s --- Success:%s Login successful!\n", GREEN, NORMAL);
+   }
+   else if (rx_pkt->options == REGSUC) {
+      pthread_mutex_lock(&roomMutex);
+      // Hardcoded lobby room
+      currentRoom = 1000;
+      pthread_mutex_unlock(&roomMutex);
+      printf("%s --- Success:%s Registration successful!\n", GREEN, NORMAL);
+   }
+   else if(rx_pkt->options == GETUSERS) {
+      printf("%s\n", rx_pkt->buf);
+   }
+
+   else if(rx_pkt->options == PASSFAIL) {
+      printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
+   }
+   else if(rx_pkt->options == PASSSUC) {
+      printf("%s --- Succes:%s Password change successful!\n", GREEN, NORMAL);
    }
    else {
-       printf("%s --- Error:%s Usage: /connect address port\n", RED, NORMAL);
-       return 0;
+      printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
    }
 }
 
@@ -335,4 +251,11 @@ void print_ip( struct addrinfo *ai) {
       // Print connection information
       printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
    }
+}
+
+
+/* Handle SIGINT (CTRL+C) */
+void sigintHandler(int sig_num) {
+   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
+   exit(1);
 }
