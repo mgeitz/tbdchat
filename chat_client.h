@@ -14,6 +14,10 @@
 #include <sys/socket.h>
 #include <signal.h>
 #include <pthread.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/uio.h>
 
 /* Preprocessor Macros */
 // Client buffer size
@@ -68,6 +72,7 @@ void fancyLogo();
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);
+int reconnect(packet *tx_pkt);
 int serverLogin(packet *tx_pkt);
 int serverRegistration(packet *tx_pkt);
 int setPassword(packet *tx_pkt);
