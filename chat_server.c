@@ -284,7 +284,8 @@ void register_user(packet *pkt, int fd) {
    strcpy(temp_user->password, args[2]);
    temp_user->sock = fd;
    insert(&user_list, temp_user);
- 
+   insert(&active_users, temp_user);
+
    //Return success message
    ret.timestamp = time(NULL);
    strcpy(ret.alias, "SERVER");
