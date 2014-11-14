@@ -41,6 +41,13 @@ int userCommand(packet *tx_pkt) {
       }
       return 0;
    }
+   // Handle reconnect command
+   else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
+      if (!reconnect(tx_pkt)) {
+          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
+      }
+      return 0;
+   }
    // Handle register command
    else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
       if (!serverRegistration(tx_pkt)) {
@@ -105,7 +112,8 @@ int newServerConnection(char *buf) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, buf);
-
+   int fd;
+   
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -122,11 +130,38 @@ int newServerConnection(char *buf) {
          return 0;
       }
       printf("Connected.\n");
+      fd = open("chat_client.ini", O_WRONLY | O_CREAT, O_TRUNC, S_IRWXU);
+      write(fd, buf, 128);
+      close(fd);
       return 1;
    }
    else {
        printf("%s --- Error:%s Usage: /connect address port\n", RED, NORMAL);
        return 0;
+   }
+}
+
+
+/* Reconnect using the last connection settings */
+int reconnect(packet *tx_pkt) {
+   if(strcmp(tx_pkt->buf, "/reconnect") == 0) {
+      int fd = open("chat_client.ini", O_RDONLY);
+      if(fd > 0) {
+         read(fd, tx_pkt->buf, sizeof(tx_pkt->buf));
+         printf("Reconnecting");
+         close(fd);
+         return newServerConnection((void *)tx_pkt->buf);
+      }
+      else
+      {
+         printf("%s --- Error:%s Server connect failed; no previous connection\n", RED, NORMAL);
+         close(fd);
+         return 0;
+      }
+   }
+   else {
+      printf("%s --- Error:%s Usage: /reconnect\n", RED, NORMAL);
+      return 0;
    }
 }
 
@@ -224,12 +259,18 @@ int setPassword(packet *tx_pkt) {
 
 /* Set user real name */
 int setName(packet *tx_pkt) {
-   pthread_mutex_lock(&unameMutex);
-   memset(&username, 0, sizeof(username));
-   strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
-   pthread_mutex_unlock(&unameMutex);
-   tx_pkt->options = SETNAME;
-   return 1;
+   if(strlen(tx_pkt->buf) > strlen("/setname ")) {
+      pthread_mutex_lock(&unameMutex);
+      memset(&username, 0, sizeof(username));
+      strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
+      pthread_mutex_unlock(&unameMutex);
+      tx_pkt->options = SETNAME;
+      return 1;
+   }
+   else {
+      printf("%s --- Error:%s Usage: /setname newname\n", RED, NORMAL);
+      return 0;
+   }
 }
 
 
