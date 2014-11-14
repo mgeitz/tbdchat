@@ -70,7 +70,7 @@ void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
 int userInput(packet *tx_pkt);
-void fancyLogo();
+void asciiSplash();
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);

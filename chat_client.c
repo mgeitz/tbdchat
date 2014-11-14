@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
    
    // Clear terminal and display splash text
    printf("\33[2J\33[H");
-   fancyLogo();
+   asciiSplash();
    
    while (1) {
       tx_pkt.options = INVALID;
@@ -265,17 +265,18 @@ void sigintHandler(int sig_num) {
    exit(1);
 }
 
-void fancyLogo() {
-   printf("  __                         _                   \n");
-   printf(" / _|                       | |                  \n");
-   printf("| |_ __ _ _ __   ___ _   _  | | ___   __ _  ___  \n");
-   printf("|  _/ _` | '_ \\ / __| | | | | |/ _ \\ / _` |/ _ \\ \n");
-   printf("| || (_| | | | | (__| |_| | | | (_) | (_| | (_) |\n");
-   printf("|_| \\__,_|_| |_|\\___|\\__, | |_|\\___/ \\__, |\\___/ \n");
-   printf("                      __/ |           __/ |      \n");
-   printf("                     |___/           |___/       \n\n");
+void asciiSplash() {
+
+   printf("         __\n");
+   printf("        /_/\\        _____ ____  ____     ____ _           _   \n");
+   printf("       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
+   printf("      / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
+   printf("     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ \n");
+   printf("    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
+   printf("   /_/______\\_\\/\\\n");
+   printf("   \\_\\_________\\/\n\n");
    printf("Enter /help to view a list of available commands.\n\n");
-   
+
    /*
    printf("%s", GREEN);
    printf(" ___       __   _______   ___       ________  ________  _____ ______   _______                      \n");
