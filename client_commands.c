@@ -288,16 +288,17 @@ void debugPacket(packet *rx_pkt) {
 
 /* Print helpful and unhelpful things */
 void showHelp() {
-   printf("%s\t/help%s\t\t | Display a list of commands.\n", YELLOW, NORMAL);
-   printf("%s\t/exit%s\t\t | Exit the client.\n", YELLOW, NORMAL);
+   printf("%s\t/connect%s\t | Usage: /connect address port\n", YELLOW, NORMAL);
+   printf("%s\t/reconnect%s\t | Usage: /reconnect\n", YELLOW, NORMAL);
+   printf("%s\t/help%s\t\t | Display a list of commands\n", YELLOW, NORMAL);
+   printf("%s\t/debug%s\t\t | Toggle debug mode\n", YELLOW, NORMAL);
+   printf("%s\t/exit%s\t\t | Exit the client\n", YELLOW, NORMAL);
    printf("%s\t/register%s\t | Usage: /register username password password\n", YELLOW, NORMAL);
-   printf("%s\t/login%s\t\t | Usage: /login username password.\n", YELLOW, NORMAL);
-   printf("%s\t/who%s\t\t | Return a list of other users.\n", YELLOW, NORMAL);
-   printf("%s\t/invite%s\t\t | Usage: /invite username.\n", YELLOW, NORMAL);
-   printf("%s\t/room%s\t\t | Usage: /join room.\n", YELLOW, NORMAL);
-   printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword.\n", YELLOW, NORMAL);
-   printf("%s\t/setname%s\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
-   printf("%s\t/connect%s\t | Usage: /connect address port.\n", YELLOW, NORMAL);
-   printf("%s\t/debug%s\t\t | Toggle debug mode.\n", YELLOW, NORMAL);
+   printf("%s\t/login%s\t\t | Usage: /login username password\n", YELLOW, NORMAL);
+   printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword\n", YELLOW, NORMAL);
+   printf("%s\t/setname%s\t | Usage: /setname fname lname\n", YELLOW, NORMAL);
+   printf("%s\t/who%s\t\t | Return a list of other users\n", YELLOW, NORMAL);
+   printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
+   printf("%s\t/room%s\t\t | Usage: /join room\n", YELLOW, NORMAL);
 }
 
