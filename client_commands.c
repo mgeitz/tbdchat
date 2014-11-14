@@ -23,6 +23,7 @@ int userCommand(packet *tx_pkt) {
        showHelp();
        return 0;
    }
+   // Handle debug command
    else if (strncmp((void *)tx_pkt->buf, "/debug", strlen("/debug")) == 0) {
        pthread_mutex_lock(&debugModeMutex);
        if (debugMode) {
@@ -130,7 +131,7 @@ int newServerConnection(char *buf) {
          return 0;
       }
       printf("Connected.\n");
-      fd = open("chat_client.ini", O_WRONLY | O_CREAT, O_TRUNC, S_IRWXU);
+      fd = open("chat_client.ini", O_WRONLY | O_TRUNC | O_CREAT,0644);
       write(fd, buf, 128);
       close(fd);
       return 1;
