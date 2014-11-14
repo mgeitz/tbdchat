@@ -33,9 +33,6 @@ int main(int argc, char **argv) {
 
    
    while (1) {
-      pthread_mutex_lock(&unameMutex);
-      strcpy(tx_pkt.alias, username);
-      pthread_mutex_unlock(&unameMutex);
       tx_pkt.options = -1;
       bufSize = userInput(tx_pkt_ptr);
       send_flag = 1;
@@ -44,9 +41,14 @@ int main(int argc, char **argv) {
              send_flag = userCommand(tx_pkt_ptr);
          }
          if (send_flag && serverfd) {
+            pthread_mutex_lock(&unameMutex);
+            strcpy(tx_pkt.alias, username);
+            pthread_mutex_unlock(&unameMutex);
             tx_pkt.timestamp = time(NULL);
             pthread_mutex_lock(&roomMutex);
-            if (currentRoom > 999 && tx_pkt.options == -1) {
+            if (currentRoom >= 1000 && tx_pkt.options == -1) {
+               timestamp = asctime(localtime(&(tx_pkt.timestamp)));
+               timestamp[strlen(timestamp) - 1] = '\0';
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
                       NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
@@ -56,7 +58,7 @@ int main(int argc, char **argv) {
                send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
             }
          }
-         if (send_flag && !serverfd)  {
+         else if (send_flag && !serverfd)  {
             printf("%s --- Error:%s Not connected to any server. See /help for command usage.\n", RED, NORMAL);
          } 
       }
@@ -68,11 +70,11 @@ int main(int argc, char **argv) {
    }
    
    // Close connection
+   printf("Exiting.\n");
+   close(serverfd);
    if(pthread_join(chat_rx_thread, NULL)) {
       printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
    }
-   printf("Exiting.\n");
-   close(serverfd);
    exit(0);
 }
 
@@ -319,6 +321,7 @@ int setPassword(packet *tx_pkt) {
 /* Set user real name */
 void setName(packet *tx_pkt) {
    pthread_mutex_lock(&unameMutex);
+   memset(&username, 0, sizeof(username));
    strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
    pthread_mutex_unlock(&unameMutex);
    tx_pkt->options = SETNAME;
