@@ -34,6 +34,8 @@
 #define REGSUC 104
 #define PASSSUC 105
 #define PASSFAIL 106
+#define NAMESUC 107
+#define NAMEFAIL 108
 
 struct Packet
 {

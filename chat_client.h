@@ -41,6 +41,8 @@
 #define REGSUC 104
 #define PASSSUC 105
 #define PASSFAIL 106
+#define NAMESUC 107
+#define NAMEFAIL 108
 // Predefined colors
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"

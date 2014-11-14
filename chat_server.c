@@ -396,13 +396,13 @@ void set_pass(packet *pkt, int fd) {
 
    User *user = get_user(&user_list, pkt->alias);
    if(user != NULL) {
-    //  if(strcmp(user->password, args[1]) == 0) {
+      if(strcmp(user->password, args[1]) == 0) {
          memset(user->password, 0, 32);
          strcpy(user->password, args[2]);
          writeUserFile(&user_list, "Users.bin");
 
          pkt->options = PASSSUC;
- //     }
+      }
    }
 
 
@@ -423,15 +423,19 @@ void set_pass(packet *pkt, int fd) {
  */
 void set_name(packet *pkt, int fd) {
    char name[64];
+   packet ret;
 
    memmove(name, pkt->buf + strlen("/setname "), 64);
 
    //Submit name change to user list, write list
    User *user = get_user(&user_list, pkt->alias);
+   printf("Username: %s, Real name: %s\n", user->username, user->real_name);
+
    if(user != NULL) {
       memset(user->real_name, 0, 64);
       strcpy(user->real_name, name);
       writeUserFile(&user_list, "Users.bin");
+      ret.options = NAMESUC;
    }
    
    //Submit name change to active users
@@ -440,6 +444,15 @@ void set_name(packet *pkt, int fd) {
       memset(user->real_name, 0, 64);
       strcpy(user->real_name, name);
    }
+
+   else {
+      ret.options = NAMEFAIL;
+   }
+
+   printList(&user_list);
+   printList(&active_users);
+   ret.timestamp = time(NULL);
+   send(fd, &ret, sizeof(ret), 0);
 }
 
 /*

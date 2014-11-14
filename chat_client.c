@@ -180,7 +180,13 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
    }
    else if(rx_pkt->options == PASSSUC) {
-      printf("%s --- Succes:%s Password change successful!\n", GREEN, NORMAL);
+      printf("%s --- Success:%s Password change successful!\n", GREEN, NORMAL);
+   }
+   else if(rx_pkt->options == NAMESUC) {
+      printf("%s --- Success:%s Name change successful!\n", GREEN, NORMAL);
+   }
+   else if(rx_pkt->options == NAMEFAIL) {
+      printf("%s --- Error:%s Name change failed.\n", RED, NORMAL);
    }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
