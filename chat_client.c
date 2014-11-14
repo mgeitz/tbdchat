@@ -152,6 +152,13 @@ void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == REGFAIL) {
       printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
    }
+   else if (rx_pkt->options == REGSUC) {
+      pthread_mutex_lock(&roomMutex);
+      // Hardcoded lobby room
+      currentRoom = 1000;
+      pthread_mutex_unlock(&roomMutex);
+      printf("%s --- Success:%s Registration successful!\n", GREEN, NORMAL);
+   }
    else if (rx_pkt->options == LOGFAIL) {
       printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
    }
@@ -165,13 +172,6 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- Success:%s Login successful!\n", GREEN, NORMAL);
    }
-   else if (rx_pkt->options == REGSUC) {
-      pthread_mutex_lock(&roomMutex);
-      // Hardcoded lobby room
-      currentRoom = 1000;
-      pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Registration successful!\n", GREEN, NORMAL);
-   }
    else if(rx_pkt->options == GETUSERS) {
       printf("%s\n", rx_pkt->buf);
    }
@@ -183,6 +183,10 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- Success:%s Password change successful!\n", GREEN, NORMAL);
    }
    else if(rx_pkt->options == NAMESUC) {
+      pthread_mutex_lock(&unameMutex);
+      memset(&username, 0, sizeof(username));
+      strncpy(username, rx_pkt->buf, strlen(username));
+      pthread_mutex_unlock(&unameMutex);
       printf("%s --- Success:%s Name change successful!\n", GREEN, NORMAL);
    }
    else if(rx_pkt->options == NAMEFAIL) {

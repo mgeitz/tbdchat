@@ -261,10 +261,8 @@ int setPassword(packet *tx_pkt) {
 /* Set user real name */
 int setName(packet *tx_pkt) {
    if(strlen(tx_pkt->buf) > strlen("/setname ")) {
-      pthread_mutex_lock(&unameMutex);
-      memset(&username, 0, sizeof(username));
-      strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
-      pthread_mutex_unlock(&unameMutex);
+      // Remove command literal from buffer, leaving only new name
+      memmove(tx_pkt->buf, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
       tx_pkt->options = SETNAME;
       return 1;
    }
