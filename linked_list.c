@@ -1,16 +1,19 @@
 #include "linked_list.h"
 
 int insert(User **head, User *new_user){
+   printf("Inserting %s\n", new_user->username);
    User *temp = *head;
    if(*head == NULL)
    {
       new_user->next = NULL;
       *head = new_user;
+      printf("Insert Success\n");
       return 1;
    } 
    
    if(strcmp(temp->username, new_user->username) == 0)
    {
+      printf("Insert Failure\n");
       return 0;
    }
    
@@ -19,11 +22,13 @@ int insert(User **head, User *new_user){
       temp = temp->next;
       if(strcmp(temp->username, new_user->username) == 0)
       {
+         printf("Insert Failure\n");
          return 0;
       }
    }
    temp->next = new_user;
    new_user->next = NULL;
+   printf("Insert Success\n");
    return 1;
 }
 
@@ -143,4 +148,120 @@ void printList(User **head)
       printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
    }
    printf("End List\n");
+}
+
+
+// ROOM METHODS
+
+int Rinsert(Room **head, Room *new_room){
+   Room *temp = *head;
+   if(*head == NULL)
+   {
+      new_room->next = NULL;
+      *head = new_room;
+      return 1;
+   }
+   
+   if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID)
+   {
+      return 0;
+   }
+   
+   while(temp->next != NULL)
+   {
+      temp = temp->next;
+      if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID)
+      {
+         return 0;
+      }
+   }
+   temp->next = new_room;
+   new_room->next = NULL;
+   return 1;
+}
+
+
+int Rget_ID(Room **head, char *name)
+{
+   int error = -1;
+   Room *temp = *head;
+   
+   if(*head == NULL) return error;
+   
+   while(strcmp(name, temp->name) != 0)
+   {
+      if(temp->next == NULL) return error;
+      temp=temp->next;
+   }
+   
+   return temp->ID;
+}
+
+
+char *Rget_name(Room **head, int ID)
+{
+   char *error = "ERROR";
+   Room *temp = *head;
+   
+   if(*head == NULL) return error;
+   
+   while(ID != temp->ID)
+   {
+      if(temp->next == NULL) return error;
+      temp=temp->next;
+   }
+   
+   return temp->name;
+}
+
+
+void RprintList(Room **head)
+{
+   Room *temp = *head;
+   printf("Printing Room List\n");
+   if(*head == NULL)
+   {
+      printf("NULL\n");
+      return;
+   }
+   
+   printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
+   printf("Contains Users...\n");
+   printList(&(temp->user_list));
+   while(temp->next != NULL)
+   {
+      temp = temp->next;
+      printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
+      printf("Contains Users...\n");
+      printList(&(temp->user_list));
+   }
+   printf("End Room List\n");
+}
+
+
+Room *Rget_roomFID(Room **head, int ID) {
+   Room *temp = *head;
+   
+   if(*head == NULL) return NULL;
+   
+   while(ID != temp->ID) {
+      if(temp->next == NULL) return NULL;
+      temp = temp->next;
+   }
+   
+   return temp;
+}
+
+
+Room *Rget_roomNAME(Room **head, char *name) {
+   Room *temp = *head;
+   
+   if(*head == NULL) return NULL;
+   
+   while(strcmp(name, temp->name) != 0) {
+      if(temp->next == NULL) return NULL;
+      temp = temp->next;
+   }
+   
+   return temp;
 }

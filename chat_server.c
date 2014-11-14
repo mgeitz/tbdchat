@@ -14,7 +14,10 @@
 int chat_serv_sock_fd; //server socket
 User *user_list;
 User *active_users;
- 
+
+// Tentative Room Code
+Room *room_list;
+
 int main(int argc, char **argv) {
    if(argc < 3) {
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n", RED, NORMAL, argv[0]);
@@ -24,10 +27,18 @@ int main(int argc, char **argv) {
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
-   
+   room_list = NULL;
    user_list = NULL;
    active_users = NULL;
-
+   
+   // Tentative Room Code
+   room_list = NULL;
+   Room r1;
+   r1.ID = DEFAULT_ROOM;
+   strcpy(r1.name, "ROOM TEST");
+   r1.user_list = NULL;
+   Rinsert(&room_list, &r1);
+   
    readUserFile(&user_list, "Users.bin");
    printList(&user_list);  
    // Open server socket
@@ -50,7 +61,7 @@ int main(int argc, char **argv) {
          // Set newClient default room
          newClient.currentRoom = 0;
          // Probably should insert newClient node into list of clients (in default room maybe)
-
+         
          // Launch client recaive thread
          iret  = pthread_create(&newClient.thread_ID, NULL, client_receive, (void *)&newClient);
      }
@@ -254,10 +265,10 @@ void register_user(packet *pkt, int fd) {
    char *tmp;
    tmp = pkt->buf;
    packet ret;
-
+   
    //Pull command
    args[0] = strsep(&tmp, " \t");
-
+   
    //Pull username
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") !=0) {
@@ -270,7 +281,7 @@ void register_user(packet *pkt, int fd) {
       printf("sent\n");
       return;
    }
-  
+   
    //Pull password
    args[2] = strsep(&tmp, " \t");
    strcpy(temp_user->username, args[1]);
@@ -278,13 +289,21 @@ void register_user(packet *pkt, int fd) {
    temp_user->sock = fd;
    insert(&user_list, temp_user);
    insert(&active_users, temp_user);
-
+   
+   // Tentative Room Code
+   temp_user = (User *)malloc(sizeof(User));
+   strcpy(temp_user->username, args[1]);
+   strcpy(temp_user->password, args[2]);
+   temp_user->sock = fd;
+   User *aList = (Rget_roomFID(&room_list, DEFAULT_ROOM))->user_list;
+   insert(&aList, temp_user);
+   
    //Return success message
    ret.timestamp = time(NULL);
    strcpy(ret.alias, "SERVER");
    ret.options = REGSUC;
    send(fd, &ret, sizeof(ret), 0);
-
+   
    writeUserFile(&user_list, "Users.bin");
    printf("New User Registered\n");
 }
@@ -293,14 +312,17 @@ void register_user(packet *pkt, int fd) {
  *Login
  */
 void login(packet *pkt, int fd) {
+   // Tentative Room Code
+   User *temp_user = (User *)malloc(sizeof(User));
+   
    char *args[3];
    packet ret;
    char *tmp;
    tmp = pkt->buf;
-
+   
    //Pull command
    args[0] = strsep(&tmp, " \t");
-
+   
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
    if (strcmp(get_real_name(&user_list, args[1]), "ERROR") ==0) {
@@ -314,7 +336,7 @@ void login(packet *pkt, int fd) {
    //Pull password and check if it is valid
    args[2] = strsep(&tmp, " \t");
    char *password = get_password(&user_list, args[1]);
-
+   
    if (strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
@@ -330,13 +352,23 @@ void login(packet *pkt, int fd) {
    user->next = NULL;
    user->sock = fd;
    insert(&active_users, user);
+   
+   // Tentative Room Code
+   temp_user = (User *)malloc(sizeof(User));
+   strcpy(temp_user->username, args[1]);
+   strcpy(temp_user->password, args[2]);
+   temp_user->sock = fd;
+   User *aList = (Rget_roomFID(&room_list, DEFAULT_ROOM))->user_list;
+   insert(&aList, temp_user);
+   //insert(&((Rget_roomFID(&room_list, &DEFAULT_ROOM))->user_list), temp_user);
+   
    ret.options = LOGSUC;
    ret.timestamp = time(NULL);
    strcpy(ret.alias, "SERVER");
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
    printf("User logged in\n");
-} 
+}
 
 /*
  *Invite
@@ -356,7 +388,14 @@ void exit_client(packet *pkt) {
  *Send Message
  */
 void send_message(packet *pkt, int clientfd) {
-    User *tmp = active_users;
+    // Tentative Room Code
+    Room *room = Rget_roomFID(&room_list, pkt->options);
+    printf("Sending message to Room %d, %s\n", room->ID, room->name);
+    printf("The Users in Room %d %s are...\n", room->ID, room->name);
+    printList(&(room->user_list));
+    User *tmp = room->user_list;
+    
+    //User *tmp = active_users;
     while(tmp != NULL) {
        if (clientfd != tmp->sock) {
           send(tmp->sock, (void *)pkt, sizeof(packet), 0);
