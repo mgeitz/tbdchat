@@ -260,6 +260,7 @@ void register_user(packet *pkt, int fd) {
    char *args[5];
    char *tmp;
    tmp = pkt->buf;
+   packet ret;
 
    //Pull command
    args[0] = strsep(&tmp, " \t");
@@ -267,7 +268,6 @@ void register_user(packet *pkt, int fd) {
    //Pull username
    args[1] = strsep(&tmp, " \t");
    if(strcmp(get_real_name(&user_list, args[1]), "ERROR") !=0) {
-      packet ret;
       ret.timestamp = time(NULL);
       strcpy(ret.alias, "SERVER");
       ret.options = REGFAIL;
@@ -285,6 +285,12 @@ void register_user(packet *pkt, int fd) {
    temp_user->sock = fd;
    insert(&user_list, temp_user);
  
+   //Return success message
+   ret.timestamp = time(NULL);
+   strcpy(ret.alias, "SERVER");
+   ret.options = REGSUC;
+   send(fd, &ret, sizeof(ret), 0);
+
    writeUserFile(&user_list, "Users.bin");
    printf("New User Registered\n");
 }
