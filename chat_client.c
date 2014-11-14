@@ -110,14 +110,14 @@ int userCommand(packet *tx_pkt) {
        return 0;
    }
    // Handle connect command
-   else if (strncmp((void *)tx_pkt->buf, "/connect ", strlen("/connect ")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
           printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
       }
       return 0;
    }
    // Handle register command
-   else if (strncmp((void *)tx_pkt->buf, "/register ", strlen("/register ")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
       if (!serverRegistration(tx_pkt)) {
          printf("%s --- Error:%s Server registration failed.\n", RED, NORMAL);
          return 0;
@@ -127,7 +127,7 @@ int userCommand(packet *tx_pkt) {
       }
    }
    // Handle login command
-   else if (strncmp((void *)tx_pkt->buf, "/login ", strlen("/login ")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/login", strlen("/login")) == 0) {
       if (!serverLogin(tx_pkt)) {
          printf("%s --- Error:%s Server login failed.\n", RED, NORMAL);
          return 0;
@@ -137,12 +137,11 @@ int userCommand(packet *tx_pkt) {
       }
    }
    // Handle setname command
-   else if (strncmp((void *)tx_pkt->buf, "/setname ", strlen("/setname ")) == 0) {
-      setName(tx_pkt);
-      return 1;
+   else if (strncmp((void *)tx_pkt->buf, "/setname", strlen("/setname")) == 0) {
+      return setName(tx_pkt);
    }
    // Handle setpass command
-   else if (strncmp((void *)tx_pkt->buf, "/setpass ", strlen("/setpass ")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
       if (!setPassword(tx_pkt)) {
          printf("%s --- Error:%s Password mismatch.\n", RED, NORMAL);
          return 0;
@@ -152,12 +151,12 @@ int userCommand(packet *tx_pkt) {
       }
    }
    // Handle invite command
-   if (strncmp((void *)tx_pkt->buf, "/invite ", strlen("/invite ")) == 0) {
+   if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
        tx_pkt->options = JOIN;
        return 1;;
    }
    // Handle join command
-   else if (strncmp((void *)tx_pkt->buf, "/join ", strlen("/join ")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
        tx_pkt->options = INVITE;
        return 1;;
    }

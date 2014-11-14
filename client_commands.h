@@ -3,7 +3,7 @@
 int serverLogin(packet *tx_pkt);
 int serverRegistration(packet *tx_pkt);
 int setPassword(packet *tx_pkt);
-void setName(packet *tx_pkt);
+int setName(packet *tx_pkt);
 void serverResponse(packet *rx_pkt);
 void debugPacket(packet *rx_pkt);
 void showHelp();
@@ -100,12 +100,19 @@ int setPassword(packet *tx_pkt) {
 
 
 /* Set user real name */
-void setName(packet *tx_pkt) {
-   pthread_mutex_lock(&unameMutex);
-   memset(&username, 0, sizeof(username));
-   strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
-   pthread_mutex_unlock(&unameMutex);
-   tx_pkt->options = SETNAME;
+int setName(packet *tx_pkt) {
+   if(strlen(tx_pkt->buf) > strlen("/setname ")) {
+      pthread_mutex_lock(&unameMutex);
+      memset(&username, 0, sizeof(username));
+      strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
+      pthread_mutex_unlock(&unameMutex);
+      tx_pkt->options = SETNAME;
+      return 1;
+   }
+   else {
+      printf("%s --- Error:%s Usage: /setname newname\n", RED, NORMAL);
+      return 0;
+   }
 }
 
 
