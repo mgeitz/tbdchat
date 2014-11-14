@@ -12,6 +12,7 @@
 #include <pthread.h>
 
 #define BUFFERSIZE 128
+#define INVALID -1
 #define CONNECT 0
 #define REGISTER 1
 #define SETPASS 2 
@@ -57,11 +58,20 @@ int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
 int userInput(packet *tx_pkt);
 int userCommand(packet *tx_pkt);
-int serverLogin(packet *tx_pkt);
-int serverRegistration(packet *tx_pkt);
+//int serverLogin(packet *tx_pkt);
+//int serverRegistration(packet *tx_pkt);
 int newServerConnection(char *buf);
-void showHelp();
-int setPassword(packet *tx_pkt);
-void setName(packet *tx_pkt);
-void serverResponse(packet *rx_pkt);
-void debugPacket(packet *rx_pkt);
+//void showHelp();
+//int setPassword(packet *tx_pkt);
+//void setName(packet *tx_pkt);
+//void serverResponse(packet *rx_pkt);
+//void debugPacket(packet *rx_pkt);
+
+// Client mutexes and globals
+pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
+volatile int currentRoom;
+volatile int debugMode;
+char username[64];
+

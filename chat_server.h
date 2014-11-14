@@ -17,6 +17,7 @@
 #define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
 
+#define INVALID -1
 #define CONNECT 0
 #define REGISTER 1
 #define SETPASS 2

@@ -8,16 +8,13 @@
    The client program for a simple two way chat utility
 
 */
-#include "chat_client.h"
+#include "client_commands.h"
 
 int serverfd;
-volatile int currentRoom;
-volatile int debugMode;
-char username[64];
+//volatile int currentRoom;
+//volatile int debugMode;
+//char username[64];
 pthread_t chat_rx_thread;
-pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 int main(int argc, char **argv) {
@@ -28,12 +25,14 @@ int main(int argc, char **argv) {
    
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
-
+   
+   // Clear terminal and display splash text
+   printf("\33[2J\33[H");
    printf("Fancy ascii logo splash. Use /help to view a list of available commands.\n");
-
+   
    
    while (1) {
-      tx_pkt.options = -1;
+      tx_pkt.options = INVALID;
       bufSize = userInput(tx_pkt_ptr);
       send_flag = 1;
       if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
@@ -79,9 +78,16 @@ int main(int argc, char **argv) {
 }
 
 
+/* Handle SIGINT (CTRL+C) */
+void sigintHandler(int sig_num) {
+   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
+   exit(1);
+}
+
+
 /* Process user commands and mutate buffer accordingly */
 int userCommand(packet *tx_pkt) {
-
+   
    // Handle exit command
    if (strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) {
        tx_pkt->options = EXIT;
@@ -171,7 +177,7 @@ int userCommand(packet *tx_pkt) {
 /* Read keyboard input into buffer */
 int userInput(packet *tx_pkt) {
    int i = 0;
-      
+   
    // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
    tx_pkt->buf[i] = getc(stdin);
    while(tx_pkt->buf[i] != '\n' && tx_pkt->buf[i] != EOF) {
@@ -194,28 +200,44 @@ int userInput(packet *tx_pkt) {
 }
 
 
-/* Connect to a new server */
-int serverLogin(packet *tx_pkt) {
-   char *args[16];
-   char cpy[64];
-   int i;
-   strcpy(cpy, tx_pkt->buf);
-   char *tmp = cpy;
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       args[++i] = strsep(&tmp, " \t");
+/* Print messages as they are received */
+void *chatRX(void *ptr) {
+   packet rx_pkt;
+   packet *rx_pkt_ptr = &rx_pkt;
+   int received;
+   int *serverfd = (int *)ptr;
+   char *timestamp;
+
+   while(1) {
+      // Wait for message to arrive..
+      received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
+
+      if(received) {
+         pthread_mutex_lock(&debugModeMutex);
+         if (debugMode) {
+            debugPacket(rx_pkt_ptr);
+         }
+         pthread_mutex_unlock(&debugModeMutex);
+         if (rx_pkt.options >= 1000) {
+            // Format timestamp
+            pthread_mutex_lock(&roomMutex);
+            if (rx_pkt.options != currentRoom) {
+               currentRoom = rx_pkt.options;
+               printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
+            }
+            pthread_mutex_unlock(&roomMutex);
+            timestamp = asctime(localtime(&(rx_pkt.timestamp)));
+            timestamp[strlen(timestamp) - 1] = '\0';
+            printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
+                   NORMAL, rx_pkt.buf);
+         }
+         else {
+            serverResponse(rx_pkt_ptr);
+         }
+      }
+      memset(&rx_pkt, 0, sizeof(packet));
    }
-   if (i == 3) {
-      pthread_mutex_lock(&unameMutex);
-      strcpy(username, args[1]);
-      pthread_mutex_unlock(&unameMutex);
-      tx_pkt->options = LOGIN;
-      return 1;
-   }
-   else {
-      printf("%s --- Error:%s Usage: /login username password\n", RED, NORMAL);
-      return 0;
-   }
+   return NULL;
 }
 
 
@@ -248,181 +270,6 @@ int newServerConnection(char *buf) {
    else {
        printf("%s --- Error:%s Usage: /connect address port\n", RED, NORMAL);
        return 0;
-   }
-}
-
-
-/* Handle registration for server  */
-int serverRegistration(packet *tx_pkt) {
-   int i = 0;
-   char *args[16];
-   char cpy[128];
-   char *tmp = cpy;
-   strcpy(tmp, tx_pkt->buf);
-   
-   // Split command args
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       args[++i] = strsep(&tmp, " \t");
-   }
-   if (i == 4) {
-      // if the passwords patch mark options
-      if (strcmp(args[2], args[3]) == 0) {
-         tx_pkt->options = REGISTER;
-         strcpy(tx_pkt->alias, args[1]);
-         pthread_mutex_lock(&unameMutex);
-         strcpy(username, args[1]);
-         pthread_mutex_unlock(&unameMutex);
-         return 1;
-      } 
-      else {
-       printf("%s --- Error:%s Password mismatch\n", RED, NORMAL);
-       return 0;
-      }
-   }
-   else {
-       printf("%s --- Error:%s Usage: /register username password password\n", RED, NORMAL);
-       return 0;
-   }
-}
-
-
-/* Set user password */
-int setPassword(packet *tx_pkt) {
-   int i = 0;
-   char *args[16];
-   char cpy[128];
-   char *tmp = cpy;
-   strcpy(tmp, tx_pkt->buf);
-   
-   // Split command args
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       args[++i] = strsep(&tmp, " \t");
-   }
-   if (1 == 4) {
-      if (strcmp(args[2], args[3])  == 0) {
-         tx_pkt->options = SETPASS;
-         return 1;
-
-      }
-      else {
-       printf("%s --- Error:%s New password mismatch\n", RED, NORMAL);
-       return 0;
-      }
-   }
-   else {
-       printf("%s --- Error:%s Usage: /setpass oldpassword newpassword newpassword\n", RED, NORMAL);
-       return 0;
-   }
-}
-
-
-/* Set user real name */
-void setName(packet *tx_pkt) {
-   pthread_mutex_lock(&unameMutex);
-   memset(&username, 0, sizeof(username));
-   strncpy(username, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
-   pthread_mutex_unlock(&unameMutex);
-   tx_pkt->options = SETNAME;
-}
-
-
-/* Handle SIGINT (CTRL+C) */
-void sigintHandler(int sig_num) {
-   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
-   exit(1);
-}
-
-
-/* Print messages as they are received */
-void *chatRX(void *ptr) {
-   packet rx_pkt;
-   packet *rx_pkt_ptr = &rx_pkt;
-   int received;
-   int *serverfd = (int *)ptr;
-   char *timestamp;
-   
-   while(1) {
-      // Wait for message to arrive..
-      received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
-      
-      if(received) {
-         pthread_mutex_lock(&debugModeMutex);
-         if (debugMode) {
-            debugPacket(rx_pkt_ptr);
-         }
-         pthread_mutex_unlock(&debugModeMutex);
-         if (rx_pkt.options >= 1000) {
-            // Format timestamp
-            pthread_mutex_lock(&roomMutex);
-            if (rx_pkt.options != currentRoom) {
-               currentRoom = rx_pkt.options;
-               printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
-            }
-            pthread_mutex_unlock(&roomMutex);
-            timestamp = asctime(localtime(&(rx_pkt.timestamp)));
-            timestamp[strlen(timestamp) - 1] = '\0';
-            printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
-                   NORMAL, rx_pkt.buf);
-         }
-         else {
-            serverResponse(rx_pkt_ptr);
-         }
-      }
-      memset(&rx_pkt, 0, sizeof(packet));
-   }
-   return NULL;
-}
-
-
-/* Dump contents of received packet from server */
-void debugPacket(packet *rx_pkt) {
-   printf("%s --------------------- PACKET REPORT --------------------- %s\n", CYAN, NORMAL);
-   printf("%s Timestamp: %s%lu\n", MAGENTA, NORMAL, rx_pkt->timestamp);
-   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->alias);
-   printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
-   printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
-   printf("%s --------------------------------------------------------- %s\n", CYAN, NORMAL);
-}
-
-/* Handle non message packets from server */
-void serverResponse(packet *rx_pkt) {
-   if (rx_pkt->options == REGFAIL) {
-      printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
-   }
-   else if (rx_pkt->options == LOGFAIL) {
-      printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
-   }
-   else if (rx_pkt->options == LOGSUC) {
-      pthread_mutex_lock(&unameMutex);
-      strcpy(username, rx_pkt->buf);
-      pthread_mutex_unlock(&unameMutex);
-      pthread_mutex_lock(&roomMutex);
-      // Hardcoded lobby room
-      currentRoom = 1000;
-      pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Login successful!\n", GREEN, NORMAL);
-   }
-   else if (rx_pkt->options == REGSUC) {
-      pthread_mutex_lock(&roomMutex);
-      // Hardcoded lobby room
-      currentRoom = 1000;
-      pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Registration successful!\n", GREEN, NORMAL);
-   }
-   else if(rx_pkt->options == GETUSERS) {
-      printf("%s\n", rx_pkt->buf);
-   }
-
-   else if(rx_pkt->options == PASSFAIL) {
-      printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
-   }
-   else if(rx_pkt->options == PASSSUC) {
-      printf("%s --- Succes:%s Password change successful!\n", GREEN, NORMAL);
-   }
-   else {
-      printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
    }
 }
 
@@ -489,20 +336,4 @@ void print_ip( struct addrinfo *ai) {
       // Print connection information
       printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
    }
-}
-
-
-/* Print helpful and unhelpful things */
-void showHelp() {
-   printf("%s\t/help%s\t\t | Display a list of commands.\n", YELLOW, NORMAL);
-   printf("%s\t/exit%s\t\t | Exit the client.\n", YELLOW, NORMAL);
-   printf("%s\t/register%s\t | Usage: /register username password password\n", YELLOW, NORMAL);
-   printf("%s\t/login%s\t\t | Usage: /login username password.\n", YELLOW, NORMAL);
-   printf("%s\t/who%s\t\t | Return a list of other users.\n", YELLOW, NORMAL);
-   printf("%s\t/invite%s\t\t | Usage: /invite username.\n", YELLOW, NORMAL);
-   printf("%s\t/room%s\t\t | Usage: /join room.\n", YELLOW, NORMAL);
-   printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword.\n", YELLOW, NORMAL);
-   printf("%s\t/setname%s\t | Usage: /setname fname lname.\n", YELLOW, NORMAL);
-   printf("%s\t/connect%s\t | Usage: /connect address port.\n", YELLOW, NORMAL);
-   printf("%s\t/debug%s\t\t | Toggle debug mode.\n", YELLOW, NORMAL);
 }

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS_CLIENT=-Wall -l pthread
+CFLAGS_CLIENT=-Wall -l pthread client_commands.c
 CFLAGS_SERVER=-Wall -l pthread linked_list.c
 
 all: chat_client chat_server
