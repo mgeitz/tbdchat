@@ -31,8 +31,7 @@ int main(int argc, char **argv) {
    
    // Clear terminal and display splash text
    printf("\33[2J\33[H");
-   printf("Fancy ascii logo splash. Use /help to view a list of available commands.\n");
-   
+   fancyLogo();
    
    while (1) {
       tx_pkt.options = INVALID;
@@ -258,4 +257,16 @@ void print_ip( struct addrinfo *ai) {
 void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
    exit(1);
+}
+
+void fancyLogo() {
+   printf("  __                         _                   \n");
+   printf(" / _|                       | |                  \n");
+   printf("| |_ __ _ _ __   ___ _   _  | | ___   __ _  ___  \n");
+   printf("|  _/ _` | '_ \\ / __| | | | | |/ _ \\ / _` |/ _ \\ \n");
+   printf("| || (_| | | | | (__| |_| | | | (_) | (_| | (_) |\n");
+   printf("|_| \\__,_|_| |_|\\___|\\__, | |_|\\___/ \\__, |\\___/ \n");
+   printf("                      __/ |           __/ |      \n");
+   printf("                     |___/           |___/       \n\n");
+   printf("Enter /help to view a list of available commands.\n\n");
 }
