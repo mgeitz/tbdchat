@@ -296,6 +296,6 @@ void showHelp() {
    printf("%s\t/setname%s\t | Usage: /setname fname lname\n", YELLOW, NORMAL);
    printf("%s\t/who%s\t\t | Return a list of other users\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
-   printf("%s\t/room%s\t\t | Usage: /join room\n", YELLOW, NORMAL);
+   printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
 }
 

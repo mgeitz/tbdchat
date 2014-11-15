@@ -31,7 +31,8 @@ typedef struct room Room;
 
 /* Function Prototypes */
 // user nodes
-int insert(User **head, User *new_user);
+int insertUser(User **head, User *new_user);
+int removeUser(User **head, User *new_user);
 char *get_real_name(User **head, char *user);
 char *get_password(User **head, char *user);
 void readUserFile(User **head, char *filename);

@@ -11,10 +11,9 @@
 #include "chat_server.h"
 
 int chat_serv_sock_fd; //server socket
+int numRooms = DEFAULT_ROOM;
 User *registered_users_list;
 User *active_users_list;
-
-// Tentative Room Code
 Room *room_list;
 
 
@@ -31,7 +30,7 @@ int main(int argc, char **argv) {
    registered_users_list = NULL;
    active_users_list = NULL;
    
-   createRoom(&room_list, DEFAULT_ROOM, "Lobby");
+   createRoom(&room_list, numRooms, "Lobby");
    RprintList(&room_list);  
    
    readUserFile(&registered_users_list, "Users.bin");
@@ -195,7 +194,7 @@ void *client_receive(void *ptr) {
                invite(&in_pkt);
             }
             else if(in_pkt.options == JOIN) { 
-               join(&in_pkt);
+               join(&in_pkt, client);
             }
             else if(in_pkt.options == GETUSERS) {
                get_active_users(client);
@@ -251,10 +250,10 @@ void register_user(packet *pkt, int fd) {
    user->sock = fd;
    user->next = NULL;
    
-   insert(&registered_users_list, user);
-   insert(&active_users_list, user);
+   insertUser(&registered_users_list, user);
+   insertUser(&active_users_list, user);
    Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
-   insert(&(defaultRoom->user_list), user);
+   insertUser(&(defaultRoom->user_list), user);
    RprintList(&room_list);  
    
    //Return success message
@@ -311,9 +310,9 @@ void login(packet *pkt, int fd) {
    user->sock = fd;
    user->next = NULL;
 
-   insert(&active_users_list, user);
+   insertUser(&active_users_list, user);
    Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
-   insert(&(defaultRoom->user_list), user);
+   insertUser(&(defaultRoom->user_list), user);
    RprintList(&room_list);  
    
    ret.options = LOGSUC;
@@ -345,10 +344,6 @@ void exit_client(packet *pkt) {
  *Send Message
  */
 void send_message(packet *pkt, int clientfd) {
-   // Tentative Room Code
-   // Room *room = Rget_roomFID(&room_list, pkt->options);
-   //printf("Sending message to Room %d, %s\n", room->ID, room->name);
-   //printf("The Users in Room %d %s are...\n", room->ID, room->name);
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
    printList(&(currentRoom->user_list));
    User *tmp = currentRoom->user_list;
@@ -456,6 +451,51 @@ void set_name(packet *pkt, int fd) {
 /*
  *Join a chat room
  */
-void join(packet *pkt) {
+void join(packet *pkt, int fd) {
+   int i = 0;
+   char *args[16];
+   char *tmp = pkt->buf;
+   packet ret;
 
+   // Split command args
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      // check if room exists
+      printf("Checking if room exists . . .\n");
+      if (Rget_ID(&room_list, args[1]) == -1) {
+         // create if it does not exist
+         createRoom(&room_list, numRooms, args[1]);
+      }
+      RprintList(&room_list);  
+      printf("Receiving room node for requested room.\n");
+      Room *newRoom = Rget_roomFNAME(&room_list, args[1]);
+
+      printf("Receiving room node for users current room.\n");
+      Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
+
+      printf("Getting user node from current room user list.\n");
+      User *currUser = get_user(&active_users_list, pkt->alias);
+
+      //printf("Removing user from his current rooms user list\n");
+      //removeUser(&(currentRoom->user_list), currUser);
+
+      printf("Inserting user into new rooms user list\n");
+      insertUser(&(newRoom->user_list), currUser);
+
+      RprintList(&room_list);  
+
+      ret.options = newRoom->ID;
+      strcpy(ret.alias, "SERVER");
+      strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
+      strcat(ret.buf, " has joined the room.");
+      ret.timestamp = time(NULL);
+      send_message(&ret, -1);
+      //send(fd, &ret, sizeof(packet), 0);
+   }
+   else {
+      printf("uhoh\n");
+   }
 }

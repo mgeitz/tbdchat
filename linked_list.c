@@ -1,7 +1,9 @@
 #include "linked_list.h"
 
+extern int numRooms;
+
 /* Insert a new user node into the list over user nodes passed in */
-int insert(User **head, User *new_user){
+int insertUser(User **head, User *new_user){
    printf("Inserting %s\n", new_user->username);
    User *temp = *head;
    if (*head == NULL) {
@@ -27,6 +29,41 @@ int insert(User **head, User *new_user){
    new_user->next = NULL;
    printf("Insert Success\n");
    return 1;
+}
+
+
+/* Remove a user node from the list of user nodes passed in */
+int removeUser(User **head, User *user){
+   printf("Removing user: %s\n", user->username);
+   User *current = *head;
+   printf("Here0\n");
+   if (*head == NULL) {
+      printf("Can't remove from empty list.\n");
+      return 0;
+   }
+
+   printf("Here1\n");
+   if (strcmp(current->username, user->username) == 0) {
+      printf("Here1.5\n");
+      current->next = user->next;
+      user->next = NULL;
+      printf("Potentially removed a user from a list.\n");
+      return 1;
+   }
+   printf("Here22\n");
+   while (current->next != NULL) {
+      if (strcmp(current->next->username, user->username) == 0) {
+         current->next = user->next;
+         user->next = NULL;
+         printf("Potentially removed a user from a list.\n");
+         return 1;
+      }
+      current = current->next;
+   }
+   //temp->next = new_user;
+   //new_user->next = NULL;
+   printf("User not found in list, nothing removed.\n");
+   return 0;
 }
 
 
@@ -100,7 +137,7 @@ void readUserFile(User **head, char *filename) {
          read(fd, temp, sizeof(User));
          temp->next = NULL;
          //printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
-         insert(head, temp);
+         insertUser(head, temp);
       }
    }
    close(fd);
@@ -130,7 +167,7 @@ void writeUserFile(User **head, char *filename) {
 /* Print contents of list */
 void printList(User **head) {
    User *temp = *head;
-   printf("Printing List\n");
+   printf("Printing User List\n");
    if(*head == NULL) {
       printf("NULL\n");
       return;
@@ -141,7 +178,7 @@ void printList(User **head) {
       temp = temp->next;
       printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
    }
-   printf("End List\n");
+   printf("End User List\n");
 }
 
 
@@ -174,10 +211,12 @@ int insertRoom(Room **head, Room *new_room){
 
 
 int createRoom(Room **head, int ID, char *name) {
+   printf("Creating room %d %s\n", ID, name);
    Room *newRoom = (Room *) malloc(sizeof(Room));
    newRoom->ID = ID;
    strncpy(newRoom->name, name, sizeof(newRoom->name));
    newRoom->user_list = NULL;
+   numRooms++;
    return insertRoom(head, newRoom);
 }
 
@@ -251,7 +290,7 @@ Room *Rget_roomFID(Room **head, int ID) {
 
 
 /*  */
-Room *Rget_roomNAME(Room **head, char *name) {
+Room *Rget_roomFNAME(Room **head, char *name) {
    Room *temp = *head;
    
    if(*head == NULL) return NULL;

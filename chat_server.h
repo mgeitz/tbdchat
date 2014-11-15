@@ -93,7 +93,7 @@ void send_message(packet *pkt, int clientfd);
 void get_active_users(int fd);
 void set_pass(packet *pkt, int fd);
 void set_name(packet *pkt, int fd);
-void join(packet *pkt);
+void join(packet *pkt, int fd);
 void debugPacket(packet *rx_pkt);
 
 #endif
