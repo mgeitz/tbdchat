@@ -8,7 +8,6 @@
    The server program for a simple two way chat utility
 
 */
-
 #include "chat_server.h"
 
 int chat_serv_sock_fd; //server socket
@@ -17,6 +16,7 @@ User *active_users;
 
 // Tentative Room Code
 Room *room_list;
+
 
 int main(int argc, char **argv) {
    if(argc < 3) {
@@ -49,24 +49,6 @@ int main(int argc, char **argv) {
       printf("start server error\n");
       exit(1);
    }	
-   /*while (1) {
-      // Initialize memory space for new clientInfo node
-      clientInfo newClient;
-      // Store client sockfd in clientInfo  node
-      newClient.sockfd = accept_client(chat_serv_sock_fd);
-      if(newClient.sockfd != -1) {
-         int iret;
-         // Set newClient default logged in value
-         newClient.logged_in = 0;
-         // Set newClient default room
-         newClient.currentRoom = 0;
-         // Probably should insert newClient node into list of clients (in default room maybe)
-         
-         // Launch client recaive thread
-         iret  = pthread_create(&newClient.thread_ID, NULL, client_receive, (void *)&newClient);
-     }
-      
-   }*/
    //Main execution loop   
    while(1) {
       //Accept a connection, start a thread
@@ -81,9 +63,9 @@ int main(int argc, char **argv) {
    close(chat_serv_sock_fd);
 }
 
+
 //Copied from Dr. Bi's example
-int get_server_socket(char *hostname, char *port)
-{
+int get_server_socket(char *hostname, char *port) {
    struct addrinfo hints, *servinfo, *p;
    int status;
    int server_socket;
@@ -94,56 +76,48 @@ int get_server_socket(char *hostname, char *port)
    hints.ai_socktype = SOCK_STREAM;  // TCP
    hints.ai_flags = AI_PASSIVE;      // Flag for returning bindable socket addr for either ipv4/6
    
-   if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0)
-   {
+   if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
       printf("getaddrinfo: %s\n", gai_strerror(status));
       exit(1);
    }
    
-   for(p = servinfo; p != NULL; p = p ->ai_next)
-   {
+   for(p = servinfo; p != NULL; p = p ->ai_next) {
       // step 1: create a socket
-      if((server_socket = socket(p->ai_family, p->ai_socktype,
-                                 p->ai_protocol)) == -1)
-      {
+      if((server_socket = socket(p->ai_family, p->ai_socktype,p->ai_protocol)) == -1) {
          printf("socket socket \n");
          continue;
       }
       // if the port is not released yet, reuse it.
-      if(setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
-      {
+      if(setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
          printf("socket option\n");
          continue;
       }
       
       // step 2: bind socket to an IP addr and port
-      if(bind(server_socket, p->ai_addr, p->ai_addrlen) == -1)
-      {
+      if(bind(server_socket, p->ai_addr, p->ai_addrlen) == -1) {
          printf("socket bind \n");
          continue;
       }
       break;
    }
-   //print_ip(servinfo);
    freeaddrinfo(servinfo);   // servinfo structure is no longer needed. free it.
    
    return server_socket;
 }
 
-//Copied from Dr. Bi's example
-int start_server(int serv_socket, int backlog)
-{
+
+/* Copied from Dr. Bi's example */
+int start_server(int serv_socket, int backlog) {
    int status = 0;
-   if((status = listen(serv_socket, backlog)) == -1)
-   {
+   if((status = listen(serv_socket, backlog)) == -1) {
       printf("socket listen error\n");
    }
    return status;
 }
 
-//Copied from Dr. Bi's example
-int accept_client(int serv_sock)
-{
+
+/* Copied from Dr. Bi's example */
+int accept_client(int serv_sock) {
    int reply_sock_fd = -1;
    socklen_t sin_size = sizeof(struct sockaddr_storage);
    struct sockaddr_storage client_addr;
@@ -152,15 +126,11 @@ int accept_client(int serv_sock)
    // accept a connection request from a client
    // the returned file descriptor from accept will be used
    // to communicate with this client.
-   if((reply_sock_fd = accept(serv_sock,
-      (struct sockaddr *)&client_addr, &sin_size)) == -1)
-   {
+   if((reply_sock_fd = accept(serv_sock,(struct sockaddr *)&client_addr, &sin_size)) == -1) {
       printf("socket accept error\n");
    }
    return reply_sock_fd;
 }
-
-
 
 
 /* Dump contents of received packet from client */
@@ -179,20 +149,20 @@ void debugPacket(packet *rx_pkt) {
  *for each client and sets a flag telling the threads 
  *for that session to exit.
  */
-void end(session *ptr)
-{
+void end(session *ptr) {
    close(ptr->clients[0]);
    close(ptr->clients[1]);
    free(ptr);
 }
 
+
 /* Handle SIGINT (CTRL+C) */
-void sigintHandler(int sig_num)
-{
+void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
    close(chat_serv_sock_fd);
    exit(0);
 }
+
 
 /*
  *Main thread for each client.  Receives all messages
@@ -250,6 +220,7 @@ void *client_receive(void *ptr) {
    return NULL;
 }
 
+
 /*
  *Register
  */
@@ -302,6 +273,7 @@ void register_user(packet *pkt, int fd) {
    writeUserFile(&user_list, "Users.bin");
    printf("New User Registered\n");
 }
+
 
 /*
  *Login
@@ -359,11 +331,12 @@ void login(packet *pkt, int fd) {
    
    ret.options = LOGSUC;
    ret.timestamp = time(NULL);
-   strcpy(ret.alias, "SERVER");
+   //strcpy(ret.alias, "SERVER");
    strcpy(ret.buf, get_real_name(&user_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
    printf("User logged in\n");
 }
+
 
 /*
  *Invite
@@ -372,12 +345,14 @@ void invite(packet *pkt) {
 
 }
 
+
 /*
  *Exit
  */
 void exit_client(packet *pkt) {
 
 }
+
 
 /*
  *Send Message
@@ -416,6 +391,7 @@ void get_active_users(int fd) {
     }
 }
 
+
 /*
  *Set user password
  */
@@ -423,34 +399,29 @@ void set_pass(packet *pkt, int fd) {
    char *args[3];
    char *tmp = pkt->buf;
 
+   // We should loop this incase a malformed command gets through and segfaults
    //Pull command, old pw, new pw
    args[0] = strsep(&tmp, " \t");
    args[1] = strsep(&tmp, " \t");
    args[2] = strsep(&tmp, " \t");
 
    User *user = get_user(&user_list, pkt->alias);
-   if(user != NULL) {
+   if (user != NULL) {
       if(strcmp(user->password, args[1]) == 0) {
          memset(user->password, 0, 32);
          strcpy(user->password, args[2]);
          writeUserFile(&user_list, "Users.bin");
-
          pkt->options = PASSSUC;
       }
    }
-
 
    else {
       pkt->options = PASSFAIL;
    }
 
-
    send(fd, (void *)pkt, sizeof(packet), 0);
-
-  
-   
-
 }
+
 
 /*
  *Set user real name
@@ -494,10 +465,10 @@ void set_name(packet *pkt, int fd) {
    send(fd, &ret, sizeof(packet), 0);
 }
 
+
 /*
  *Join a chat room
  */
 void join(packet *pkt) {
-
 
 }

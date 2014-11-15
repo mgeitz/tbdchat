@@ -85,12 +85,12 @@ int userCommand(packet *tx_pkt) {
    }
    // Handle invite command
    if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
-       tx_pkt->options = JOIN;
+       tx_pkt->options = INVITE;
        return 1;;
    }
    // Handle join command
    else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
-       tx_pkt->options = INVITE;
+       tx_pkt->options = JOIN;
        return 1;;
    }
    // Handle who command
