@@ -39,11 +39,12 @@ void writeUserFile(User **head, char *filename);
 void printList(User **head);
 User *get_user(User **head, char *user);
 // room nodes
-int Rinsert(Room **head, Room *new_room);
+int insertRoom(Room **head, Room *new_room);
 int Rget_ID(Room **head, char *name);
 char *Rget_name(Room **head, int ID);
 void RprintList(Room **head);
 Room *Rget_roomFID(Room **head, int ID);
 Room *Rget_roomFNAME(Room **head, char *name);
+int createRoom(Room **head, int ID, char *name);
 
 #endif

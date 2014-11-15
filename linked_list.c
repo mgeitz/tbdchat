@@ -146,8 +146,10 @@ void printList(User **head) {
 
 
 // ROOM METHODS
+
+
 /* Insert new room node to room list */
-int Rinsert(Room **head, Room *new_room){
+int insertRoom(Room **head, Room *new_room){
    Room *temp = *head;
    if(*head == NULL) {
       new_room->next = NULL;
@@ -170,6 +172,14 @@ int Rinsert(Room **head, Room *new_room){
    return 1;
 }
 
+
+int createRoom(Room **head, int ID, char *name) {
+   Room *newRoom = (Room *) malloc(sizeof(Room));
+   newRoom->ID = ID;
+   strncpy(newRoom->name, name, sizeof(newRoom->name));
+   newRoom->user_list = NULL;
+   return insertRoom(head, newRoom);
+}
 
 /* Return ID of room node from its name*/
 int Rget_ID(Room **head, char *name) {

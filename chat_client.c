@@ -137,8 +137,12 @@ void *chatRX(void *ptr) {
             printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
                    NORMAL, rx_pkt.buf);
          }
-         else {
+         else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
             serverResponse(rx_pkt_ptr);
+         }
+         else {
+            printf("%s --- Error:%s Something horrible has happened.\n", RED, NORMAL);
+            break;
          }
       }
       memset(&rx_pkt, 0, sizeof(packet));
