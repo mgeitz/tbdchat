@@ -1,27 +1,24 @@
 #include "linked_list.h"
 
+/* Insert a new user node into the list over user nodes passed in */
 int insert(User **head, User *new_user){
    printf("Inserting %s\n", new_user->username);
    User *temp = *head;
-   if(*head == NULL)
-   {
+   if (*head == NULL) {
       new_user->next = NULL;
       *head = new_user;
       printf("Insert Success\n");
       return 1;
    } 
    
-   if(strcmp(temp->username, new_user->username) == 0)
-   {
+   if (strcmp(temp->username, new_user->username) == 0) {
       printf("Insert Failure\n");
       return 0;
    }
    
-   while(temp->next != NULL) 
-   {
+   while (temp->next != NULL) {
       temp = temp->next;
-      if(strcmp(temp->username, new_user->username) == 0)
-      {
+      if (strcmp(temp->username, new_user->username) == 0) {
          printf("Insert Failure\n");
          return 0;
       }
@@ -32,37 +29,38 @@ int insert(User **head, User *new_user){
    return 1;
 }
 
-char *get_real_name(User **head, char *user)
-{
+
+/* Return the display name for given user name in the list */
+char *get_real_name(User **head, char *user) {
    char *error = "ERROR";
    User *temp = *head;
    
-   if(*head == NULL) return error;
+   if (*head == NULL) return error;
    
-   while(strcmp(user, temp->username) != 0)
-   {
-      if(temp->next == NULL) return error;
+   while (strcmp(user, temp->username) != 0) {
+      if (temp->next == NULL) return error;
       temp=temp->next;
    }
    
    return temp->real_name;
 }
 
-char *get_password(User **head, char *user)
-{
+
+/* Return stored password for user */
+char *get_password(User **head, char *user) {
    char *error = "ERROR";
    User *temp = *head;
 
    if(*head == NULL) return error;
 
-   while(strcmp(user, temp->username) != 0)
-   {
+   while(strcmp(user, temp->username) != 0) {
       if(temp->next == NULL) return error;
       temp=temp->next;
    }
 
    return temp->password;
 }
+
 
 User *get_user(User **head, char *user) {
    User *temp = *head;
@@ -79,8 +77,9 @@ User *get_user(User **head, char *user) {
    return temp;
 }
 
-void readUserFile(User **head, char *filename)
-{
+
+/* Populate user list from Users.bin */
+void readUserFile(User **head, char *filename) {
    int fd = open(filename, O_RDONLY);
    int n;
    int i;
@@ -88,18 +87,15 @@ void readUserFile(User **head, char *filename)
    User *temp;
    
    *head = NULL;
-   if(fd == -1)
-   {
+   if(fd == -1) {
       close(fd);
       return;
    }
-   else
-   {
+   else {
       fstat(fd, &st);
       n = (st.st_size / sizeof(User));
       //printf("n: %d\n", n);
-      for(i = 0; i < n; i++)
-      {
+      for(i = 0; i < n; i++) {
          temp = (User *)malloc(sizeof(User));
          read(fd, temp, sizeof(User));
          temp->next = NULL;
@@ -110,40 +106,38 @@ void readUserFile(User **head, char *filename)
    close(fd);
 }
 
-void writeUserFile(User **head, char *filename)
-{
+
+/* Write user list to Users.bin */
+void writeUserFile(User **head, char *filename) {
    int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
    User *temp = *head;
    
-   if(*head == NULL)
-   {
+   if(*head == NULL) {
       close(fd);
       return;
    }
    
    //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
    write(fd, temp, sizeof(User));
-   while(temp->next != NULL)
-   {
+   while(temp->next != NULL) {
       temp = temp->next;
       //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
       write(fd, temp, sizeof(User));
    }
 }
 
-void printList(User **head)
-{
+
+/* Print contents of list */
+void printList(User **head) {
    User *temp = *head;
    printf("Printing List\n");
-   if(*head == NULL)
-   {
+   if(*head == NULL) {
       printf("NULL\n");
       return;
    }
    
    printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
-   while(temp->next != NULL)
-   {
+   while(temp->next != NULL) {
       temp = temp->next;
       printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
    }
@@ -152,26 +146,22 @@ void printList(User **head)
 
 
 // ROOM METHODS
-
+/* Insert new room node to room list */
 int Rinsert(Room **head, Room *new_room){
    Room *temp = *head;
-   if(*head == NULL)
-   {
+   if(*head == NULL) {
       new_room->next = NULL;
       *head = new_room;
       return 1;
    }
    
-   if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID)
-   {
+   if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID) {
       return 0;
    }
    
-   while(temp->next != NULL)
-   {
+   while(temp->next != NULL) {
       temp = temp->next;
-      if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID)
-      {
+      if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID) {
          return 0;
       }
    }
@@ -181,15 +171,14 @@ int Rinsert(Room **head, Room *new_room){
 }
 
 
-int Rget_ID(Room **head, char *name)
-{
+/* Return ID of room node from its name*/
+int Rget_ID(Room **head, char *name) {
    int error = -1;
    Room *temp = *head;
    
    if(*head == NULL) return error;
    
-   while(strcmp(name, temp->name) != 0)
-   {
+   while(strcmp(name, temp->name) != 0) {
       if(temp->next == NULL) return error;
       temp=temp->next;
    }
@@ -198,15 +187,14 @@ int Rget_ID(Room **head, char *name)
 }
 
 
-char *Rget_name(Room **head, int ID)
-{
+/* Return name of room node from ID */
+char *Rget_name(Room **head, int ID) {
    char *error = "ERROR";
    Room *temp = *head;
    
    if(*head == NULL) return error;
    
-   while(ID != temp->ID)
-   {
+   while(ID != temp->ID) {
       if(temp->next == NULL) return error;
       temp=temp->next;
    }
@@ -215,12 +203,11 @@ char *Rget_name(Room **head, int ID)
 }
 
 
-void RprintList(Room **head)
-{
+/* Print contents of room list */
+void RprintList(Room **head) {
    Room *temp = *head;
    printf("Printing Room List\n");
-   if(*head == NULL)
-   {
+   if(*head == NULL) {
       printf("NULL\n");
       return;
    }
@@ -228,8 +215,7 @@ void RprintList(Room **head)
    printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
    printf("Contains Users...\n");
    printList(&(temp->user_list));
-   while(temp->next != NULL)
-   {
+   while(temp->next != NULL) {
       temp = temp->next;
       printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
       printf("Contains Users...\n");
@@ -239,6 +225,7 @@ void RprintList(Room **head)
 }
 
 
+/*  */
 Room *Rget_roomFID(Room **head, int ID) {
    Room *temp = *head;
    
@@ -253,6 +240,7 @@ Room *Rget_roomFID(Room **head, int ID) {
 }
 
 
+/*  */
 Room *Rget_roomNAME(Room **head, char *name) {
    Room *temp = *head;
    
