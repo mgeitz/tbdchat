@@ -205,52 +205,47 @@ void *client_receive(void *ptr) {
    int received;
    packet in_pkt, *client_message_ptr = &in_pkt;
    while (1) {
-   received = recv(client, &in_pkt, sizeof(packet), 0);
-   // Just for testing
-   if (received) { 
-      debugPacket(client_message_ptr); 
-      //printf("Client Info: %lu %d %d %d", (unsigned long)client.thread_ID, client.sockfd, client.logged_in, client.currentRoom);
-   }
+      received = recv(client, &in_pkt, sizeof(packet), 0);
+      if (received) { 
+         debugPacket(client_message_ptr); 
 
-   //Handle command messages
-   if(in_pkt.options == REGISTER) { 
-      printf("register\n");
-      register_user(&in_pkt, client);
-   }
-   else if(in_pkt.options == SETPASS) {
-      printf("setpass\n");
-      set_pass(&in_pkt, client);
-   }
-   else if(in_pkt.options == SETNAME) {
-      printf("setname\n");
-      set_name(&in_pkt, client);
-   }
-   else if(in_pkt.options == LOGIN) {
-      printf("login\n");
-      login(&in_pkt, client);
-   }
-   else if(in_pkt.options == EXIT) {
-      printf("exit\n");
-      exit_client(&in_pkt);
-   }
-   else if(in_pkt.options == INVITE) {
-      printf("invite\n");
-      invite(&in_pkt);
-   }
-   else if(in_pkt.options == JOIN) { 
-      printf("join\n");
-      join(&in_pkt);
-   }
-   else if(in_pkt.options == GETUSERS) {
-      printf("getusers\n");
-      get_active_users(client);
-   }
-   //Handle conversation message
-   else if(in_pkt.options >= 1000) { 
-      printf("message\n");
-      send_message(&in_pkt, client);
-   }
-   memset(&in_pkt, 0, sizeof(packet));
+         // Handle command messages
+         if (in_pkt.options < 1000) {
+            if(in_pkt.options == REGISTER) { 
+               register_user(&in_pkt, client);
+            }
+            else if(in_pkt.options == SETPASS) {
+               set_pass(&in_pkt, client);
+            }
+            else if(in_pkt.options == SETNAME) {
+               set_name(&in_pkt, client);
+            }
+            else if(in_pkt.options == LOGIN) {
+               login(&in_pkt, client);
+            }
+            else if(in_pkt.options == EXIT) {
+               exit_client(&in_pkt);
+            }
+            else if(in_pkt.options == INVITE) {
+               invite(&in_pkt);
+            }
+            else if(in_pkt.options == JOIN) { 
+               join(&in_pkt);
+            }
+            else if(in_pkt.options == GETUSERS) {
+               get_active_users(client);
+            }
+            else {
+               printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
+            }
+         }
+
+         // Handle conversation message
+         else { 
+            send_message(&in_pkt, client);
+         }
+         memset(&in_pkt, 0, sizeof(packet));
+      }
    }
    return NULL;
 }
@@ -464,34 +459,39 @@ void set_name(packet *pkt, int fd) {
    char name[64];
    packet ret;
 
-   memmove(name, pkt->buf + strlen("/setname "), 64);
+   strncpy(name, pkt->buf, sizeof(name));
+   strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
    //Submit name change to user list, write list
    User *user = get_user(&user_list, pkt->alias);
    printf("Username: %s, Real name: %s\n", user->username, user->real_name);
 
    if(user != NULL) {
-      memset(user->real_name, 0, 64);
-      strcpy(user->real_name, name);
+      memset(user->real_name, 0, sizeof(user->real_name));
+      strncpy(user->real_name, name, sizeof(name));
       writeUserFile(&user_list, "Users.bin");
       ret.options = NAMESUC;
+   }
+   else {
+      printf("%s --- Error:%s Trying to modify null user in user_list.\n", RED, NORMAL);
+      ret.options = NAMEFAIL;
    }
    
    //Submit name change to active users
    user = get_user(&active_users, pkt->alias);
    if(user != NULL) {
-      memset(user->real_name, 0, 64);
-      strcpy(user->real_name, name);
+      memset(user->real_name, 0, sizeof(user->real_name));
+      strncpy(user->real_name, name, sizeof(name));
    }
-
    else {
+      printf("%s --- Error:%s Trying to modify null user in active_users.\n", RED, NORMAL);
       ret.options = NAMEFAIL;
    }
 
    printList(&user_list);
    printList(&active_users);
    ret.timestamp = time(NULL);
-   send(fd, &ret, sizeof(ret), 0);
+   send(fd, &ret, sizeof(packet), 0);
 }
 
 /*

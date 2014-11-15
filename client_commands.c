@@ -261,8 +261,7 @@ int setPassword(packet *tx_pkt) {
 /* Set user real name */
 int setName(packet *tx_pkt) {
    if(strlen(tx_pkt->buf) > strlen("/setname ")) {
-      // Remove command literal from buffer, leaving only new name
-      memmove(tx_pkt->buf, tx_pkt->buf + strlen("/setname "), strlen(tx_pkt->buf) - strlen("/setname "));
+      memmove(tx_pkt->buf, tx_pkt->buf + strlen("/setname "), sizeof(tx_pkt->buf));
       tx_pkt->options = SETNAME;
       return 1;
    }
