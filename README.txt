@@ -24,9 +24,9 @@ Client:
          Description: Invite a user to your current room.
          Usage: /invite username
 
-      - /room
-         Description: This shoud probably be /join or /joinroom I think, not sure why I went with /room.
-         Usage: /room roomnumber
+      - /join
+         Description: Requests to join the room of the name given, if it exists join it, otherwise create it and join it.
+         Usage: /join roomname
 
       - /setpass
          Description: Change your current users password.
@@ -54,7 +54,8 @@ Server:
          o Allows a single registration for any given unique username 
          o Stores a password associated with each username
          o Saves username/realname/password to a file so registration persists after server is shutdown
-      - Other things worth mentioning . . .
+      - Chat with n clients at a time
+      - Rooms containing unique chat sessions simultaneously
     
  
 Known Bugs / Errors:
@@ -65,9 +66,16 @@ Known Bugs / Errors:
           which closes the server socket, but does not close any client sockets
           or free the memory used for the user list.  Major problem.
 
-   Client:
-      - There is a very strange issue regarding username persisting in client after registration that login and setpass somehow do not have.
+      - Problems with accessing / modifying user lists
+         o Does not seem to be a problem for inserting the first few user nodes
+         o Methods mutating a user node contents are written to the node in active user but not registered users
+            which is the list written to Users.bin for persistance
+         o I think in order to establish private (invite required) rooms we will need to store an additional linked list
+            of users with each room node to keep track of who has been invited to the channel. If that list is empty
+            then I guess we can assume the channel to be public.
 
+   Client:
+      - Does not have a means to properly exit.
       - I'm sure there are other bugs
 
      
@@ -77,8 +85,8 @@ Future Plans:
          screen show conversation and bottom allow user to input message
 
    Functional:
-      - Implement rooms
+      - Track which users are permitted to join a particular preexisting room.
 
-      - Allow users to join/leave conversations in real time (not sure how this would work with logging)
+      - Assign the creator of a room some unique flagged ability to make the room private
 
       - Full encryption

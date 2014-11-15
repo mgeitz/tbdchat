@@ -91,7 +91,8 @@ int userCommand(packet *tx_pkt) {
    // Handle join command
    else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
        tx_pkt->options = JOIN;
-       return 1;;
+       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
+       return 1;
    }
    // Handle who command
    else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
