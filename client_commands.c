@@ -115,7 +115,7 @@ int newServerConnection(char *buf) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, buf);
-   int fd;
+   int configfd;
    
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -123,19 +123,17 @@ int newServerConnection(char *buf) {
    }
    if (i == 3) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         // If connection fails, exit
          printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
          return 0;
       }
       if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         // If thread creation fails, exit
          printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
          return 0;
       }
       printf("Connected.\n");
-      fd = open("chat_client.ini", O_WRONLY | O_TRUNC | O_CREAT,S_IRWXU);
-      write(fd, buf, 128);
-      close(fd);
+      configfd = open("chat_client.ini", O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+      write(configfd, buf, strlen(buf));
+      close(configfd);
       return 1;
    }
    else {
