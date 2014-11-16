@@ -87,11 +87,12 @@ int main(int argc, char **argv) {
    }
    
    // Close connection
-   printf("Exiting.\n");
+   printf("%sPreparing to exit . . .%s\n", WHITE, NORMAL);
    close(serverfd);
    if(pthread_join(chat_rx_thread, NULL)) {
       printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
    }
+   printf("%sExiting client.%s\n", WHITE, NORMAL);
    exit(0);
 }
 
@@ -191,11 +192,10 @@ void *chatRX(void *ptr) {
             }
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
-            //if (rx_pkt.options == EXIT) return NULL;
             serverResponse(rx_pkt_ptr);
          }
          else {
-            printf("%s --- Error:%s Something horrible has happened.\n", RED, NORMAL);
+            printf("%sCommunication with server has terminated.%s\n", WHITE, NORMAL);
             break;
          }
       }
@@ -254,9 +254,9 @@ void serverResponse(packet *rx_pkt) {
       newRoom((void *)rx_pkt->buf);
    }
    else if(rx_pkt->options == EXIT) {
-      printf("%s --- Error:%s Server closed.\n", RED, NORMAL);
+      printf("%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
+      printf("%sClosing socket connection with server.%s\n", WHITE, NORMAL);
       close(serverfd);
-      exit(1);
    }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
