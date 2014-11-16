@@ -232,7 +232,7 @@ void register_user(packet *pkt, int fd) {
    //
    if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0) {
       ret.timestamp = time(NULL);
-      strcpy(ret.username, "SERVER");
+      strcpy(ret.realname, "SERVER");
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
       debugPacket(&ret);
@@ -260,7 +260,7 @@ void register_user(packet *pkt, int fd) {
    
    //Return success message
    ret.timestamp = time(NULL);
-   strcpy(ret.username, "SERVER");
+   strcpy(ret.realname, "SERVER");
    ret.options = REGSUC;
    send(fd, &ret, sizeof(ret), 0);
    
@@ -289,7 +289,7 @@ void login(packet *pkt, int fd) {
    if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") ==0) {
       ret.options = LOGFAIL;
       ret.timestamp = time(NULL);
-      strcpy(ret.username, "SERVER");
+      strcpy(ret.realname, "SERVER");
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
       return;
@@ -301,7 +301,7 @@ void login(packet *pkt, int fd) {
    if (strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
-     strcpy(ret.username, "SERVER");
+     strcpy(ret.realname, "SERVER");
      strcpy(ret.buf, "Incorrect password.");
      send(fd, &ret, sizeof(ret), 0);
      return;
@@ -327,7 +327,7 @@ void login(packet *pkt, int fd) {
       printf("User log in failed: alredy logged in");
    }
    ret.timestamp = time(NULL);
-   //strcpy(ret.username, "SERVER");
+   strcpy(ret.realname, "SERVER");
    send(fd, &ret, sizeof(ret), 0);
 }
 
@@ -496,7 +496,7 @@ void join(packet *pkt, int fd) {
       RprintList(&room_list);  
       
       ret.options = newRoom->ID;
-      strcpy(ret.username, "SERVER");
+      strcpy(ret.realname, "SERVER");
       strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
       strcat(ret.buf, " has joined the room.");
       ret.timestamp = time(NULL);
