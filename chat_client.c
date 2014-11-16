@@ -94,8 +94,10 @@ int main(int argc, char **argv) {
    // Close connection
    printf("%sPreparing to exit . . .%s\n", WHITE, NORMAL);
    close(serverfd);
-   if(pthread_join(chat_rx_thread, NULL)) {
-      printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+   if (chat_rx_thread) {
+      if(pthread_join(chat_rx_thread, NULL)) {
+         printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+      }
    }
    printf("%sExiting client.%s\n", WHITE, NORMAL);
    exit(0);
