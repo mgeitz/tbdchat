@@ -308,6 +308,8 @@ void login(packet *pkt, int fd) {
    }
    //Login successful, send username to client and add to active_users
    User *user = get_user(&registered_users_list, args[1]);
+   user->sock = fd;
+
    user = clone_user(user);
    
    if(insertUser(&active_users_list, user) == 1) {
