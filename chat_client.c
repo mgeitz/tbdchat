@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
                timestamp = asctime(localtime(&(tx_pkt.timestamp)));
                timestamp[strlen(timestamp) - 1] = '\0';
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.realname,
-                      NORMAL, tx_pkt.buf);
+                   NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
             pthread_mutex_unlock(&roomMutex);
@@ -179,11 +179,11 @@ void *chatRX(void *ptr) {
          pthread_mutex_unlock(&debugModeMutex);
          if (rx_pkt.options >= 1000) {
             // Format timestamp
-            pthread_mutex_lock(&roomMutex);
-            if (rx_pkt.options != currentRoom) {
-               currentRoom = rx_pkt.options;
-               printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
-            }
+            //pthread_mutex_lock(&roomMutex);
+            //if (rx_pkt.options != currentRoom) {
+            //   currentRoom = rx_pkt.options;
+            //   printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
+            //}
             pthread_mutex_unlock(&roomMutex);
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
@@ -256,8 +256,39 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == NAMEFAIL) {
       printf("%s --- Error:%s Name change failed.\n", RED, NORMAL);
    }
+   else if(rx_pkt->options == JOINSUC) {
+      newRoom((void *)rx_pkt->buf);
+   }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
+   }
+}
+
+
+/* Change the clients current room (for sending) */
+void newRoom(char *buf) {
+   int i = 0, roomNumber;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i >= 1) {
+      roomNumber = atoi(args[1]);
+      pthread_mutex_lock(&roomMutex);
+      if (roomNumber != currentRoom) {
+         currentRoom = roomNumber;
+         printf("%s --- Success:%s Joined room %s.\n", GREEN, NORMAL, args[0]);
+      }
+      pthread_mutex_unlock(&roomMutex);
+   }
+   else {
+      printf("%s --- Error:%s Problem reading JOINSUC from server.\n", RED, NORMAL);
+
    }
 }
 

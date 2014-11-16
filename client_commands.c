@@ -104,9 +104,7 @@ int userCommand(packet *tx_pkt) {
    }
    // Handle join command
    else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
-       tx_pkt->options = JOIN;
-       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
-       return 1;
+       return validJoin(tx_pkt);
    }
    // Handle who command
    else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
@@ -121,11 +119,39 @@ int userCommand(packet *tx_pkt) {
 }
 
 
+/* Uses first word after /join as roomname arg, appends currentroom */
+int validJoin(packet *tx_pkt) {
+   int i;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, tx_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+
+   if (i > 1) {
+      tx_pkt->options = JOIN;
+      pthread_mutex_lock(&roomMutex);
+      memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+      sprintf(tx_pkt->buf, "%s %d", args[1], currentRoom);
+      pthread_mutex_unlock(&roomMutex);
+      return 1;
+   }
+   else {
+      printf("%s --- Error:%s Usage: /join roomname.\n", RED, NORMAL);
+      return 0;
+   }
+}
+
+
 /* Connect to a new server */
 int newServerConnection(char *buf) {
    int i = 0;
    char *args[16];
-   char cpy[128];
+   char cpy[BUFFERSIZE];
    char *tmp = cpy;
    strcpy(tmp, buf);
    FILE *configfp;

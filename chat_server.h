@@ -44,6 +44,7 @@
 #define PASSFAIL 106
 #define NAMESUC 107
 #define NAMEFAIL 108
+#define JOINSUC 109
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"

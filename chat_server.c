@@ -273,9 +273,6 @@ void register_user(packet *pkt, int fd) {
  *Login
  */
 void login(packet *pkt, int fd) {
-   // Tentative Room Code
-   //User *temp_user = (User *)malloc(sizeof(User));
-   
    char *args[3];
    packet ret;
    char *tmp;
@@ -476,17 +473,18 @@ void join(packet *pkt, int fd) {
    if (i > 1) {
       // check if room exists
       printf("Checking if room exists . . .\n");
-      if (Rget_ID(&room_list, args[1]) == -1) {
+      if (Rget_ID(&room_list, args[0]) == -1) {
          // create if it does not exist
-         createRoom(&room_list, numRooms, args[1]);
+         createRoom(&room_list, numRooms, args[0]);
       }
       RprintList(&room_list);  
       printf("Receiving room node for requested room.\n");
-      Room *newRoom = Rget_roomFNAME(&room_list, args[1]);
+      Room *newRoom = Rget_roomFNAME(&room_list, args[0]);
       
+      int currRoomNum = atoi(args[1]);
+      // Should check if current room exists
       printf("Receiving room node for users current room.\n");
-      Room *currentRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);//pkt->options);
-      
+      Room *currentRoom = Rget_roomFID(&room_list, currRoomNum);//pkt->options);
       printf("Getting user node from current room user list.\n");
       User *currUser = get_user(&active_users_list, pkt->username);
       currUser = clone_user(currUser);
@@ -501,6 +499,12 @@ void join(packet *pkt, int fd) {
       insertUser(&(newRoom->user_list), currUser);
       
       RprintList(&room_list);  
+
+      ret.options = JOINSUC;
+      strcpy(ret.realname, "SERVER");
+      sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
+      send(fd, (void *)&ret, sizeof(packet), 0);
+      memset(&ret, 0, sizeof(ret));
       
       ret.options = newRoom->ID;
       strcpy(ret.realname, "SERVER");
@@ -508,7 +512,6 @@ void join(packet *pkt, int fd) {
       strcat(ret.buf, " has joined the room.");
       ret.timestamp = time(NULL);
       send_message(&ret, -1);
-      //send(fd, &ret, sizeof(packet), 0);
    }
    else {
       printf("uhoh\n");
