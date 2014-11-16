@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
    active_users_list = NULL;
    
    createRoom(&room_list, numRooms, "Lobby");
-   RprintList(&room_list);  
+   RprintList(&room_list);
    
    readUserFile(&registered_users_list, "Users.bin");
    printList(&registered_users_list);  
@@ -172,7 +172,7 @@ void *client_receive(void *ptr) {
       received = recv(client, &in_pkt, sizeof(packet), 0);
       if (received) { 
          debugPacket(client_message_ptr); 
-
+         
          // Handle command messages
          if (in_pkt.options < 1000) {
             if(in_pkt.options == REGISTER) { 
@@ -203,7 +203,7 @@ void *client_receive(void *ptr) {
                printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
             }
          }
-
+         
          // Handle conversation message
          else { 
             send_message(&in_pkt, client);
@@ -309,7 +309,7 @@ void login(packet *pkt, int fd) {
    strcpy(user->username, args[1]);
    user->sock = fd;
    user->next = NULL;
-
+   
    insertUser(&active_users_list, user);
    Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
    insertUser(&(defaultRoom->user_list), user);
@@ -347,7 +347,7 @@ void send_message(packet *pkt, int clientfd) {
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
    printList(&(currentRoom->user_list));
    User *tmp = currentRoom->user_list;
-    
+   
    while(tmp != NULL) {
       if (clientfd != tmp->sock) {
          send(tmp->sock, (void *)pkt, sizeof(packet), 0);
@@ -361,16 +361,16 @@ void send_message(packet *pkt, int clientfd) {
  *Get active users
  */
 void get_active_users(int fd) {
-    User *temp = active_users_list;
-    packet pkt;
-    pkt.options = GETUSERS;
-    strcpy(pkt.alias, "SERVER");
-    while(temp != NULL ) {
-     pkt.timestamp = time(NULL);
-     strcpy(pkt.buf, temp->username);
-     send(fd, &pkt, sizeof(pkt), 0);
-     temp = temp->next;
-    }
+   User *temp = active_users_list;
+   packet pkt;
+   pkt.options = GETUSERS;
+   strcpy(pkt.alias, "SERVER");
+   while(temp != NULL ) {
+      pkt.timestamp = time(NULL);
+      strcpy(pkt.buf, temp->username);
+      send(fd, &pkt, sizeof(pkt), 0);
+      temp = temp->next;
+   }
 }
 
 
@@ -380,13 +380,13 @@ void get_active_users(int fd) {
 void set_pass(packet *pkt, int fd) {
    char *args[3];
    char *tmp = pkt->buf;
-
+   
    // We should loop this incase a malformed command gets through and segfaults
    //Pull command, old pw, new pw
    args[0] = strsep(&tmp, " \t");
    args[1] = strsep(&tmp, " \t");
    args[2] = strsep(&tmp, " \t");
-
+   
    User *user = get_user(&registered_users_list, pkt->alias);
    if (user != NULL) {
       if(strcmp(user->password, args[1]) == 0) {
@@ -396,11 +396,11 @@ void set_pass(packet *pkt, int fd) {
          pkt->options = PASSSUC;
       }
    }
-
+   
    else {
       pkt->options = PASSFAIL;
    }
-
+   
    send(fd, (void *)pkt, sizeof(packet), 0);
 }
 
@@ -411,14 +411,14 @@ void set_pass(packet *pkt, int fd) {
 void set_name(packet *pkt, int fd) {
    char name[64];
    packet ret;
-
+   
    strncpy(name, pkt->buf, sizeof(name));
    strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
-
+   
    //Submit name change to user list, write list
    User *user = get_user(&registered_users_list, pkt->alias);
    printf("Username: %s, Real name: %s\n", user->username, user->real_name);
-
+   
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));
       strncpy(user->real_name, name, sizeof(name));
@@ -440,7 +440,7 @@ void set_name(packet *pkt, int fd) {
       printf("%s --- Error:%s Trying to modify null user in active_users.\n", RED, NORMAL);
       ret.options = NAMEFAIL;
    }
-
+   
    printList(&registered_users_list);
    printList(&active_users_list);
    ret.timestamp = time(NULL);
@@ -456,7 +456,7 @@ void join(packet *pkt, int fd) {
    char *args[16];
    char *tmp = pkt->buf;
    packet ret;
-
+   
    // Split command args
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -472,21 +472,21 @@ void join(packet *pkt, int fd) {
       RprintList(&room_list);  
       printf("Receiving room node for requested room.\n");
       Room *newRoom = Rget_roomFNAME(&room_list, args[1]);
-
+      
       printf("Receiving room node for users current room.\n");
       Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
-
+      
       printf("Getting user node from current room user list.\n");
       User *currUser = get_user(&active_users_list, pkt->alias);
-
+      
       //printf("Removing user from his current rooms user list\n");
       //removeUser(&(currentRoom->user_list), currUser);
-
+      
       printf("Inserting user into new rooms user list\n");
       insertUser(&(newRoom->user_list), currUser);
-
+      
       RprintList(&room_list);  
-
+      
       ret.options = newRoom->ID;
       strcpy(ret.alias, "SERVER");
       strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));

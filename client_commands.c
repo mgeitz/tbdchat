@@ -200,7 +200,7 @@ int serverRegistration(packet *tx_pkt) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, tx_pkt->buf);
-
+   
    // Split command args
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -235,7 +235,7 @@ int setPassword(packet *tx_pkt) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, tx_pkt->buf);
-
+   
    // Split command args
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -245,7 +245,6 @@ int setPassword(packet *tx_pkt) {
       if (strcmp(args[2], args[3])  == 0) {
          tx_pkt->options = SETPASS;
          return 1;
-
       }
       else {
       printf("%s --- Error:%s New password mismatch\n", RED, NORMAL);
@@ -299,4 +298,3 @@ void showHelp() {
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
    printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
 }
-

@@ -113,11 +113,11 @@ void *chatRX(void *ptr) {
    int received;
    int *serverfd = (int *)ptr;
    char *timestamp;
-
+   
    while(1) {
       // Wait for message to arrive..
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
-
+      
       if(received) {
          pthread_mutex_lock(&debugModeMutex);
          if (debugMode) {
@@ -179,7 +179,6 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == GETUSERS) {
       printf("%s\n", rx_pkt->buf);
    }
-
    else if(rx_pkt->options == PASSFAIL) {
       printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
    }
@@ -284,7 +283,7 @@ void asciiSplash() {
    printf("%s   /_/%s______%s\\%s_%s\\%s/%s\\%s\n", RED, BLUE, GREEN, BLUE, GREEN, BLUE, BLUE, NORMAL);
    printf("%s   \\_\\%s_________\\/%s\n\n", RED, BLUE, NORMAL);
    printf("%sEnter /help to view a list of available commands.%s\n\n", WHITE, NORMAL);
-
+   
    /*
    printf("%s", GREEN);
    printf(" ___       __   _______   ___       ________  ________  _____ ______   _______                      \n");

@@ -41,7 +41,7 @@ int removeUser(User **head, User *user){
       printf("Can't remove from empty list.\n");
       return 0;
    }
-
+   
    printf("Here1\n");
    if (strcmp(current->username, user->username) == 0) {
       printf("Here1.5\n");
@@ -87,30 +87,29 @@ char *get_real_name(User **head, char *user) {
 char *get_password(User **head, char *user) {
    char *error = "ERROR";
    User *temp = *head;
-
+   
    if(*head == NULL) return error;
-
+   
    while(strcmp(user, temp->username) != 0) {
       if(temp->next == NULL) return error;
       temp=temp->next;
    }
-
+   
    return temp->password;
 }
 
 
 User *get_user(User **head, char *user) {
    User *temp = *head;
-
+   
    if(*head == NULL) return NULL;
-
+   
    while(strcmp(user, temp->username) != 0  &&
          strcmp(user, temp->real_name) != 0) {
-
       if(temp->next == NULL) return NULL;
       temp = temp->next;
    }
-
+   
    return temp;
 }
 
