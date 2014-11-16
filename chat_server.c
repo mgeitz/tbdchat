@@ -131,7 +131,8 @@ int accept_client(int serv_sock) {
 void debugPacket(packet *rx_pkt) {
    printf("%s --------------------- TPS REPORT --------------------- %s\n", CYAN, NORMAL);
    printf("%s Timestamp: %s%lu\n", MAGENTA, NORMAL, rx_pkt->timestamp);
-   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->username);
+   printf("%s User Name: %s%s\n", MAGENTA, NORMAL, rx_pkt->username);
+   printf("%s Real Name: %s%s\n", MAGENTA, NORMAL, rx_pkt->realname);
    printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
    printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
    printf("%s ------------------------------------------------------- %s\n", CYAN, NORMAL);
