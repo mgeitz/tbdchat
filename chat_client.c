@@ -178,12 +178,6 @@ void *chatRX(void *ptr) {
          }
          pthread_mutex_unlock(&debugModeMutex);
          if (rx_pkt.options >= 1000) {
-            // Format timestamp
-            //pthread_mutex_lock(&roomMutex);
-            //if (rx_pkt.options != currentRoom) {
-            //   currentRoom = rx_pkt.options;
-            //   printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
-            //}
             pthread_mutex_unlock(&roomMutex);
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
@@ -256,15 +250,13 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == NAMEFAIL) {
       printf("%s --- Error:%s Name change failed.\n", RED, NORMAL);
    }
-<<<<<<< HEAD
    else if(rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
-=======
+   }
    else if(rx_pkt->options == EXIT) {
       printf("%s --- Error:%s Server closed.\n", RED, NORMAL);
       close(serverfd);
       exit(1);
->>>>>>> 110383683647c2f6e80dc9b7556ed6f263500b22
    }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
