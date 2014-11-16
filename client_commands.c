@@ -304,7 +304,7 @@ int setPassword(packet *tx_pkt) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
       args[++i] = strsep(&tmp, " \t");
    }
-   if (1 == 4) {
+   if (i == 4) {
       if (strcmp(args[2], args[3])  == 0) {
          tx_pkt->options = SETPASS;
          return 1;
