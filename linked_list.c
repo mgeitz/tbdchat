@@ -104,8 +104,7 @@ User *get_user(User **head, char *user) {
    
    if(*head == NULL) return NULL;
    
-   while(strcmp(user, temp->username) != 0  &&
-         strcmp(user, temp->real_name) != 0) {
+   while(strcmp(user, temp->username) != 0) {
       if(temp->next == NULL) return NULL;
       temp = temp->next;
    }
