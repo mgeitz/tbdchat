@@ -197,7 +197,7 @@ void *chatRX(void *ptr) {
             }
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
-            if (rx_pkt.options == EXIT) return NULL;
+            //if (rx_pkt.options == EXIT) return NULL;
             serverResponse(rx_pkt_ptr);
          }
          else {
@@ -256,8 +256,15 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == NAMEFAIL) {
       printf("%s --- Error:%s Name change failed.\n", RED, NORMAL);
    }
+<<<<<<< HEAD
    else if(rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
+=======
+   else if(rx_pkt->options == EXIT) {
+      printf("%s --- Error:%s Server closed.\n", RED, NORMAL);
+      close(serverfd);
+      exit(1);
+>>>>>>> 110383683647c2f6e80dc9b7556ed6f263500b22
    }
    else {
       printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
