@@ -136,8 +136,14 @@ void *chatRX(void *ptr) {
             pthread_mutex_unlock(&roomMutex);
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
+            if(strcmp(rx_pkt.realname, "SERVER") == 0) {
+            printf("%s%s [%s]:%s %s\n", YELLOW, timestamp, rx_pkt.realname,
+                   NORMAL, rx_pkt.buf);
+            }
+            else {
             printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.realname,
                    NORMAL, rx_pkt.buf);
+            }
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
             serverResponse(rx_pkt_ptr);

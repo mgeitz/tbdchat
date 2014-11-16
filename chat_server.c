@@ -264,6 +264,17 @@ void register_user(packet *pkt, int fd) {
    
    writeUserFile(&registered_users_list, "Users.bin");
    printf("New User Registered\n");
+   
+   // Print message to everyone in lobby
+   if(ret.options == REGSUC) {
+      ret.options = DEFAULT_ROOM;
+      strcpy(ret.realname, "SERVER");
+      strncpy(ret.buf, user->real_name, sizeof(user->real_name));
+      strcat(ret.buf, " has joined the room.");
+      ret.timestamp = time(NULL);
+      send_message(&ret, -1);
+   }
+
 }
 
 
@@ -324,6 +335,16 @@ void login(packet *pkt, int fd) {
    }
    ret.timestamp = time(NULL);
    send(fd, &ret, sizeof(ret), 0);
+   
+   // Print message to everyone in lobby
+   if(ret.options == LOGSUC) {
+      ret.options = DEFAULT_ROOM;
+      strcpy(ret.realname, "SERVER");
+      strncpy(ret.buf, user->real_name, sizeof(user->real_name));
+      strcat(ret.buf, " has joined the room.");
+      ret.timestamp = time(NULL);
+      send_message(&ret, -1);
+   }
 }
 
 
