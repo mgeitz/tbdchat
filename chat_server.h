@@ -37,6 +37,7 @@
 #define GETALLUSERS 9
 #define GETUSER 10
 #define LEAVE 11
+#define GETMOTD 12
 // Server responses
 #define RECFAIL 100
 #define REGFAIL 101
@@ -48,6 +49,9 @@
 #define NAMESUC 107
 #define NAMEFAIL 108
 #define JOINSUC 109
+#define MOTD 110
+#define WHOFAIL 111
+#define WHOSUC 112
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
