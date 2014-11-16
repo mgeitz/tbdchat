@@ -484,7 +484,7 @@ void join(packet *pkt, int fd) {
       
       printf("Getting user node from current room user list.\n");
       User *currUser = get_user(&active_users_list, pkt->username);
-      
+      currUser = clone_user(currUser);
       //printf("Removing user from his current rooms user list\n");
       //removeUser(&(currentRoom->user_list), currUser);
       
