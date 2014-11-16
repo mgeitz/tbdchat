@@ -58,7 +58,8 @@
 struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
-   char alias[64];
+   char username[64];
+   char realname[64];
    int options;
 };
 typedef struct Packet packet;
