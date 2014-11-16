@@ -113,6 +113,21 @@ User *get_user(User **head, char *user) {
    return temp;
 }
 
+User *clone_user(User *user) {
+   printf("Cloning User");
+   printf("Old User: %s, %s, %s", user->username, user->real_name,
+           user->password);
+   User *new_user = (User *)malloc(sizeof(User));
+   strcpy(new_user->username, user->username);
+   strcpy(new_user->real_name, user->real_name);
+   strcpy(new_user->password, user->password);
+   new_user->sock = user->sock;
+   new_user-> next = NULL;
+   printf("New User: %s, %s, %s", new_user->username, new_user->real_name,
+           new_user->password);
+   return new_user;
+}
+
 
 /* Populate user list from Users.bin */
 void readUserFile(User **head, char *filename) {

@@ -251,8 +251,10 @@ void register_user(packet *pkt, int fd) {
    user->next = NULL;
    
    insertUser(&registered_users_list, user);
+   user = clone_user(user);
    insertUser(&active_users_list, user);
    Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
+   user = clone_user(user);
    insertUser(&(defaultRoom->user_list), user);
    RprintList(&room_list);  
    
@@ -305,13 +307,12 @@ void login(packet *pkt, int fd) {
      return;
    }
    //Login successful, send username to client and add to active_users
-   User *user = (User *)malloc(sizeof(User));
-   strcpy(user->username, args[1]);
-   user->sock = fd;
-   user->next = NULL;
+   User *user = get_user(&registered_users_list, args[1]);
+   user = clone_user(user);
    
    insertUser(&active_users_list, user);
    Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
+   user = clone_user(user);
    insertUser(&(defaultRoom->user_list), user);
    RprintList(&room_list);  
    

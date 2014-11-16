@@ -35,6 +35,7 @@ int insertUser(User **head, User *new_user);
 int removeUser(User **head, User *new_user);
 char *get_real_name(User **head, char *user);
 char *get_password(User **head, char *user);
+User *clone_user(User *user);
 void readUserFile(User **head, char *filename);
 void writeUserFile(User **head, char *filename);
 void printList(User **head);
