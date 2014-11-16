@@ -76,7 +76,7 @@ void buildDefaultConfig();
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);
-int reconnect(packet *tx_pkt);
+int reconnect(char *buf);
 int serverLogin(packet *tx_pkt);
 int serverRegistration(packet *tx_pkt);
 int setPassword(packet *tx_pkt);

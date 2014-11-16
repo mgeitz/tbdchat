@@ -48,7 +48,7 @@ int userCommand(packet *tx_pkt) {
    }
    // Handle reconnect command
    else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
-      if (!reconnect(tx_pkt)) {
+      if (!reconnect((void *)tx_pkt->buf)) {
           printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
       }
       return 0;
@@ -163,7 +163,7 @@ int newServerConnection(char *buf) {
 
 
 /* Reconnect using the last connection settings */
-int reconnect(packet *tx_pkt) {
+int reconnect(char *buf) {
    FILE *configfp;
    char line[128];
    configfp = fopen(config_file, "r");
@@ -171,15 +171,15 @@ int reconnect(packet *tx_pkt) {
       while (!feof(configfp)) {
          if (fgets(line, sizeof(line), configfp)) {
             if (strncmp(line, "last connection:", strlen("last connection:")) == 0) {
-               strcpy(tx_pkt->buf, "/connect ");
-               strcat(tx_pkt->buf, line + strlen("last connection: "));
+               strcpy(buf, "/connect ");
+               strcat(buf, line + strlen("last connection: "));
                //strncpy(tx_pkt->buf, line + strlen("last_connection: "), sizeof(line) - sizeof("last_reconnect: "));
             }
          }
       }
    }
    fclose(configfp);
-   return newServerConnection((void *)tx_pkt->buf);
+   return newServerConnection(buf);
 }
 
 
