@@ -5,9 +5,10 @@ extern int serverfd;
 extern volatile int currentRoom;
 extern volatile int debugMode;
 extern char username[64];
+extern char realname[64];
 extern pthread_t chat_rx_thread;
 extern pthread_mutex_t roomMutex;
-extern pthread_mutex_t unameMutex;
+extern pthread_mutex_t nameMutex;
 extern pthread_mutex_t debugModeMutex;
 
 /* Process user commands and mutate buffer accordingly */
@@ -180,9 +181,10 @@ int serverLogin(packet *tx_pkt) {
       args[++i] = strsep(&tmp, " \t");
    }
    if (i == 3) {
-      pthread_mutex_lock(&unameMutex);
+      pthread_mutex_lock(&nameMutex);
       strcpy(username, args[1]);
-      pthread_mutex_unlock(&unameMutex);
+      strcpy(realname, args[1]);
+      pthread_mutex_unlock(&nameMutex);
       tx_pkt->options = LOGIN;
       return 1;
    }
@@ -210,10 +212,12 @@ int serverRegistration(packet *tx_pkt) {
       // if the passwords patch mark options
       if (strcmp(args[2], args[3]) == 0) {
          tx_pkt->options = REGISTER;
-         strcpy(tx_pkt->alias, args[1]);
-         pthread_mutex_lock(&unameMutex);
+         pthread_mutex_lock(&nameMutex);
          strcpy(username, args[1]);
-         pthread_mutex_unlock(&unameMutex);
+         strcpy(tx_pkt->username, username);
+         strcpy(realname, args[1]);
+         strcpy(tx_pkt->realname, realname);
+         pthread_mutex_unlock(&nameMutex);
          return 1;
       }
       else {
@@ -276,7 +280,8 @@ int setName(packet *tx_pkt) {
 void debugPacket(packet *rx_pkt) {
    printf("%s --------------------- PACKET REPORT --------------------- %s\n", CYAN, NORMAL);
    printf("%s Timestamp: %s%lu\n", MAGENTA, NORMAL, rx_pkt->timestamp);
-   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->alias);
+   printf("%s User Name: %s%s\n", MAGENTA, NORMAL, rx_pkt->username);
+   printf("%s Real Name: %s%s\n", MAGENTA, NORMAL, rx_pkt->realname);
    printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
    printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
    printf("%s --------------------------------------------------------- %s\n", CYAN, NORMAL);

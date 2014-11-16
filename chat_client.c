@@ -12,10 +12,11 @@
 
 int serverfd;
 pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t unameMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t nameMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
 volatile int currentRoom;
 volatile int debugMode;
+char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 
@@ -42,15 +43,16 @@ int main(int argc, char **argv) {
              send_flag = userCommand(tx_pkt_ptr);
          }
          if (send_flag && serverfd) {
-            pthread_mutex_lock(&unameMutex);
-            strcpy(tx_pkt.alias, username);
-            pthread_mutex_unlock(&unameMutex);
+            pthread_mutex_lock(&nameMutex);
+            strcpy(tx_pkt.username, username);
+            strcpy(tx_pkt.realname, realname);
+            pthread_mutex_unlock(&nameMutex);
             tx_pkt.timestamp = time(NULL);
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                timestamp = asctime(localtime(&(tx_pkt.timestamp)));
                timestamp[strlen(timestamp) - 1] = '\0';
-               printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.alias,
+               printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.realname,
                       NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
@@ -134,7 +136,7 @@ void *chatRX(void *ptr) {
             pthread_mutex_unlock(&roomMutex);
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
-            printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.alias,
+            printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.realname,
                    NORMAL, rx_pkt.buf);
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
@@ -167,9 +169,10 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
    }
    else if (rx_pkt->options == LOGSUC) {
-      pthread_mutex_lock(&unameMutex);
-      strcpy(username, rx_pkt->buf);
-      pthread_mutex_unlock(&unameMutex);
+      pthread_mutex_lock(&nameMutex);
+      strcpy(username, rx_pkt->username);
+      strcpy(realname, rx_pkt->realname);
+      pthread_mutex_unlock(&nameMutex);
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room
       currentRoom = 1000;
@@ -186,10 +189,10 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- Success:%s Password change successful!\n", GREEN, NORMAL);
    }
    else if(rx_pkt->options == NAMESUC) {
-      pthread_mutex_lock(&unameMutex);
-      memset(&username, 0, sizeof(username));
-      strncpy(username, rx_pkt->buf, sizeof(username));
-      pthread_mutex_unlock(&unameMutex);
+      pthread_mutex_lock(&nameMutex);
+      memset(&realname, 0, sizeof(realname));
+      strncpy(realname, rx_pkt->buf, sizeof(realname));
+      pthread_mutex_unlock(&nameMutex);
       printf("%s --- Success:%s Name change successful!\n", GREEN, NORMAL);
    }
    else if(rx_pkt->options == NAMEFAIL) {
