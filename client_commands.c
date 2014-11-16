@@ -140,14 +140,14 @@ int newServerConnection(char *buf) {
       if (configfp != NULL) {
          while (!feof(configfp)) {
             if (fgets(line, sizeof(line), configfp)) {
-               if (strncmp(line, "reconnect:", strlen("reconnect:")) == 0) {
+               if (strncmp(line, "last connection:", strlen("last connection:")) == 0) {
                   fseek(configfp, -strlen(line), SEEK_CUR);
                   for (i = 0; i < strlen(line); i++) {
                      fputs(" ", configfp);
                   }
                   fseek(configfp, -strlen(line), SEEK_CUR);
-                  fputs("reconnect: ", configfp);
-                  fputs(buf, configfp);
+                  fputs("last connection: ", configfp);
+                  fputs(buf + strlen("/connect "), configfp);
                }
             }
          }
@@ -170,8 +170,10 @@ int reconnect(packet *tx_pkt) {
    if (configfp != NULL) {
       while (!feof(configfp)) {
          if (fgets(line, sizeof(line), configfp)) {
-            if (strncmp(line, "reconnect:", strlen("reconnect:")) == 0) {
-               strncpy(tx_pkt->buf, line + strlen("reconnect: "), sizeof(line) - sizeof("reconnect: "));
+            if (strncmp(line, "last connection:", strlen("last connection:")) == 0) {
+               strcpy(tx_pkt->buf, "/connect ");
+               strcat(tx_pkt->buf, line + strlen("last connection: "));
+               //strncpy(tx_pkt->buf, line + strlen("last_connection: "), sizeof(line) - sizeof("last_reconnect: "));
             }
          }
       }

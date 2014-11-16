@@ -24,7 +24,6 @@ char *config_file;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
-   FILE *configfp;
    packet tx_pkt;
    char *timestamp;
    char *config_file_name = "/tbd_chat.ini";
@@ -34,20 +33,15 @@ int main(int argc, char **argv) {
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
 
-   // Establish relative config file path
    strcpy(full_config_path, getenv("HOME"));
    printf("User home is %s\n", full_config_path);
    strcat(full_config_path, config_file_name);
    printf("full config path is %s\n", full_config_path);
    config_file = full_config_path;
-   // Create default config if non exists
    if (access(config_file, F_OK) == -1) {
-      configfp = fopen(config_file, "a+");
-      fputs("###\n#\n#\tTBD Chat Configuration\n#\n###\n\nreconnect:\n", configfp);
-      fclose(configfp);
+      buildDefaultConfig();
    }
 
-   // Clear terminal and display splash text
    printf("\33[2J\33[H");
    asciiSplash();
    
@@ -98,6 +92,15 @@ int main(int argc, char **argv) {
    exit(0);
 }
 
+
+void buildDefaultConfig() {
+      FILE *configfp;
+      configfp = fopen(config_file, "a+");
+      fputs("###\n#\n#\tTBD Chat Configuration\n#\n###\n\n\n", configfp);
+      fputs("## Stores auto reconnect state\nauto-reconnect: 0\n\n", configfp);
+      fputs("## Stores last client connection\nlast connection:\n", configfp);
+      fclose(configfp);
+}
 
 /* Read keyboard input into buffer */
 int userInput(packet *tx_pkt) {
