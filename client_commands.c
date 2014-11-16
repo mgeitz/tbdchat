@@ -12,6 +12,7 @@ extern pthread_t chat_rx_thread;
 extern pthread_mutex_t roomMutex;
 extern pthread_mutex_t nameMutex;
 extern pthread_mutex_t debugModeMutex;
+extern pthread_mutex_t configFileMutex;
 
 
 /* Process user commands and mutate buffer accordingly */
@@ -172,6 +173,7 @@ int newServerConnection(char *buf) {
       }
       printf("Connected.\n");
       i = 0;
+      pthread_mutex_lock(&configFileMutex);
       configfp = fopen(config_file, "r+");
       if (configfp != NULL) {
          while (!feof(configfp)) {
@@ -189,6 +191,7 @@ int newServerConnection(char *buf) {
          }
       }
       fclose(configfp);
+      pthread_mutex_unlock(&configFileMutex);
       return 1;
    }
    else {
@@ -202,6 +205,8 @@ int newServerConnection(char *buf) {
 int reconnect(char *buf) {
    FILE *configfp;
    char line[128];
+
+   pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r");
    if (configfp != NULL) {
       while (!feof(configfp)) {
@@ -211,10 +216,12 @@ int reconnect(char *buf) {
                   strcpy(buf, "/connect ");
                   strcat(buf, line + strlen("last connection: "));
                   fclose(configfp);
+                  pthread_mutex_unlock(&configFileMutex);
                   return newServerConnection(buf);
                }
                else {
                   fclose(configfp);
+                  pthread_mutex_unlock(&configFileMutex);
                   printf("%s --- Error:%s No previous connection to reconnect to.\n", RED, NORMAL);
                   return 0;
                }
@@ -222,6 +229,8 @@ int reconnect(char *buf) {
          }
       }
    }
+   fclose(configfp);
+   pthread_mutex_unlock(&configFileMutex);
    return 0;
 }
 
@@ -230,7 +239,8 @@ int toggleAutoConnect() {
    FILE *configfp;
    char line[128];
    int ret;
-
+ 
+   pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r+");
    if (configfp != NULL) {
       while (!feof(configfp)) {
@@ -250,6 +260,7 @@ int toggleAutoConnect() {
       }
    }
    fclose(configfp);
+   pthread_mutex_unlock(&configFileMutex);
    return ret;
 }
 

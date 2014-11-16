@@ -14,6 +14,7 @@ int serverfd;
 pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t nameMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t configFileMutex = PTHREAD_MUTEX_INITIALIZER;
 volatile int currentRoom;
 volatile int debugMode;
 char realname[64];
@@ -37,17 +38,21 @@ int main(int argc, char **argv) {
    strcat(full_config_path, config_file_name);
    printf("full config path is %s\n", full_config_path);
    config_file = full_config_path;
+   pthread_mutex_lock(&configFileMutex);
    if (access(config_file, F_OK) == -1) {
       buildDefaultConfig();
    }
+   pthread_mutex_unlock(&configFileMutex);
 
    printf("\33[2J\33[H");
    asciiSplash();
 
+   pthread_mutex_lock(&configFileMutex);
    if (auto_connect()) {
       printf("Auto connecting to most recently connected host . . .\n");
       reconnect(tx_pkt.buf);
    }
+   pthread_mutex_unlock(&configFileMutex);
    
    while (1) {
       memset(&tx_pkt, 0, sizeof(packet));
