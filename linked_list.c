@@ -186,10 +186,12 @@ void printList(User **head) {
       return;
    }
    
-   printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
+   printf("%s, %s, %s, %d\n", temp->username, temp->real_name, temp->password,
+          temp->sock);
    while(temp->next != NULL) {
       temp = temp->next;
-      printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
+      printf("%s, %s, %s, %d\n", temp->username, temp->real_name, temp->password,
+             temp->sock);
    }
    printf("End User List\n");
 }
