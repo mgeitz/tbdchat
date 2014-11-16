@@ -310,18 +310,23 @@ void login(packet *pkt, int fd) {
    User *user = get_user(&registered_users_list, args[1]);
    user = clone_user(user);
    
-   insertUser(&active_users_list, user);
-   Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
-   user = clone_user(user);
-   insertUser(&(defaultRoom->user_list), user);
-   RprintList(&room_list);  
-   
-   ret.options = LOGSUC;
+   if(insertUser(&active_users_list, user) == 1) {
+      Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
+      user = clone_user(user);
+      insertUser(&(defaultRoom->user_list), user);
+      RprintList(&room_list);  
+      strcpy(ret.realname, get_real_name(&registered_users_list, args[1]));
+      strcpy(ret.username, args[1]);
+      ret.options = LOGSUC;
+      printf("User logged in\n");
+   }
+   else {
+      ret.options = LOGFAIL;
+      printf("User log in failed: alredy logged in");
+   }
    ret.timestamp = time(NULL);
    //strcpy(ret.username, "SERVER");
-   strcpy(ret.buf, get_real_name(&registered_users_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
-   printf("User logged in\n");
 }
 
 
@@ -418,7 +423,7 @@ void set_name(packet *pkt, int fd) {
    
    //Submit name change to user list, write list
    User *user = get_user(&registered_users_list, pkt->username);
-   printf("Username: %s, Real name: %s\n", user->username, user->real_name);
+   //printf("Username: %s, Real name: %s\n", user->username, user->real_name);
    
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));

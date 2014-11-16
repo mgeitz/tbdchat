@@ -114,8 +114,8 @@ User *get_user(User **head, char *user) {
 }
 
 User *clone_user(User *user) {
-   printf("Cloning User");
-   printf("Old User: %s, %s, %s", user->username, user->real_name,
+   printf("Cloning User\n");
+   printf("Old User: %s, %s, %s\n", user->username, user->real_name,
            user->password);
    User *new_user = (User *)malloc(sizeof(User));
    strcpy(new_user->username, user->username);
@@ -123,7 +123,7 @@ User *clone_user(User *user) {
    strcpy(new_user->password, user->password);
    new_user->sock = user->sock;
    new_user-> next = NULL;
-   printf("New User: %s, %s, %s", new_user->username, new_user->real_name,
+   printf("New User: %s, %s, %s\n", new_user->username, new_user->real_name,
            new_user->password);
    return new_user;
 }
