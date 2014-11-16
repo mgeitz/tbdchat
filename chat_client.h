@@ -33,6 +33,9 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
+#define GETALLUSERS 9
+#define GETUSER 10
+#define LEAVE 11
 // Server responses
 #define RECFAIL 100 
 #define REGFAIL 101
