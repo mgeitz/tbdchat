@@ -83,10 +83,23 @@ Future Plans:
    Visual:
       - Use Curses library to take over terminal window.  Plan to have the top portion of the
          screen show conversation and bottom allow user to input message
-
+      
    Functional:
       - Track which users are permitted to join a particular preexisting room.
-
+        
       - Assign the creator of a room some unique flagged ability to make the room private
-
+        
       - Full encryption
+   
+   Things that should be added with rooms:
+      - Make join room show room number and name (going to be a pain the way we have 
+        it set up right now)
+        
+      - Command to list all rooms
+        
+      - Command to list who is in your current room
+        
+      - Invite command
+        
+      - Exit room command
+      
