@@ -19,7 +19,6 @@ volatile int debugMode;
 char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
-
 char *config_file;
 
 int main(int argc, char **argv) {
@@ -44,8 +43,14 @@ int main(int argc, char **argv) {
 
    printf("\33[2J\33[H");
    asciiSplash();
+
+   if (auto_connect()) {
+      printf("Auto connecting to most recently connected host . . .\n");
+      reconnect(tx_pkt.buf);
+   }
    
    while (1) {
+      memset(&tx_pkt, 0, sizeof(packet));
       tx_pkt.options = INVALID;
       bufSize = userInput(tx_pkt_ptr);
       send_flag = 1;
@@ -79,8 +84,6 @@ int main(int argc, char **argv) {
       if (tx_pkt.options == EXIT) {
          break;
       }
-      // Wipe packet
-      memset(&tx_pkt, 0, sizeof(packet));
    }
    
    // Close connection
@@ -93,6 +96,7 @@ int main(int argc, char **argv) {
 }
 
 
+/* Build the default config file */
 void buildDefaultConfig() {
       FILE *configfp;
       configfp = fopen(config_file, "a+");
@@ -100,6 +104,33 @@ void buildDefaultConfig() {
       fputs("## Stores auto reconnect state\nauto-reconnect: 0\n\n", configfp);
       fputs("## Stores last client connection\nlast connection:\n", configfp);
       fclose(configfp);
+}
+
+
+/* Check if auto-reconnect is set enabled */
+int auto_connect() {
+   FILE *configfp;
+   char line[128];
+   
+   configfp = fopen(config_file, "r");
+   if (configfp != NULL) {
+      while (!feof(configfp)) {
+         if (fgets(line, sizeof(line), configfp)) {
+            if (strncmp(line, "auto-reconnect:", strlen("auto-reconnect:")) == 0) {
+               fclose(configfp);
+               strncpy(line, line + strlen("auto-reconnect: "), 1);
+               if (strncmp(line, "0", 1) == 0) {
+                  return 0;
+               }
+               else {
+                  return 1;
+               }
+            }
+         }
+      }
+   }
+   fclose(configfp);
+   return 0;
 }
 
 /* Read keyboard input into buffer */
@@ -301,6 +332,7 @@ void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
    exit(1);
 }
+
 
 void asciiSplash() {
 

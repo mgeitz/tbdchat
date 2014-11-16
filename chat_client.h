@@ -73,6 +73,7 @@ void *chatRX(void *ptr);
 int userInput(packet *tx_pkt);
 void asciiSplash();
 void buildDefaultConfig();
+int auto_connect();
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);
@@ -83,6 +84,7 @@ int setPassword(packet *tx_pkt);
 int setName(packet *tx_pkt);
 void serverResponse(packet *rx_pkt);
 void debugPacket(packet *rx_pkt);
+int toggleAutoConnect();
 void showHelp();
 
 #endif

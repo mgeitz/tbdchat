@@ -53,6 +53,16 @@ int userCommand(packet *tx_pkt) {
       }
       return 0;
    }
+   // Handle autoconnect command
+   else if (strncmp((void *)tx_pkt->buf, "/autoconnect", strlen("/autoconnect")) == 0) {
+       if (toggleAutoConnect()) {
+          printf("%sAutoconnect enabled.%s\n", WHITE, NORMAL);
+       }
+       else {
+          printf("%sAutoconnect disabled.%s\n", WHITE, NORMAL);
+       }
+       return 0;
+   }
    // Handle register command
    else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
       if (!serverRegistration(tx_pkt)) {
@@ -171,15 +181,50 @@ int reconnect(char *buf) {
       while (!feof(configfp)) {
          if (fgets(line, sizeof(line), configfp)) {
             if (strncmp(line, "last connection:", strlen("last connection:")) == 0) {
-               strcpy(buf, "/connect ");
-               strcat(buf, line + strlen("last connection: "));
-               //strncpy(tx_pkt->buf, line + strlen("last_connection: "), sizeof(line) - sizeof("last_reconnect: "));
+               if (strlen(line) > (strlen("last connection: "))) {
+                  strcpy(buf, "/connect ");
+                  strcat(buf, line + strlen("last connection: "));
+                  fclose(configfp);
+                  return newServerConnection(buf);
+               }
+               else {
+                  fclose(configfp);
+                  printf("%s --- Error:%s No previous connection to reconnect to.\n", RED, NORMAL);
+                  return 0;
+               }
+            }
+         }
+      }
+   }
+   return 0;
+}
+
+
+int toggleAutoConnect() {
+   FILE *configfp;
+   char line[128];
+   int ret;
+
+   configfp = fopen(config_file, "r+");
+   if (configfp != NULL) {
+      while (!feof(configfp)) {
+         if (fgets(line, sizeof(line), configfp)) {
+            if (strncmp(line, "auto-reconnect:", strlen("auto-reconnect:")) == 0) {
+               fseek(configfp, -2, SEEK_CUR);
+               if (strncmp(line + strlen("auto-reconnect: "), "0", 1) == 0) {
+                  fputs("1", configfp);
+                  ret = 1;
+               }
+               else {
+                  fputs("0", configfp);
+                  ret = 0;
+               }
             }
          }
       }
    }
    fclose(configfp);
-   return newServerConnection(buf);
+   return ret;
 }
 
 
@@ -305,7 +350,8 @@ void debugPacket(packet *rx_pkt) {
 /* Print helpful and unhelpful things */
 void showHelp() {
    printf("%s\t/connect%s\t | Usage: /connect address port\n", YELLOW, NORMAL);
-   printf("%s\t/reconnect%s\t | Usage: /reconnect\n", YELLOW, NORMAL);
+   printf("%s\t/reconnect%s\t | Connect to last known host\n", YELLOW, NORMAL);
+   printf("%s\t/autoconnect%s\t | Toggle automatic connection to last known host on startup\n", YELLOW, NORMAL);
    printf("%s\t/help%s\t\t | Display a list of commands\n", YELLOW, NORMAL);
    printf("%s\t/debug%s\t\t | Toggle debug mode\n", YELLOW, NORMAL);
    printf("%s\t/exit%s\t\t | Exit the client\n", YELLOW, NORMAL);
