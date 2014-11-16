@@ -189,7 +189,8 @@ void *client_receive(void *ptr) {
                login(&in_pkt, client);
             }
             else if(in_pkt.options == EXIT) {
-               exit_client(&in_pkt);
+               exit_client(&in_pkt, client);
+               return NULL;
             }
             else if(in_pkt.options == INVITE) {
                invite(&in_pkt);
@@ -339,8 +340,14 @@ void invite(packet *pkt) {
 /*
  *Exit
  */
-void exit_client(packet *pkt) {
-
+void exit_client(packet *pkt, int fd) {
+   packet ret;
+   strcpy(ret.realname, "SERVER");
+   ret.options = EXIT;
+   strcat(ret.buf, "Closing connection.");
+   ret.timestamp = time(NULL);
+   send(fd, &ret, sizeof(ret), 0);
+   close(fd);
 }
 
 

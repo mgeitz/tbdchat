@@ -146,6 +146,7 @@ void *chatRX(void *ptr) {
             }
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
+            if (rx_pkt.options == EXIT) return NULL;
             serverResponse(rx_pkt_ptr);
          }
          else {
