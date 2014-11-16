@@ -485,14 +485,18 @@ void join(packet *pkt, int fd) {
       Room *newRoom = Rget_roomFNAME(&room_list, args[1]);
       
       printf("Receiving room node for users current room.\n");
-      Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
+      Room *currentRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);//pkt->options);
       
       printf("Getting user node from current room user list.\n");
       User *currUser = get_user(&active_users_list, pkt->username);
       currUser = clone_user(currUser);
-      //printf("Removing user from his current rooms user list\n");
-      //removeUser(&(currentRoom->user_list), currUser);
-      
+      if(currentRoom != NULL) {
+         printf("Removing user from his current rooms user list\n");
+         removeUser(&(currentRoom->user_list), currUser);
+      }
+      else {
+         printf("Could not remove user: current room is NULL\n");
+      }
       printf("Inserting user into new rooms user list\n");
       insertUser(&(newRoom->user_list), currUser);
       

@@ -35,6 +35,8 @@ int insertUser(User **head, User *new_user){
 /* Remove a user node from the list of user nodes passed in */
 int removeUser(User **head, User *user){
    printf("Removing user: %s\n", user->username);
+   printList(head);
+   printf("jere\n");
    User *current = *head;
    printf("Here0\n");
    if (*head == NULL) {
@@ -45,8 +47,9 @@ int removeUser(User **head, User *user){
    printf("Here1\n");
    if (strcmp(current->username, user->username) == 0) {
       printf("Here1.5\n");
-      current->next = user->next;
-      user->next = NULL;
+      *head = user->next;
+      //current->next = user->next;
+      //user->next = NULL;
       printf("Potentially removed a user from a list.\n");
       return 1;
    }
@@ -54,7 +57,7 @@ int removeUser(User **head, User *user){
    while (current->next != NULL) {
       if (strcmp(current->next->username, user->username) == 0) {
          current->next = user->next;
-         user->next = NULL;
+         //user->next = NULL;
          printf("Potentially removed a user from a list.\n");
          return 1;
       }
