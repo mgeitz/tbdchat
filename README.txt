@@ -46,6 +46,8 @@ Client:
 
    Features:
       - Supports orderless interaction
+      - Configuration file
+      - auto-reconnect
      
  
 Server:
@@ -67,16 +69,13 @@ Known Bugs / Errors:
           or free the memory used for the user list.  Major problem.
 
       - Problems with accessing / modifying user lists
-         o Does not seem to be a problem for inserting the first few user nodes
-         o Methods mutating a user node contents are written to the node in active user but not registered users
-            which is the list written to Users.bin for persistance
          o I think in order to establish private (invite required) rooms we will need to store an additional linked list
             of users with each room node to keep track of who has been invited to the channel. If that list is empty
             then I guess we can assume the channel to be public.
 
    Client:
-      - Does not have a means to properly exit.
-      - I'm sure there are other bugs
+      - Only supports being in one room.
+      - Does not support /invite yet
 
      
 Future Plans:
@@ -94,11 +93,12 @@ Future Plans:
    Things that should be added with rooms:
       - Make join room show room number and name (going to be a pain the way we have 
         it set up right now)
+         o should be done
         
       - Command to list all rooms
-        
+         
       - Command to list who is in your current room
-        
+        o will expand on /who to include '/who all' connected, '/who' who in room, maybe '/who realname' too?
       - Invite command
         
       - Exit room command
