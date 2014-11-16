@@ -131,7 +131,7 @@ int accept_client(int serv_sock) {
 void debugPacket(packet *rx_pkt) {
    printf("%s --------------------- TPS REPORT --------------------- %s\n", CYAN, NORMAL);
    printf("%s Timestamp: %s%lu\n", MAGENTA, NORMAL, rx_pkt->timestamp);
-   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->alias);
+   printf("%s Alias: %s%s\n", MAGENTA, NORMAL, rx_pkt->username);
    printf("%s Option: %s%d\n", MAGENTA, NORMAL, rx_pkt->options);
    printf("%s Buffer: %s%s\n", MAGENTA, NORMAL, rx_pkt->buf);
    printf("%s ------------------------------------------------------- %s\n", CYAN, NORMAL);
@@ -232,7 +232,7 @@ void register_user(packet *pkt, int fd) {
    //
    if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0) {
       ret.timestamp = time(NULL);
-      strcpy(ret.alias, "SERVER");
+      strcpy(ret.username, "SERVER");
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
       debugPacket(&ret);
@@ -260,7 +260,7 @@ void register_user(packet *pkt, int fd) {
    
    //Return success message
    ret.timestamp = time(NULL);
-   strcpy(ret.alias, "SERVER");
+   strcpy(ret.username, "SERVER");
    ret.options = REGSUC;
    send(fd, &ret, sizeof(ret), 0);
    
@@ -289,7 +289,7 @@ void login(packet *pkt, int fd) {
    if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") ==0) {
       ret.options = LOGFAIL;
       ret.timestamp = time(NULL);
-      strcpy(ret.alias, "SERVER");
+      strcpy(ret.username, "SERVER");
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
       return;
@@ -301,7 +301,7 @@ void login(packet *pkt, int fd) {
    if (strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
-     strcpy(ret.alias, "SERVER");
+     strcpy(ret.username, "SERVER");
      strcpy(ret.buf, "Incorrect password.");
      send(fd, &ret, sizeof(ret), 0);
      return;
@@ -318,7 +318,7 @@ void login(packet *pkt, int fd) {
    
    ret.options = LOGSUC;
    ret.timestamp = time(NULL);
-   //strcpy(ret.alias, "SERVER");
+   //strcpy(ret.username, "SERVER");
    strcpy(ret.buf, get_real_name(&registered_users_list, args[1]));
    send(fd, &ret, sizeof(ret), 0);
    printf("User logged in\n");
@@ -365,7 +365,7 @@ void get_active_users(int fd) {
    User *temp = active_users_list;
    packet pkt;
    pkt.options = GETUSERS;
-   strcpy(pkt.alias, "SERVER");
+   strcpy(pkt.username, "SERVER");
    while(temp != NULL ) {
       pkt.timestamp = time(NULL);
       strcpy(pkt.buf, temp->username);
@@ -388,7 +388,7 @@ void set_pass(packet *pkt, int fd) {
    args[1] = strsep(&tmp, " \t");
    args[2] = strsep(&tmp, " \t");
    
-   User *user = get_user(&registered_users_list, pkt->alias);
+   User *user = get_user(&registered_users_list, pkt->username);
    if (user != NULL) {
       if(strcmp(user->password, args[1]) == 0) {
          memset(user->password, 0, 32);
@@ -417,7 +417,7 @@ void set_name(packet *pkt, int fd) {
    strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
    
    //Submit name change to user list, write list
-   User *user = get_user(&registered_users_list, pkt->alias);
+   User *user = get_user(&registered_users_list, pkt->username);
    printf("Username: %s, Real name: %s\n", user->username, user->real_name);
    
    if(user != NULL) {
@@ -432,7 +432,7 @@ void set_name(packet *pkt, int fd) {
    }
    
    // Submit name change to active users
-   user = get_user(&active_users_list, pkt->alias);
+   user = get_user(&active_users_list, pkt->username);
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));
       strncpy(user->real_name, name, sizeof(name));
@@ -478,7 +478,7 @@ void join(packet *pkt, int fd) {
       Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
       
       printf("Getting user node from current room user list.\n");
-      User *currUser = get_user(&active_users_list, pkt->alias);
+      User *currUser = get_user(&active_users_list, pkt->username);
       
       //printf("Removing user from his current rooms user list\n");
       //removeUser(&(currentRoom->user_list), currUser);
@@ -489,7 +489,7 @@ void join(packet *pkt, int fd) {
       RprintList(&room_list);  
       
       ret.options = newRoom->ID;
-      strcpy(ret.alias, "SERVER");
+      strcpy(ret.username, "SERVER");
       strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
       strcat(ret.buf, " has joined the room.");
       ret.timestamp = time(NULL);
