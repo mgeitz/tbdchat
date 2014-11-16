@@ -17,8 +17,12 @@ Client:
          Usage: /login username password
 
       - /who
-         Description: Print a list the list of users you are chatting with.
+         Description: Print a list the list of users in the same room as you.
          Usage: /who
+         Description: Print a list the list of all connected.
+         Usage: /who all
+         Description: Print a users username.
+         Usage: /who username
 
       - /invite
          Description: Invite a user to your current room.
@@ -43,6 +47,14 @@ Client:
       - /debug
          Description: Toggle debug mode [print out structured content of each packet received].
          Usage: /debug
+
+      - /autoconnect
+         Description: Toggle auto-reconnect on startup.
+         Usage: /autoconnect
+
+      - /leave
+         Description: Leave the room you are current chatting in and return to the lobby.
+         Usage: /leave
 
    Features:
       - Supports orderless interaction

@@ -411,7 +411,9 @@ void showHelp() {
    printf("%s\t/login%s\t\t | Usage: /login username password\n", YELLOW, NORMAL);
    printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword\n", YELLOW, NORMAL);
    printf("%s\t/setname%s\t | Usage: /setname fname lname\n", YELLOW, NORMAL);
-   printf("%s\t/who%s\t\t | Return a list of other users\n", YELLOW, NORMAL);
+   printf("%s\t/who%s\t\t | Return a list of users in your current room or a specific user\n", YELLOW, NORMAL);
+   printf("%s\t/who all%s\t\t | Return a list of all connected users\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
    printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
+   printf("%s\t/leave%s\t\t | Leave the room you are in\n", YELLOW, NORMAL);
 }
