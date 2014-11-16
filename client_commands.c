@@ -1,15 +1,18 @@
 #include "chat_client.h"
 
-/* Declared, defined and allocated in chat_client.c */
+/* Declared.  Defined and allocated in chat_client.c */
 extern int serverfd;
 extern volatile int currentRoom;
 extern volatile int debugMode;
 extern char username[64];
 extern char realname[64];
+extern char *config_file;
+
 extern pthread_t chat_rx_thread;
 extern pthread_mutex_t roomMutex;
 extern pthread_mutex_t nameMutex;
 extern pthread_mutex_t debugModeMutex;
+
 
 /* Process user commands and mutate buffer accordingly */
 int userCommand(packet *tx_pkt) {
@@ -115,13 +118,14 @@ int newServerConnection(char *buf) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, buf);
-   int configfd;
-   
+   FILE *configfp;
+   char line[128];
+
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
    }
-   if (i == 3) {
+   if (i > 2) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
          printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
          return 0;
@@ -131,9 +135,24 @@ int newServerConnection(char *buf) {
          return 0;
       }
       printf("Connected.\n");
-      configfd = open("chat_client.ini", O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
-      write(configfd, buf, strlen(buf));
-      close(configfd);
+      i = 0;
+      configfp = fopen(config_file, "r+");
+      if (configfp != NULL) {
+         while (!feof(configfp)) {
+            if (fgets(line, sizeof(line), configfp)) {
+               if (strncmp(line, "reconnect:", strlen("reconnect:")) == 0) {
+                  fseek(configfp, -strlen(line), SEEK_CUR);
+                  for (i = 0; i < strlen(line); i++) {
+                     fputs(" ", configfp);
+                  }
+                  fseek(configfp, -strlen(line), SEEK_CUR);
+                  fputs("reconnect: ", configfp);
+                  fputs(buf, configfp);
+               }
+            }
+         }
+      }
+      fclose(configfp);
       return 1;
    }
    else {
@@ -145,25 +164,20 @@ int newServerConnection(char *buf) {
 
 /* Reconnect using the last connection settings */
 int reconnect(packet *tx_pkt) {
-   if(strcmp(tx_pkt->buf, "/reconnect") == 0) {
-      int fd = open("chat_client.ini", O_RDONLY);
-      if(fd > 0) {
-         read(fd, tx_pkt->buf, sizeof(tx_pkt->buf));
-         printf("Reconnecting");
-         close(fd);
-         return newServerConnection((void *)tx_pkt->buf);
-      }
-      else
-      {
-         printf("%s --- Error:%s Server connect failed; no previous connection\n", RED, NORMAL);
-         close(fd);
-         return 0;
+   FILE *configfp;
+   char line[128];
+   configfp = fopen(config_file, "r");
+   if (configfp != NULL) {
+      while (!feof(configfp)) {
+         if (fgets(line, sizeof(line), configfp)) {
+            if (strncmp(line, "reconnect:", strlen("reconnect:")) == 0) {
+               strncpy(tx_pkt->buf, line + strlen("reconnect: "), sizeof(line) - sizeof("reconnect: "));
+            }
+         }
       }
    }
-   else {
-      printf("%s --- Error:%s Usage: /reconnect\n", RED, NORMAL);
-      return 0;
-   }
+   fclose(configfp);
+   return newServerConnection((void *)tx_pkt->buf);
 }
 
 

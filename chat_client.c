@@ -20,16 +20,33 @@ char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 
+char *config_file;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
+   FILE *configfp;
    packet tx_pkt;
    char *timestamp;
+   char *config_file_name = "/tbd_chat.ini";
+   char full_config_path[64];
    packet *tx_pkt_ptr = &tx_pkt;
    
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
-   
+
+   // Establish relative config file path
+   strcpy(full_config_path, getenv("HOME"));
+   printf("User home is %s\n", full_config_path);
+   strcat(full_config_path, config_file_name);
+   printf("full config path is %s\n", full_config_path);
+   config_file = full_config_path;
+   // Create default config if non exists
+   if (access(config_file, F_OK) == -1) {
+      configfp = fopen(config_file, "a+");
+      fputs("###\n#\n#\tTBD Chat Configuration\n#\n###\n\nreconnect:\n", configfp);
+      fclose(configfp);
+   }
+
    // Clear terminal and display splash text
    printf("\33[2J\33[H");
    asciiSplash();
