@@ -133,7 +133,7 @@ int newServerConnection(char *buf) {
          return 0;
       }
       printf("Connected.\n");
-      fd = open("chat_client.ini", O_WRONLY | O_TRUNC | O_CREAT,0644);
+      fd = open("chat_client.ini", O_WRONLY | O_TRUNC | O_CREAT,S_IRWXU);
       write(fd, buf, 128);
       close(fd);
       return 1;
