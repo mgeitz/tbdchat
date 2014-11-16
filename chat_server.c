@@ -154,6 +154,29 @@ void end(session *ptr) {
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
+  
+   //Closing client sockets and freeing memory from user lists
+   User *temp = active_users_list;
+   User *next;
+
+   printf("--------CLOSING ACTIVE USERS--------\n");
+   while(temp != NULL) {
+      printf("Closing %s's socket\n", temp->username);
+      next = temp->next;
+      exit_client(temp->sock);
+      free(temp);
+      temp = next;
+   }
+
+   temp = registered_users_list;
+   printf("--------EMPTYING REGISTERED USERS LIST--------\n");
+   while(temp != NULL) {
+      printf("Freeing %s\n", temp->username);
+      next = temp->next;
+      free(temp);
+      temp = next;
+   }
+      
    close(chat_serv_sock_fd);
    exit(0);
 }
@@ -189,7 +212,7 @@ void *client_receive(void *ptr) {
                login(&in_pkt, client);
             }
             else if(in_pkt.options == EXIT) {
-               exit_client(&in_pkt, client);
+               exit_client(client);
                return NULL;
             }
             else if(in_pkt.options == INVITE) {
@@ -340,12 +363,13 @@ void invite(packet *pkt) {
 /*
  *Exit
  */
-void exit_client(packet *pkt, int fd) {
+void exit_client(int fd) {
    packet ret;
    strcpy(ret.realname, "SERVER");
    ret.options = EXIT;
    strcat(ret.buf, "Closing connection.");
    ret.timestamp = time(NULL);
+   printf("Sending close message to %d", fd);
    send(fd, &ret, sizeof(ret), 0);
    close(fd);
 }
