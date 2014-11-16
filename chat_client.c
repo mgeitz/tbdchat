@@ -258,6 +258,10 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
+   else if(rx_pkt->options == INVITE) {
+      printf("%s --- Success:%s Invite received!\n", GREEN, NORMAL);
+      printf("%s\n", rx_pkt->buf);
+   }
    else if(rx_pkt->options == EXIT) {
       printf("%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
       printf("%sClosing socket connection with server.%s\n", WHITE, NORMAL);

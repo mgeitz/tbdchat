@@ -107,9 +107,24 @@ int userCommand(packet *tx_pkt) {
    else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
        return validJoin(tx_pkt);
    }
+   // Handle leave command
+   else if (strncmp((void *)tx_pkt->buf, "/leave", strlen("/leave")) == 0) {
+       tx_pkt->options = LEAVE;
+       pthread_mutex_lock(&roomMutex);
+       memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+       sprintf(tx_pkt->buf, "/leave %d", currentRoom);
+       pthread_mutex_unlock(&roomMutex);
+       return 1;
+   }
    // Handle who command
    else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
        tx_pkt->options = GETUSERS;
+       if (strncmp((void *)tx_pkt->buf, "/who all", strlen("/who all")) == 0) {
+          tx_pkt->options = GETALLUSERS;
+       }
+       else if (strlen(tx_pkt->buf) > strlen("/who ")) {
+          tx_pkt->options = GETUSER;
+       }
        return 1;;
    }
    // If it wasn't any of that, invalid command
