@@ -228,6 +228,9 @@ void *client_receive(void *ptr) {
             else if(in_pkt.options == GETUSERS) {
                get_active_users(client);
             }
+            else if(in_pkt.options == GETROOMS) {
+               get_room_list(client);
+            }
             else if(in_pkt.options == GETMOTD) {
                sendMOTD(client);
             }
@@ -439,6 +442,23 @@ void get_active_users(int fd) {
    while(temp != NULL ) {
       pkt.timestamp = time(NULL);
       strcpy(pkt.buf, temp->username);
+      send(fd, &pkt, sizeof(pkt), 0);
+      temp = temp->next;
+   }
+}
+
+
+/*
+ *Get list of rooms
+ */
+void get_room_list(int fd) {
+   Room *temp = room_list;
+   packet pkt;
+   pkt.options = GETROOMS;
+   strcpy(pkt.username, "SERVER");
+   while(temp != NULL ) {
+      pkt.timestamp = time(NULL);
+      strcpy(pkt.buf, temp->name);
       send(fd, &pkt, sizeof(pkt), 0);
       temp = temp->next;
    }
