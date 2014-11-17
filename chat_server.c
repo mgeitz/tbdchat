@@ -222,8 +222,7 @@ void *client_receive(void *ptr) {
                join(&in_pkt, client);
             }
             else if(in_pkt.options == LEAVE) { 
-               //leave(&in_pkt, client);
-               printf("%s%s wants to %s %s Unknown message received from client.\n", YELLOW, in_pkt.username, in_pkt.buf, NORMAL);
+               leave(&in_pkt, client);
             }
             else if(in_pkt.options == GETALLUSERS) {
                get_active_users(client);
@@ -712,3 +711,45 @@ void join(packet *pkt, int fd) {
    }
 }
 
+
+/* Remove a user from their current room */
+void leave(packet *pkt, int fd) {
+   int i = 0, roomNum;
+   char *args[16];
+   char *tmp = pkt->buf;
+   packet ret;
+
+   // Split command args
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      roomNum = atoi(args[1]);
+      if (roomNum != DEFAULT_ROOM) {
+         Room *currRoom = Rget_roomFID(&room_list, roomNum);
+         User *currUser = get_user(&(currRoom->user_list), pkt->username);
+         if (currRoom != NULL) {
+            if (currUser != NULL) {
+               removeUser(&(currRoom->user_list), currUser);
+               currUser = clone_user(currUser);
+               Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
+               
+               insertUser(&(defaultRoom->user_list), currUser);
+               ret.options = JOINSUC;
+               strcpy(ret.realname, "SERVER");
+               sprintf(ret.buf, "%s %d", defaultRoom->name, defaultRoom->ID);
+               send(fd, (void *)&ret, sizeof(packet), 0);
+               memset(&ret, 0, sizeof(ret));
+
+               ret.options = defaultRoom->ID;
+               strcpy(ret.realname, "SERVER");
+               strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
+               strcat(ret.buf, " has joined the room.");
+               ret.timestamp = time(NULL);
+               send_message(&ret, -1);
+            }
+         }  
+      }
+   }
+}

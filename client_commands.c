@@ -463,5 +463,5 @@ void showHelp() {
    printf("%s\t/list%s\t\t | Return a list of all public rooms with active users in them\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
    printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
-   printf("%s\t/leave%s\t\t | Leave the room you are in\n", YELLOW, NORMAL);
+   printf("%s\t/leave%s\t\t | Leave the room you are in and return to the lobby\n", YELLOW, NORMAL);
 }

@@ -109,6 +109,7 @@ void set_pass(packet *pkt, int fd);
 void set_name(packet *pkt, int fd);
 void join(packet *pkt, int fd);
 void invite(packet *in_pkt, int fd);
+void leave(packet *pkt, int fd);
 void debugPacket(packet *rx_pkt);
 
 #endif

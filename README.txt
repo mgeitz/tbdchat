@@ -116,8 +116,10 @@ Future Plans:
         
       - Full encryption, but we should start with trying to hash the stored passwords
    
+      - logout command
+
    Things that should be added with rooms:
-      - Invite command
+      - Notify all in room when someone else in the room leaves
         
-      - Leave room command
+
       
