@@ -12,6 +12,7 @@ extern pthread_t chat_rx_thread;
 extern pthread_mutex_t roomMutex;
 extern pthread_mutex_t nameMutex;
 extern pthread_mutex_t debugModeMutex;
+extern pthread_mutex_t configFileMutex;
 
 
 /* Process user commands and mutate buffer accordingly */
@@ -19,6 +20,11 @@ int userCommand(packet *tx_pkt) {
 
    // Handle exit command
    if (strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) {
+       tx_pkt->options = EXIT;
+       return 1;;
+   }
+   // Handle quit command
+   else if (strncmp((void *)tx_pkt->buf, "/quit", strlen("/quit")) == 0) {
        tx_pkt->options = EXIT;
        return 1;;
    }
@@ -32,9 +38,11 @@ int userCommand(packet *tx_pkt) {
        pthread_mutex_lock(&debugModeMutex);
        if (debugMode) {
          debugMode = 0;
+         printf("%s --- %sClient: %sDebug disabled.\n", WHITE, BLUE, NORMAL);
        }
        else {
           debugMode = 1;
+         printf("%s --- %sClient: %sDebug enabled.\n", WHITE, BLUE, NORMAL);
        }
        pthread_mutex_unlock(&debugModeMutex);
        return 0;
@@ -42,31 +50,31 @@ int userCommand(packet *tx_pkt) {
    // Handle connect command
    else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
-          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
+          printf("%s --- %sError:%s Server connect failed.\n", WHITE, RED, NORMAL);
       }
       return 0;
    }
    // Handle reconnect command
    else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
       if (!reconnect((void *)tx_pkt->buf)) {
-          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
+          printf("%s --- %sError:%s Server connect failed.\n", WHITE, RED, NORMAL);
       }
       return 0;
    }
    // Handle autoconnect command
    else if (strncmp((void *)tx_pkt->buf, "/autoconnect", strlen("/autoconnect")) == 0) {
        if (toggleAutoConnect()) {
-          printf("%sAutoconnect enabled.%s\n", WHITE, NORMAL);
+          printf("%s --- %sClient: %sAutoconnect enabled.\n", WHITE, BLUE, NORMAL);
        }
        else {
-          printf("%sAutoconnect disabled.%s\n", WHITE, NORMAL);
+          printf("%s --- %sClient: %sAutoconnect disabled.\n", WHITE, BLUE, NORMAL);
        }
        return 0;
    }
    // Handle register command
    else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
       if (!serverRegistration(tx_pkt)) {
-         printf("%s --- Error:%s Server registration failed.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Server registration failed.\n", WHITE, RED, NORMAL);
          return 0;
       }
       else {
@@ -76,7 +84,7 @@ int userCommand(packet *tx_pkt) {
    // Handle login command
    else if (strncmp((void *)tx_pkt->buf, "/login", strlen("/login")) == 0) {
       if (!serverLogin(tx_pkt)) {
-         printf("%s --- Error:%s Server login failed.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Server login failed.\n", WHITE, RED, NORMAL);
          return 0;
       }
       else {
@@ -90,32 +98,115 @@ int userCommand(packet *tx_pkt) {
    // Handle setpass command
    else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
       if (!setPassword(tx_pkt)) {
-         printf("%s --- Error:%s Password mismatch.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Password mismatch.\n", WHITE, RED, NORMAL);
          return 0;
       }
       else {
          return 1;
       }
    }
-   // Handle invite command
-   if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
-       tx_pkt->options = INVITE;
+   // Handle motd command
+   else if (strncmp((void *)tx_pkt->buf, "/motd", strlen("/motd")) == 0) {
+       tx_pkt->options = GETMOTD;
        return 1;;
+   }
+   // Handle invite command
+   else if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
+      return validInvite(tx_pkt);
    }
    // Handle join command
    else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
-       tx_pkt->options = JOIN;
-       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
+       return validJoin(tx_pkt);
+   }
+   // Handle leave command
+   else if (strncmp((void *)tx_pkt->buf, "/leave", strlen("/leave")) == 0) {
+       tx_pkt->options = LEAVE;
+       pthread_mutex_lock(&roomMutex);
+       memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+       sprintf(tx_pkt->buf, "/leave %d", currentRoom);
+       pthread_mutex_unlock(&roomMutex);
        return 1;
    }
    // Handle who command
    else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
+       if (strncmp((void *)tx_pkt->buf, "/who all", strlen("/who all")) == 0) {
+          tx_pkt->options = GETALLUSERS;
+          return 1;
+       }
+       else if (strlen(tx_pkt->buf) > strlen("/who ")) {
+          tx_pkt->options = GETUSER;
+          return 1;
+       }
        tx_pkt->options = GETUSERS;
-       return 1;;
+       pthread_mutex_lock(&roomMutex);
+       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
+       pthread_mutex_unlock(&roomMutex);
+       return 1;
+   }
+   // Handle rooms command
+   else if (strncmp((void *)tx_pkt->buf, "/list", strlen("/list")) == 0) {
+       tx_pkt->options = GETROOMS;
+       return 1;
    }
    // If it wasn't any of that, invalid command
    else {
-      printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Invalid command.\n", WHITE, RED, NORMAL);
+      return 0;
+   }
+}
+
+
+/* Uses first word after /invite as username arg, appends currentroom */
+int validInvite(packet *tx_pkt) {
+   int i;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, tx_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+
+   if (i > 1) {
+      tx_pkt->options = INVITE;
+      memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+      pthread_mutex_lock(&roomMutex);
+      sprintf(tx_pkt->buf, "%s %d", args[1], currentRoom);
+      pthread_mutex_unlock(&roomMutex);
+      return 1;
+   }
+   else {
+      printf("%s --- %sError:%s Usage: /invite username\n", WHITE, RED, NORMAL);
+      return 0;
+   }
+}
+
+
+/* Uses first word after /join as roomname arg, appends currentroom */
+int validJoin(packet *tx_pkt) {
+   int i;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, tx_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+
+   if (i > 1) {
+      tx_pkt->options = JOIN;
+      memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+      pthread_mutex_lock(&roomMutex);
+      sprintf(tx_pkt->buf, "%s %d", args[1], currentRoom);
+      pthread_mutex_unlock(&roomMutex);
+      return 1;
+   }
+   else {
+      printf("%s --- %sError:%s Usage: /join roomname\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -125,7 +216,7 @@ int userCommand(packet *tx_pkt) {
 int newServerConnection(char *buf) {
    int i = 0;
    char *args[16];
-   char cpy[128];
+   char cpy[BUFFERSIZE];
    char *tmp = cpy;
    strcpy(tmp, buf);
    FILE *configfp;
@@ -137,15 +228,16 @@ int newServerConnection(char *buf) {
    }
    if (i > 2) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Could not connect to server.\n", WHITE, RED, NORMAL);
          return 0;
       }
       if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
+         printf("%s --- %sError: %s chatRX thread not created.\n", WHITE, RED, NORMAL);
          return 0;
       }
       printf("Connected.\n");
       i = 0;
+      pthread_mutex_lock(&configFileMutex);
       configfp = fopen(config_file, "r+");
       if (configfp != NULL) {
          while (!feof(configfp)) {
@@ -163,10 +255,11 @@ int newServerConnection(char *buf) {
          }
       }
       fclose(configfp);
+      pthread_mutex_unlock(&configFileMutex);
       return 1;
    }
    else {
-       printf("%s --- Error:%s Usage: /connect address port\n", RED, NORMAL);
+       printf("%s --- %sError:%s Usage: /connect address port\n", WHITE, RED, NORMAL);
        return 0;
    }
 }
@@ -176,6 +269,8 @@ int newServerConnection(char *buf) {
 int reconnect(char *buf) {
    FILE *configfp;
    char line[128];
+
+   pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r");
    if (configfp != NULL) {
       while (!feof(configfp)) {
@@ -185,17 +280,21 @@ int reconnect(char *buf) {
                   strcpy(buf, "/connect ");
                   strcat(buf, line + strlen("last connection: "));
                   fclose(configfp);
+                  pthread_mutex_unlock(&configFileMutex);
                   return newServerConnection(buf);
                }
                else {
                   fclose(configfp);
-                  printf("%s --- Error:%s No previous connection to reconnect to.\n", RED, NORMAL);
+                  pthread_mutex_unlock(&configFileMutex);
+                  printf("%s --- %sError:%s No previous connection to reconnect to.\n", WHITE, RED, NORMAL);
                   return 0;
                }
             }
          }
       }
    }
+   fclose(configfp);
+   pthread_mutex_unlock(&configFileMutex);
    return 0;
 }
 
@@ -204,7 +303,8 @@ int toggleAutoConnect() {
    FILE *configfp;
    char line[128];
    int ret;
-
+ 
+   pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r+");
    if (configfp != NULL) {
       while (!feof(configfp)) {
@@ -224,6 +324,7 @@ int toggleAutoConnect() {
       }
    }
    fclose(configfp);
+   pthread_mutex_unlock(&configFileMutex);
    return ret;
 }
 
@@ -248,7 +349,7 @@ int serverLogin(packet *tx_pkt) {
       return 1;
    }
    else {
-      printf("%s --- Error:%s Usage: /login username password\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /login username password\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -280,12 +381,12 @@ int serverRegistration(packet *tx_pkt) {
          return 1;
       }
       else {
-         printf("%s --- Error:%s Password mismatch\n", RED, NORMAL);
+         printf("%s --- %sError:%s Password mismatch\n", WHITE, RED, NORMAL);
          return 0;
       }
    }
    else {
-      printf("%s --- Error:%s Usage: /register username password password\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /register username password password\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -310,12 +411,12 @@ int setPassword(packet *tx_pkt) {
          return 1;
       }
       else {
-      printf("%s --- Error:%s New password mismatch\n", RED, NORMAL);
+      printf("%s --- %sError:%s New password mismatch\n", WHITE, RED, NORMAL);
       return 0;
       }
    }
    else {
-      printf("%s --- Error:%s Usage: /setpass oldpassword newpassword newpassword\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /setpass oldpassword newpassword newpassword\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -329,7 +430,7 @@ int setName(packet *tx_pkt) {
       return 1;
    }
    else {
-      printf("%s --- Error:%s Usage: /setname newname\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /setname newname\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -349,6 +450,7 @@ void debugPacket(packet *rx_pkt) {
 
 /* Print helpful and unhelpful things */
 void showHelp() {
+   printf("%s--------------------------------[ %sCommand List%s ]--------------------------------------%s\n", BLACK, CYAN, BLACK, NORMAL);
    printf("%s\t/connect%s\t | Usage: /connect address port\n", YELLOW, NORMAL);
    printf("%s\t/reconnect%s\t | Connect to last known host\n", YELLOW, NORMAL);
    printf("%s\t/autoconnect%s\t | Toggle automatic connection to last known host on startup\n", YELLOW, NORMAL);
@@ -359,7 +461,11 @@ void showHelp() {
    printf("%s\t/login%s\t\t | Usage: /login username password\n", YELLOW, NORMAL);
    printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword\n", YELLOW, NORMAL);
    printf("%s\t/setname%s\t | Usage: /setname fname lname\n", YELLOW, NORMAL);
-   printf("%s\t/who%s\t\t | Return a list of other users\n", YELLOW, NORMAL);
+   printf("%s\t/who%s\t\t | Return a list of users in your current room or a specific user real name\n", YELLOW, NORMAL);
+   printf("%s\t/who all%s\t | Return a list of all connected users\n", YELLOW, NORMAL);
+   printf("%s\t/list%s\t\t | Return a list of all public rooms with active users in them\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
    printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
+   printf("%s\t/leave%s\t\t | Leave the room you are in and return to the lobby\n", YELLOW, NORMAL);
+   printf("%s------------------------------------------------------------------------------------------%s\n", BLACK, NORMAL);
 }

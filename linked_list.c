@@ -36,7 +36,6 @@ int insertUser(User **head, User *new_user){
 int removeUser(User **head, User *user){
    printf("Removing user: %s\n", user->username);
    printList(head);
-   printf("jere\n");
    User *current = *head;
    printf("Here0\n");
    if (*head == NULL) {
@@ -51,7 +50,8 @@ int removeUser(User **head, User *user){
       //current->next = user->next;
       //user->next = NULL;
       printf("Potentially removed a user from a list.\n");
-      return 1;
+     printList(head);
+     return 1;
    }
    printf("Here22\n");
    while (current->next != NULL) {
@@ -59,6 +59,7 @@ int removeUser(User **head, User *user){
          current->next = user->next;
          //user->next = NULL;
          printf("Potentially removed a user from a list.\n");
+         printList(head);
          return 1;
       }
       current = current->next;

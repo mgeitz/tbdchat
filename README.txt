@@ -5,8 +5,12 @@ Client:
          Usage: /help
 
       - /exit
-         Description: Inform the server you are quitting, proceed to disconnect and wonder why your client is still running.
+         Description: Safely disconnect from the server and end.
          Usage: /exit
+
+      - /quit
+         Description: Safely disconnect from the server and end.
+         Usage: /quit
 
       - /register
          Description: Register as a new user.
@@ -17,8 +21,12 @@ Client:
          Usage: /login username password
 
       - /who
-         Description: Print a list the list of users you are chatting with.
+         Description: Print a list the list of users in the same room as you.
          Usage: /who
+         Description: Print a list the list of all connected.
+         Usage: /who all
+         Description: Print a users real name.
+         Usage: /who username
 
       - /invite
          Description: Invite a user to your current room.
@@ -44,8 +52,26 @@ Client:
          Description: Toggle debug mode [print out structured content of each packet received].
          Usage: /debug
 
+      - /autoconnect
+         Description: Toggle auto-reconnect on startup.
+         Usage: /autoconnect
+
+      - /leave
+         Description: Leave the room you are current chatting in and return to the lobby.
+         Usage: /leave
+
+      - /motd
+         Description: Print out the servers message of the day.
+         Usage: /motd
+
+      - /list
+         Description: Print out a list of public rooms with active users in them.
+         Usage: /list
+
    Features:
       - Supports orderless interaction
+      - Configuration file
+      - auto-reconnect
      
  
 Server:
@@ -61,45 +87,45 @@ Server:
 Known Bugs / Errors:
    Server:
       - Can have a conversation between the same user logged in two times
-             
-      - No way of safely exiting server.  Currently CTRL-C is the only method,
-          which closes the server socket, but does not close any client sockets
-          or free the memory used for the user list.  Major problem.
 
       - Problems with accessing / modifying user lists
-         o Does not seem to be a problem for inserting the first few user nodes
-         o Methods mutating a user node contents are written to the node in active user but not registered users
-            which is the list written to Users.bin for persistance
          o I think in order to establish private (invite required) rooms we will need to store an additional linked list
             of users with each room node to keep track of who has been invited to the channel. If that list is empty
             then I guess we can assume the channel to be public.
+         o Users not being removed from any lists after /exit is received from them
 
    Client:
-      - Does not have a means to properly exit.
-      - I'm sure there are other bugs
+      - Only supports being in one room.
 
+   Potential race conditions to still address
+:
+      - Client: 
+         o Printing anything on the client (any cli or gui will solve this)
+      - Server:
+         o List reading / writing 
      
-Future Plans:
-   Visual:
+Future Plans / To Do:
       - Use Curses library to take over terminal window.  Plan to have the top portion of the
          screen show conversation and bottom allow user to input message
       
-   Functional:
-      - Track which users are permitted to join a particular preexisting room.
+      - Track which users are permitted to join a particular preexisting room, give rooms state of public or private.
         
-      - Assign the creator of a room some unique flagged ability to make the room private
+      - Assign the creator of a room some unique flagged ability to make the room private, or set other room features
         
-      - Full encryption
+      - Full encryption, but we should start with trying to hash the stored passwords
    
+      - logout command to put user back in not-logged-in state, disconnect command to close serverfd and chatrxthread but not close client
+
+      - Generalize many FAIL responses into a SERVERR response with the error message in buffer
+
+      - Remove a user from active_users_list and their room list when they send a /exit
+
+      - Shorten the printed timestamp a lot
+
+      - Logging; added debug and root level logs, give them flags set by /debug, change debug to persist. Add normal logs for each room. I think we should worry about displaying them in chat later, maybe /log toggles active message logging?
+
+      - Probably move the primary execution loop in main of client to its own method again.
+
    Things that should be added with rooms:
-      - Make join room show room number and name (going to be a pain the way we have 
-        it set up right now)
-        
-      - Command to list all rooms
-        
-      - Command to list who is in your current room
-        
-      - Invite command
-        
-      - Exit room command
+      - Notify all in room when someone else in the room leaves
       

@@ -22,6 +22,7 @@
 /* Preprocessor Macros */
 // Client buffer size
 #define BUFFERSIZE 128
+#define DEFAULT_ROOM 1000
 // Client options
 #define INVALID -1
 #define CONNECT 0
@@ -33,6 +34,11 @@
 #define INVITE 6
 #define JOIN 7
 #define GETUSERS 8
+#define GETALLUSERS 9
+#define GETUSER 10
+#define LEAVE 11
+#define GETMOTD 12
+#define GETROOMS 13
 // Server responses
 #define RECFAIL 100 
 #define REGFAIL 101
@@ -43,6 +49,11 @@
 #define PASSFAIL 106
 #define NAMESUC 107
 #define NAMEFAIL 108
+#define JOINSUC 109
+#define MOTD 110
+#define WHOFAIL 111
+#define INVITESUC 112
+#define INVITEFAIL 113
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -74,6 +85,7 @@ int userInput(packet *tx_pkt);
 void asciiSplash();
 void buildDefaultConfig();
 int auto_connect();
+void newRoom(char *buf);
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);
@@ -86,5 +98,7 @@ void serverResponse(packet *rx_pkt);
 void debugPacket(packet *rx_pkt);
 int toggleAutoConnect();
 void showHelp();
+int validJoin(packet *tx_pkt);
+int validInvite(packet *tx_pkt);
 
 #endif

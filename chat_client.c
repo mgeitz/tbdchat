@@ -14,12 +14,14 @@ int serverfd;
 pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t nameMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t configFileMutex = PTHREAD_MUTEX_INITIALIZER;
 volatile int currentRoom;
 volatile int debugMode;
 char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 char *config_file;
+
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -33,21 +35,23 @@ int main(int argc, char **argv) {
    signal(SIGINT, sigintHandler);
 
    strcpy(full_config_path, getenv("HOME"));
-   printf("User home is %s\n", full_config_path);
    strcat(full_config_path, config_file_name);
-   printf("full config path is %s\n", full_config_path);
    config_file = full_config_path;
+   pthread_mutex_lock(&configFileMutex);
    if (access(config_file, F_OK) == -1) {
       buildDefaultConfig();
    }
+   pthread_mutex_unlock(&configFileMutex);
 
    printf("\33[2J\33[H");
    asciiSplash();
 
+   pthread_mutex_lock(&configFileMutex);
    if (auto_connect()) {
-      printf("Auto connecting to most recently connected host . . .\n");
+      printf("%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
       reconnect(tx_pkt.buf);
    }
+   pthread_mutex_unlock(&configFileMutex);
    
    while (1) {
       memset(&tx_pkt, 0, sizeof(packet));
@@ -69,7 +73,7 @@ int main(int argc, char **argv) {
                timestamp = asctime(localtime(&(tx_pkt.timestamp)));
                timestamp[strlen(timestamp) - 1] = '\0';
                printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.realname,
-                      NORMAL, tx_pkt.buf);
+                   NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
             pthread_mutex_unlock(&roomMutex);
@@ -78,7 +82,7 @@ int main(int argc, char **argv) {
             }
          }
          else if (send_flag && !serverfd)  {
-            printf("%s --- Error:%s Not connected to any server. See /help for command usage.\n", RED, NORMAL);
+            printf("%s --- %sError:%s Not connected to any server. See /help for command usage.\n", WHITE, RED, NORMAL);
          } 
       }
       if (tx_pkt.options == EXIT) {
@@ -87,11 +91,14 @@ int main(int argc, char **argv) {
    }
    
    // Close connection
-   printf("Exiting.\n");
+   printf("%sPreparing to exit . . .%s\n", WHITE, NORMAL);
    close(serverfd);
-   if(pthread_join(chat_rx_thread, NULL)) {
-      printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+   if (chat_rx_thread) {
+      if(pthread_join(chat_rx_thread, NULL)) {
+         printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
+      }
    }
+   printf("%sExiting client.%s\n", WHITE, NORMAL);
    exit(0);
 }
 
@@ -132,6 +139,7 @@ int auto_connect() {
    fclose(configfp);
    return 0;
 }
+
 
 /* Read keyboard input into buffer */
 int userInput(packet *tx_pkt) {
@@ -178,12 +186,6 @@ void *chatRX(void *ptr) {
          }
          pthread_mutex_unlock(&debugModeMutex);
          if (rx_pkt.options >= 1000) {
-            // Format timestamp
-            pthread_mutex_lock(&roomMutex);
-            if (rx_pkt.options != currentRoom) {
-               currentRoom = rx_pkt.options;
-               printf("%s --- Success:%s Joined room %d.\n", GREEN, NORMAL, currentRoom);
-            }
             pthread_mutex_unlock(&roomMutex);
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
@@ -197,11 +199,10 @@ void *chatRX(void *ptr) {
             }
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
-            //if (rx_pkt.options == EXIT) return NULL;
             serverResponse(rx_pkt_ptr);
          }
          else {
-            printf("%s --- Error:%s Something horrible has happened.\n", RED, NORMAL);
+            printf("%sCommunication with server has terminated.%s\n", WHITE, NORMAL);
             break;
          }
       }
@@ -214,17 +215,17 @@ void *chatRX(void *ptr) {
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == REGFAIL) {
-      printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Registration failed.\n", WHITE, RED, NORMAL);
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room
-      currentRoom = 1000;
+      currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Registration successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == LOGFAIL) {
-      printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Login failed.\n", WHITE, RED, NORMAL);
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -233,36 +234,87 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&nameMutex);
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room
-      currentRoom = 1000;
+      currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Login successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
    }
-   else if(rx_pkt->options == GETUSERS) {
-      printf("%s\n", rx_pkt->buf);
+   else if(rx_pkt->options == GETUSERS || rx_pkt->options == GETALLUSERS || rx_pkt->options == GETUSER) {
+      printf("%s --- %sUser:%s %s\n", WHITE, WHITE, NORMAL, rx_pkt->buf);
    }
    else if(rx_pkt->options == PASSFAIL) {
-      printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Password change failed.\n", WHITE, RED, NORMAL);
    }
    else if(rx_pkt->options == PASSSUC) {
-      printf("%s --- Success:%s Password change successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Password change successful!\n", WHITE, GREEN, NORMAL);
+   }
+   else if(rx_pkt->options == WHOFAIL) {
+      printf("%s --- %sError:%s User lookup failed.\n", WHITE, RED, NORMAL);
    }
    else if(rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      printf("%s --- Success:%s Name change successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Name change successful!\n", WHITE, GREEN, NORMAL);
    }
    else if(rx_pkt->options == NAMEFAIL) {
-      printf("%s --- Error:%s Name change failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Name change failed.\n", WHITE, RED, NORMAL);
+   }
+   else if(rx_pkt->options == JOINSUC) {
+      newRoom((void *)rx_pkt->buf);
+   }
+   else if(rx_pkt->options == INVITE) {
+      printf("%s --- %sInvite: %s%s\n", WHITE, MAGENTA, NORMAL, rx_pkt->buf);
+   }
+   else if(rx_pkt->options == INVITEFAIL) {
+      printf("%s --- %sError:%s Invite not sent.\n", WHITE, RED, NORMAL);
+   }
+   else if(rx_pkt->options == INVITESUC) {
+      printf("%s --- %sSuccess:%s Invite sent!\n", WHITE, GREEN, NORMAL);
+   }
+   else if(rx_pkt->options == GETROOMS) {
+      printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
+   }
+   else if(rx_pkt->options == MOTD) {
+      printf("%s ----------------------------------------[ MOTD ]------------------------------------------ %s\n", BLACK, NORMAL);
+      printf("%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);
+      printf("%s ------------------------------------------------------------------------------------------ %s\n", BLACK, NORMAL);
    }
    else if(rx_pkt->options == EXIT) {
-      printf("%s --- Error:%s Server closed.\n", RED, NORMAL);
+      printf("%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
+      printf("%sClosing socket connection with server.%s\n", WHITE, NORMAL);
       close(serverfd);
-      exit(1);
    }
    else {
-      printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Unknown message received from server.\n", WHITE, RED, NORMAL);
+   }
+}
+
+
+/* Change the clients current room (for sending) */
+void newRoom(char *buf) {
+   int i = 0, roomNumber;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i >= 1) {
+      roomNumber = atoi(args[1]);
+      pthread_mutex_lock(&roomMutex);
+      if (roomNumber != currentRoom) {
+         currentRoom = roomNumber;
+         printf("%s --- %sSuccess:%s Joined room %s%s%s.\n", WHITE, GREEN, NORMAL, WHITE, args[0], NORMAL);
+      }
+      pthread_mutex_unlock(&roomMutex);
+   }
+   else {
+      printf("%s --- %sError:%s Problem reading JOINSUC from server.\n", WHITE, RED, NORMAL);
+
    }
 }
 
@@ -285,13 +337,13 @@ int get_server_connection(char *hostname, char *port) {
    print_ip(servinfo);
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         printf("%s --- Error:%s socket socket \n", RED, NORMAL);
+         printf("%s --- %sError:%s socket socket \n", WHITE, RED, NORMAL);
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         printf("%s --- Error:%s socket connect \n", RED, NORMAL);
+         printf("%s --- %sError:%s socket connect \n", WHITE, RED, NORMAL);
          return -1;
       }
       break;
@@ -327,14 +379,14 @@ void print_ip( struct addrinfo *ai) {
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
-      printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
+      printf("%sConnecting to %s: %s:%d . . .%s\n", WHITE, ipver, ipstr, ntohs(port), NORMAL);
    }
 }
 
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
+   printf("\b\b%s --- %sError:%s Forced Exit.\n", WHITE, RED, NORMAL);
    exit(1);
 }
 
