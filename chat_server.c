@@ -535,7 +535,7 @@ void user_lookup(packet *in_pkt, int fd) {
    int i = 0;
    char *args[16];
    char *tmp = in_pkt->buf;
-
+   
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
       args[++i] = strsep(&tmp, " \t");
@@ -724,36 +724,38 @@ void join(packet *pkt, int fd) {
       printf("Receiving room node for users current room.\n");
       Room *currentRoom = Rget_roomFID(&room_list, currRoomNum);//pkt->options);
       printf("Getting user node from current room user list.\n");
-      User *currUser = get_user(&active_users_list, pkt->username);
-      if(currentRoom != NULL) {
-         printf("Removing user from his current rooms user list\n");
-         removeUser(&(currentRoom->user_list), currUser);
-      }
-      else {
+      if(currentRoom == NULL) {
          printf("Could not remove user: current room is NULL\n");
       }
-      currUser = clone_user(currUser);
-      printf("Inserting user into new rooms user list\n");
-      insertUser(&(newRoom->user_list), currUser);
-      
-      RprintList(&room_list);  
-
-      ret.options = JOINSUC;
-      strcpy(ret.realname, "SERVER");
-      sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
-      send(fd, (void *)&ret, sizeof(packet), 0);
-      memset(&ret, 0, sizeof(ret));
-      
-      ret.options = newRoom->ID;
-      strcpy(ret.realname, "SERVER");
-      strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
-      strcat(ret.buf, " has joined the room.");
-      ret.timestamp = time(NULL);
-      send_message(&ret, -1);
+      else {
+         User *currUser = get_user(&(currentRoom->user_list), pkt->username);
+         printf("Removing user from his current rooms user list\n");
+         removeUser(&(currentRoom->user_list), currUser);
+         
+         currUser = clone_user(currUser);
+         printf("Inserting user into new rooms user list\n");
+         insertUser(&(newRoom->user_list), currUser);
+         
+         RprintList(&room_list);  
+         
+         ret.options = JOINSUC;
+         strcpy(ret.realname, "SERVER");
+         sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
+         send(fd, (void *)&ret, sizeof(packet), 0);
+         memset(&ret, 0, sizeof(ret));
+         
+         ret.options = newRoom->ID;
+         strcpy(ret.realname, "SERVER");
+         strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
+         strcat(ret.buf, " has joined the room.");
+         ret.timestamp = time(NULL);
+         send_message(&ret, -1);
+      }
    }
    else {
       printf("Problem in join.\n");
    }
+   pthread_mutex_unlock(&rooms_mutex);
 }
 
 
@@ -773,8 +775,8 @@ void leave(packet *pkt, int fd) {
       roomNum = atoi(args[1]);
       if (roomNum != DEFAULT_ROOM) {
          Room *currRoom = Rget_roomFID(&room_list, roomNum);
-         User *currUser = get_user(&(currRoom->user_list), pkt->username);
          if (currRoom != NULL) {
+            User *currUser = get_user(&(currRoom->user_list), pkt->username);
             if (currUser != NULL) {
                removeUser(&(currRoom->user_list), currUser);
                currUser = clone_user(currUser);
@@ -786,7 +788,7 @@ void leave(packet *pkt, int fd) {
                sprintf(ret.buf, "%s %d", defaultRoom->name, defaultRoom->ID);
                send(fd, (void *)&ret, sizeof(packet), 0);
                memset(&ret, 0, sizeof(ret));
-
+               
                ret.options = defaultRoom->ID;
                strcpy(ret.realname, "SERVER");
                strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
