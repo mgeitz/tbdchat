@@ -52,6 +52,8 @@
 #define JOINSUC 109
 #define MOTD 110
 #define WHOFAIL 111
+#define INVITESUC 112
+#define INVITEFAIL 113
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -96,7 +98,6 @@ void establish_identity(int fd, char *ID, char *name, User **user_list);
 void *client_receive(void *ptr);
 void register_user(packet *pkt, int fd);
 void login(packet *pkt, int fd);
-void invite(packet *pkt);
 void exit_client(int fd);
 void send_message(packet *pkt, int clientfd);
 void sendMOTD(int fd);
@@ -107,6 +108,7 @@ void get_room_list(int fd);
 void set_pass(packet *pkt, int fd);
 void set_name(packet *pkt, int fd);
 void join(packet *pkt, int fd);
+void invite(packet *in_pkt, int fd);
 void debugPacket(packet *rx_pkt);
 
 #endif

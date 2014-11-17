@@ -216,7 +216,7 @@ void *client_receive(void *ptr) {
                return NULL;
             }
             else if(in_pkt.options == INVITE) {
-               invite(&in_pkt);
+               invite(&in_pkt, client);
             }
             else if(in_pkt.options == JOIN) { 
                join(&in_pkt, client);
@@ -388,8 +388,44 @@ void login(packet *pkt, int fd) {
 /*
  *Invite
  */
-void invite(packet *pkt) {
+void invite(packet *in_pkt, int fd) {
+   int i = 0, roomNum;
+   char *args[16];
+   char *tmp = in_pkt->buf;
+   packet ret;
 
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      roomNum = atoi(args[1]);
+      Room *currRoom = Rget_roomFID(&room_list, roomNum);
+      if (currRoom != NULL) {
+         User *inviteUser = get_user(&active_users_list, args[0]);
+         if (inviteUser != NULL) {
+            ret.options = INVITE;
+            strcpy(ret.username, "SERVER");
+            memset(&ret.buf, 0, sizeof(ret.buf));
+            sprintf(ret.buf, "%s has invited you to join %s", in_pkt->realname, Rget_name(&room_list, roomNum));
+            send(inviteUser->sock, &ret, sizeof(packet), 0);
+            memset(&ret, 0, sizeof(packet));
+            ret.options = INVITESUC;
+            strcpy(ret.username, "SERVER");
+            send(fd, &ret, sizeof(packet), 0);
+            return;
+         }
+      }
+      else {
+         printf("%s --- Error:%s Trying to read user info but room is null.\n", RED, NORMAL);
+      }
+   }
+   else {
+      printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
+   }
+   ret.options = INVITEFAIL;
+   strcpy(ret.username, "SERVER");
+   send(fd, &ret, sizeof(packet), 0);
 }
 
 

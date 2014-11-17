@@ -140,6 +140,7 @@ int auto_connect() {
    return 0;
 }
 
+
 /* Read keyboard input into buffer */
 int userInput(packet *tx_pkt) {
    int i = 0;
@@ -263,8 +264,13 @@ void serverResponse(packet *rx_pkt) {
       newRoom((void *)rx_pkt->buf);
    }
    else if(rx_pkt->options == INVITE) {
-      printf("%s --- %sSuccess:%s Invite received!\n", WHITE, GREEN, NORMAL);
-      printf("%s\n", rx_pkt->buf);
+      printf("%s --- %sInvite: %s%s\n", WHITE, MAGENTA, NORMAL, rx_pkt->buf);
+   }
+   else if(rx_pkt->options == INVITEFAIL) {
+      printf("%s --- %sError:%s Invite not sent.\n", WHITE, RED, NORMAL);
+   }
+   else if(rx_pkt->options == INVITESUC) {
+      printf("%s --- %sSuccess:%s Invite sent!\n", WHITE, GREEN, NORMAL);
    }
    else if(rx_pkt->options == GETROOMS) {
       printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);

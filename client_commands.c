@@ -104,14 +104,13 @@ int userCommand(packet *tx_pkt) {
       }
    }
    // Handle motd command
-   if (strncmp((void *)tx_pkt->buf, "/motd", strlen("/motd")) == 0) {
+   else if (strncmp((void *)tx_pkt->buf, "/motd", strlen("/motd")) == 0) {
        tx_pkt->options = GETMOTD;
        return 1;;
    }
    // Handle invite command
-   if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
-       tx_pkt->options = INVITE;
-       return 1;;
+   else if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
+      return validInvite(tx_pkt);
    }
    // Handle join command
    else if (strncmp((void *)tx_pkt->buf, "/join", strlen("/join")) == 0) {
@@ -149,7 +148,35 @@ int userCommand(packet *tx_pkt) {
    }
    // If it wasn't any of that, invalid command
    else {
-      printf("%s --- Error:%s Invalid command.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Invalid command.\n", WHITE, RED, NORMAL);
+      return 0;
+   }
+}
+
+
+/* Uses first word after /invite as username arg, appends currentroom */
+int validInvite(packet *tx_pkt) {
+   int i;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, tx_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+
+   if (i > 1) {
+      tx_pkt->options = INVITE;
+      memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+      pthread_mutex_lock(&roomMutex);
+      sprintf(tx_pkt->buf, "%s %d", args[1], currentRoom);
+      pthread_mutex_unlock(&roomMutex);
+      return 1;
+   }
+   else {
+      printf("%s --- %sError:%s Usage: /invite username\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -170,14 +197,14 @@ int validJoin(packet *tx_pkt) {
 
    if (i > 1) {
       tx_pkt->options = JOIN;
-      pthread_mutex_lock(&roomMutex);
       memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
+      pthread_mutex_lock(&roomMutex);
       sprintf(tx_pkt->buf, "%s %d", args[1], currentRoom);
       pthread_mutex_unlock(&roomMutex);
       return 1;
    }
    else {
-      printf("%s --- Error:%s Usage: /join roomname.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /join roomname\n", WHITE, RED, NORMAL);
       return 0;
    }
 }

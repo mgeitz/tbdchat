@@ -51,6 +51,8 @@
 #define JOINSUC 109
 #define MOTD 110
 #define WHOFAIL 111
+#define INVITESUC 112
+#define INVITEFAIL 113
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -96,5 +98,6 @@ void debugPacket(packet *rx_pkt);
 int toggleAutoConnect();
 void showHelp();
 int validJoin(packet *tx_pkt);
+int validInvite(packet *tx_pkt);
 
 #endif
