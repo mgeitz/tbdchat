@@ -100,6 +100,12 @@ Known Bugs / Errors:
    Client:
       - Only supports being in one room.
 
+   Potential race conditions to still address
+:
+      - Client: 
+         o Printing anything on the client (any cli or gui will solve this)
+      - Server:
+         o List reading / writing 
      
 Future Plans:
    Visual:

@@ -405,7 +405,7 @@ void exit_client(int fd) {
    ret.options = EXIT;
    strcat(ret.buf, "Closing connection.");
    ret.timestamp = time(NULL);
-   printf("Sending close message to %d", fd);
+   printf("Sending close message to %d\n", fd);
    send(fd, &ret, sizeof(ret), 0);
    close(fd);
 }
