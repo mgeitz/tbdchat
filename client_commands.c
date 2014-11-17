@@ -98,6 +98,11 @@ int userCommand(packet *tx_pkt) {
          return 1;
       }
    }
+   // Handle motd command
+   if (strncmp((void *)tx_pkt->buf, "/motd", strlen("/motd")) == 0) {
+       tx_pkt->options = GETMOTD;
+       return 1;;
+   }
    // Handle invite command
    if (strncmp((void *)tx_pkt->buf, "/invite", strlen("/invite")) == 0) {
        tx_pkt->options = INVITE;

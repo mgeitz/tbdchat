@@ -15,7 +15,7 @@ int numRooms = DEFAULT_ROOM;
 User *registered_users_list;
 User *active_users_list;
 Room *room_list;
-
+char *server_MOTD = "Welcome to The Best Damn Chat Server! This is a temporary MOTD without version numbers or anything particularly useful.";
 
 int main(int argc, char **argv) {
    if(argc < 3) {
@@ -224,6 +224,9 @@ void *client_receive(void *ptr) {
             else if(in_pkt.options == GETUSERS) {
                get_active_users(client);
             }
+            else if(in_pkt.options == GETMOTD) {
+               sendMOTD(client);
+            }
             else {
                printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
             }
@@ -289,6 +292,15 @@ void register_user(packet *pkt, int fd) {
    
    writeUserFile(&registered_users_list, "Users.bin");
    printf("New User Registered\n");
+
+   memset(&ret, 0, sizeof(packet));
+   ret.options = DEFAULT_ROOM;
+   strcpy(ret.realname, "SERVER");
+   strncpy(ret.buf, user->real_name, sizeof(user->real_name));
+   strcat(ret.buf, " has joined the lobby.");
+   ret.timestamp = time(NULL);
+   send_message(&ret, -1);
+   sendMOTD(fd);
 }
 
 
@@ -310,7 +322,7 @@ void login(packet *pkt, int fd) {
       ret.options = LOGFAIL;
       ret.timestamp = time(NULL);
       strcpy(ret.buf, "Username not found.");
-      send(fd, &ret, sizeof(ret), 0);
+      send(fd, &ret, sizeof(packet), 0);
       return;
    }
    //Pull password and check if it is valid
@@ -321,7 +333,7 @@ void login(packet *pkt, int fd) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
      strcpy(ret.buf, "Incorrect password.");
-     send(fd, &ret, sizeof(ret), 0);
+     send(fd, &ret, sizeof(packet), 0);
      return;
    }
    //Login successful, send username to client and add to active_users
@@ -345,7 +357,18 @@ void login(packet *pkt, int fd) {
       printf("User log in failed: alredy logged in");
    }
    ret.timestamp = time(NULL);
-   send(fd, &ret, sizeof(ret), 0);
+   send(fd, &ret, sizeof(packet), 0);
+   if (ret.options == LOGSUC) {
+      memset(&ret, 0, sizeof(packet));
+      ret.options = DEFAULT_ROOM;
+      strcpy(ret.realname, "SERVER");
+      strncpy(ret.buf, user->real_name, sizeof(user->real_name));
+      strcat(ret.buf, " has joined the lobby.");
+      ret.timestamp = time(NULL);
+      send_message(&ret, -1);
+
+      sendMOTD(fd);
+   }
 }
 
 
@@ -354,6 +377,18 @@ void login(packet *pkt, int fd) {
  */
 void invite(packet *pkt) {
 
+}
+
+
+/* Send the server MOTD to the socket passed in */
+void sendMOTD(int fd) {
+   packet ret;
+   strcpy(ret.realname, "SERVER");
+   ret.options = MOTD;
+   strcpy(ret.buf, server_MOTD);
+   ret.timestamp = time(NULL);
+   printf("Sending close message to %d", fd);
+   send(fd, &ret, sizeof(ret), 0);
 }
 
 
