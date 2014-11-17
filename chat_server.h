@@ -102,6 +102,7 @@ void send_message(packet *pkt, int clientfd);
 void sendMOTD(int fd);
 void get_active_users(int fd);
 void get_room_users(packet *in_pkt, int fd);
+void user_lookup(packet *in_pkt, int fd);
 void get_room_list(int fd);
 void set_pass(packet *pkt, int fd);
 void set_name(packet *pkt, int fd);

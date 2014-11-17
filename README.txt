@@ -25,7 +25,7 @@ Client:
          Usage: /who
          Description: Print a list the list of all connected.
          Usage: /who all
-         Description: Print a users username.
+         Description: Print a users real name.
          Usage: /who username
 
       - /invite

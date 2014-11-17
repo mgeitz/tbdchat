@@ -232,7 +232,7 @@ void *client_receive(void *ptr) {
                get_room_users(&in_pkt, client);
             }
             else if(in_pkt.options == GETUSER) {
-               printf("%s%s wants to %s %s Unknown message received from client.\n", YELLOW, in_pkt.username, in_pkt.buf, NORMAL);
+               user_lookup(&in_pkt, client);
             }
             else if(in_pkt.options == GETROOMS) {
                get_room_list(client);
@@ -451,6 +451,36 @@ void get_active_users(int fd) {
       send(fd, &ret, sizeof(packet), 0);
       memset(&ret.buf, 0, sizeof(ret.buf));
       temp = temp->next;
+   }
+}
+
+
+/*
+ *Get real name of user requested
+ */
+void user_lookup(packet *in_pkt, int fd) {
+   int i = 0;
+   char *args[16];
+   char *tmp = in_pkt->buf;
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      packet ret;
+      ret.options = GETUSER;
+      strcpy(ret.username, "SERVER");
+      char *realname = get_real_name(&active_users_list, args[1]);
+      if (strcmp(realname, "ERROR") == 0) {
+         ret.options = WHOFAIL;
+      }
+      strcpy(ret.buf, realname);
+      ret.timestamp = time(NULL);
+      send(fd, &ret, sizeof(packet), 0);
+   }
+   else {
+      printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
    }
 }
 
