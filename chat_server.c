@@ -400,7 +400,6 @@ void sendMOTD(int fd) {
    ret.options = MOTD;
    strcpy(ret.buf, server_MOTD);
    ret.timestamp = time(NULL);
-   printf("Sending close message to %d", fd);
    send(fd, &ret, sizeof(ret), 0);
 }
 
@@ -673,7 +672,7 @@ void join(packet *pkt, int fd) {
       send_message(&ret, -1);
    }
    else {
-      printf("uhoh\n");
+      printf("Problem in join.\n");
    }
 }
 
