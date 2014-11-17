@@ -261,78 +261,50 @@ void *client_receive(void *ptr) {
 /*
  *Register
  */
-void register_user(packet *pkt, int fd) {
-   char *args[5];
-   char *tmp;
-   tmp = pkt->buf;
-   packet ret;
-   
-   //Pull command
-   args[0] = strsep(&tmp, " \t");
-   
-   //Pull username
-   args[1] = strsep(&tmp, " \t");
-   
-   pthread_mutex_lock(&registered_users_mutex);
-   if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0) {
-      pthread_mutex_unlock(&registered_users_mutex);
-      ret.timestamp = time(NULL);
-      ret.options = REGFAIL;
-      strcpy(ret.buf, "Username taken.");
-      debugPacket(&ret);
-      send(fd, &ret, sizeof(ret), 0);
-      printf("sent\n");
-      return;
+void register_user(packet *in_pkt, int fd) {
+   int i = 0;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, in_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
    }
-   
-   else { pthread_mutex_unlock(&registered_users_mutex); }
-   User *user = (User *)malloc(sizeof(User));
-   
-   //Pull password
-   args[2] = strsep(&tmp, " \t");
-   strcpy(user->username, args[1]);
-   strcpy(user->real_name, args[1]);
-   strcpy(user->password, args[2]);
-   user->sock = fd;
-   user->next = NULL;
-   
-   //Insert user into registered_users_list
-   pthread_mutex_lock(&registered_users_mutex);
-   insertUser(&registered_users_list, user);
-   pthread_mutex_unlock(&registered_users_mutex);
+   if (i > 3) {
+      pthread_mutex_lock(&registered_users_mutex);
+      if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0 || !(strcmp(SERVER_NAME, args[1])) || strcmp(args[2], args[3]) != 0) {
+         pthread_mutex_unlock(&registered_users_mutex);
+         packet ret;
+         ret.timestamp = time(NULL);
+         ret.options = SERV_ERR;
+         strcpy(ret.username, SERVER_NAME);
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.buf, "Username unavailable.");
+         send(fd, &ret, sizeof(packet), 0);
+         return;
+      }
+      else { pthread_mutex_unlock(&registered_users_mutex); }
 
-   //Insert user into active users list
-   user = clone_user(user);
-   pthread_mutex_lock(&active_users_mutex);
-   insertUser(&active_users_list, user);
-   pthread_mutex_unlock(&active_users_mutex);
+      User *user = (User *)malloc(sizeof(User));
+      strcpy(user->username, args[1]);
+      strcpy(user->real_name, args[1]);
+      strcpy(user->password, args[2]);
+      user->sock = fd;
+      user->next = NULL;
+      pthread_mutex_lock(&registered_users_mutex);
+      insertUser(&registered_users_list, user);
+      writeUserFile(&registered_users_list, USERS_FILE);
+      pthread_mutex_unlock(&registered_users_mutex);
 
-   //Add user to default room
-   pthread_mutex_lock(&rooms_mutex);
-   Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
-   user = clone_user(user);
-   insertUser(&(defaultRoom->user_list), user);
-   pthread_mutex_unlock(&rooms_mutex);
-   RprintList(&room_list);  
-   
-   //Return success message
-   ret.timestamp = time(NULL);
-   ret.options = REGSUC;
-   send(fd, &ret, sizeof(ret), 0);
-   
-   pthread_mutex_lock(&registered_users_mutex);
-   writeUserFile(&registered_users_list, "Users.bin");
-   pthread_mutex_unlock(&registered_users_mutex);
-   printf("New User Registered\n");
-
-   memset(&ret, 0, sizeof(packet));
-   ret.options = DEFAULT_ROOM;
-   strcpy(ret.realname, "SERVER");
-   strncpy(ret.buf, user->real_name, sizeof(user->real_name));
-   strcat(ret.buf, " has joined the lobby.");
-   ret.timestamp = time(NULL);
-   send_message(&ret, -1);
-   sendMOTD(fd);
+      memset(&in_pkt->buf, 0, sizeof(in_pkt->buf));
+      sprintf(in_pkt->buf, "/login %s %s", args[1], args[2]);
+      login(in_pkt, fd);
+   }
+   else {
+      printf("%s --- %sError:%s Malformed registration packet received from %s on %d, ignoring.\n", WHITE, RED, NORMAL, args[1], fd); 
+   }
 }
 
 
@@ -340,82 +312,94 @@ void register_user(packet *pkt, int fd) {
  *Login
  */
 void login(packet *pkt, int fd) {
-   char *args[3];
-   packet ret;
-   char *tmp;
-   tmp = pkt->buf;
-   
-   //Pull command
-   args[0] = strsep(&tmp, " \t");
-   
-   //Pull username and check valid
-   args[1] = strsep(&tmp, " \t");
-   
-   pthread_mutex_lock(&registered_users_mutex);
-   if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") ==0) {
+   int i = 0;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 2) {
+      packet ret;
+  
+      // Check if user exists 
+      pthread_mutex_lock(&registered_users_mutex);
+      if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") == 0) {
+         pthread_mutex_unlock(&registered_users_mutex);
+         ret.timestamp = time(NULL);
+         ret.options = SERV_ERR;
+         strcpy(ret.username, SERVER_NAME);
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.buf, "Username not found.");
+         send(fd, &ret, sizeof(packet), 0);
+         return;
+      }
+      else { pthread_mutex_unlock(&registered_users_mutex); }
+
+      // Check for password patch
+      pthread_mutex_lock(&registered_users_mutex);
+      char *password = get_password(&registered_users_list, args[1]);
       pthread_mutex_unlock(&registered_users_mutex);
-      ret.options = LOGFAIL;
-      ret.timestamp = time(NULL);
-      strcpy(ret.buf, "Username not found.");
-      send(fd, &ret, sizeof(packet), 0);
-      return;
-   }
-   else { pthread_mutex_unlock(&registered_users_mutex); }
+      if (strcmp(args[2], password) != 0) {
+         ret.timestamp = time(NULL);
+         ret.options = SERV_ERR;
+         strcpy(ret.username, SERVER_NAME);
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.buf, "Incorrect password.");
+         send(fd, &ret, sizeof(packet), 0);
+         return;
+      }
 
-   //Pull password and check if it is valid
-   args[2] = strsep(&tmp, " \t");
-
-   pthread_mutex_lock(&registered_users_mutex);
-   char *password = get_password(&registered_users_list, args[1]);
-   pthread_mutex_unlock(&registered_users_mutex);
-
-   if (strcmp(args[2], password) != 0) {
-     ret.options = LOGFAIL;
-     ret.timestamp = time(NULL);
-     strcpy(ret.buf, "Incorrect password.");
-     send(fd, &ret, sizeof(packet), 0);
-     return;
-   }
-   //Login successful, send username to client and add to active_users
-   pthread_mutex_lock(&registered_users_mutex);
-   User *user = get_user(&registered_users_list, args[1]);
-   pthread_mutex_unlock(&registered_users_mutex);
-
-   user->sock = fd;
-
-   user = clone_user(user);
-   
-   pthread_mutex_lock(&active_users_mutex);
-   pthread_mutex_lock(&rooms_mutex);
-   if(insertUser(&active_users_list, user) == 1) {
-      Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
+      //Login successful, send username to client and add to active_users
+      pthread_mutex_lock(&registered_users_mutex);
+      User *user = get_user(&registered_users_list, args[1]);
+      pthread_mutex_unlock(&registered_users_mutex);
+      user->sock = fd;
       user = clone_user(user);
-      insertUser(&(defaultRoom->user_list), user);
-      RprintList(&room_list);  
-      strcpy(ret.realname, get_real_name(&registered_users_list, args[1]));
-      strcpy(ret.username, args[1]);
-      ret.options = LOGSUC;
-      printf("User logged in\n");
-   }
+   
+      pthread_mutex_lock(&active_users_mutex);
+      if(insertUser(&active_users_list, user) == 1) {
+         pthread_mutex_unlock(&active_users_mutex);
+         pthread_mutex_lock(&rooms_mutex);
+         Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
+         user = clone_user(user);
+         insertUser(&(defaultRoom->user_list), user);
+         RprintList(&room_list);  
+         pthread_mutex_unlock(&rooms_mutex);
+         pthread_mutex_lock(&registered_users_mutex);
+         strcpy(ret.realname, get_real_name(&registered_users_list, args[1]));
+         pthread_mutex_unlock(&registered_users_mutex);
+         strcpy(ret.username, args[1]);
+         ret.options = LOGSUC;
+         printf("%s logged in\n", ret.username);
+      }
+      else {
+         pthread_mutex_unlock(&active_users_mutex);
+         ret.options = SERV_ERR;
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.username, SERVER_NAME);
+         sprintf(ret.buf, "%s already logged in.", args[1]);
+         printf("%s log in failed: already logged in", args[1]);
+      }
 
-   else {
-      ret.options = LOGFAIL;
-      printf("User log in failed: alredy logged in");
-   }
-   pthread_mutex_unlock(&rooms_mutex);
-   pthread_mutex_unlock(&active_users_mutex);
-   ret.timestamp = time(NULL);
-   send(fd, &ret, sizeof(packet), 0);
-   if (ret.options == LOGSUC) {
-      memset(&ret, 0, sizeof(packet));
-      ret.options = DEFAULT_ROOM;
-      strcpy(ret.realname, "SERVER");
-      strncpy(ret.buf, user->real_name, sizeof(user->real_name));
-      strcat(ret.buf, " has joined the lobby.");
       ret.timestamp = time(NULL);
-      send_message(&ret, -1);
-
-      sendMOTD(fd);
+      send(fd, &ret, sizeof(packet), 0);
+      if (ret.options == LOGSUC) {
+         memset(&ret, 0, sizeof(packet));
+         ret.options = DEFAULT_ROOM;
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.username, SERVER_NAME);
+         sprintf(ret.buf, "%s has joined the lobby.", user->real_name);
+         ret.timestamp = time(NULL);
+         send_message(&ret, -1);
+         sendMOTD(fd);
+      }
+   }
+   else {
+      printf("%s --- %sError:%s Malformed login packet received from %s on %d, ignoring.\n", WHITE, RED, NORMAL, args[1], fd); 
    }
 }
 
