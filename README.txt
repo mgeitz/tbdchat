@@ -120,6 +120,8 @@ Future Plans / To Do:
 
       - Remove a user from active_users_list and their room list when they send a /exit
 
+      - Shorten the printed timestamp a lot
+
       - Logging; added debug and root level logs, give them flags set by /debug, change debug to persist. Add normal logs for each room. I think we should worry about displaying them in chat later, maybe /log toggles active message logging?
 
       - Probably move the primary execution loop in main of client to its own method again.

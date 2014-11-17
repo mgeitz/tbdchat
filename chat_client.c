@@ -308,12 +308,12 @@ void newRoom(char *buf) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         printf("%s --- Success:%s Joined room %s.\n", GREEN, NORMAL, args[0]);
+         printf("%s --- %sSuccess:%s Joined room %s%s%s.\n", WHITE, GREEN, NORMAL, WHITE, args[0], NORMAL);
       }
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-      printf("%s --- Error:%s Problem reading JOINSUC from server.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Problem reading JOINSUC from server.\n", WHITE, RED, NORMAL);
 
    }
 }
