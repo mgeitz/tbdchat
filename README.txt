@@ -104,22 +104,26 @@ Known Bugs / Errors:
       - Server:
          o List reading / writing 
      
-Future Plans:
-   Visual: 
+Future Plans / To Do:
       - Use Curses library to take over terminal window.  Plan to have the top portion of the
          screen show conversation and bottom allow user to input message
       
-   Functional:
-      - Track which users are permitted to join a particular preexisting room.
+      - Track which users are permitted to join a particular preexisting room, give rooms state of public or private.
         
-      - Assign the creator of a room some unique flagged ability to make the room private
+      - Assign the creator of a room some unique flagged ability to make the room private, or set other room features
         
       - Full encryption, but we should start with trying to hash the stored passwords
    
-      - logout command
+      - logout command to put user back in not-logged-in state, disconnect command to close serverfd and chatrxthread but not close client
+
+      - Generalize many FAIL responses into a SERVERR response with the error message in buffer
+
+      - Remove a user from active_users_list and their room list when they send a /exit
+
+      - Logging; added debug and root level logs, give them flags set by /debug, change debug to persist. Add normal logs for each room. I think we should worry about displaying them in chat later, maybe /log toggles active message logging?
+
+      - Probably move the primary execution loop in main of client to its own method again.
 
    Things that should be added with rooms:
       - Notify all in room when someone else in the room leaves
-        
-
       

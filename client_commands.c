@@ -38,9 +38,11 @@ int userCommand(packet *tx_pkt) {
        pthread_mutex_lock(&debugModeMutex);
        if (debugMode) {
          debugMode = 0;
+         printf("%s --- %sClient: %sDebug disabled.\n", WHITE, BLUE, NORMAL);
        }
        else {
           debugMode = 1;
+         printf("%s --- %sClient: %sDebug enabled.\n", WHITE, BLUE, NORMAL);
        }
        pthread_mutex_unlock(&debugModeMutex);
        return 0;
@@ -48,31 +50,31 @@ int userCommand(packet *tx_pkt) {
    // Handle connect command
    else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
-          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
+          printf("%s --- %sError:%s Server connect failed.\n", WHITE, RED, NORMAL);
       }
       return 0;
    }
    // Handle reconnect command
    else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
       if (!reconnect((void *)tx_pkt->buf)) {
-          printf("%s --- Error:%s Server connect failed.\n", RED, NORMAL);
+          printf("%s --- %sError:%s Server connect failed.\n", WHITE, RED, NORMAL);
       }
       return 0;
    }
    // Handle autoconnect command
    else if (strncmp((void *)tx_pkt->buf, "/autoconnect", strlen("/autoconnect")) == 0) {
        if (toggleAutoConnect()) {
-          printf("%sAutoconnect enabled.%s\n", WHITE, NORMAL);
+          printf("%s --- %sClient: %sAutoconnect enabled.\n", WHITE, BLUE, NORMAL);
        }
        else {
-          printf("%sAutoconnect disabled.%s\n", WHITE, NORMAL);
+          printf("%s --- %sClient: %sAutoconnect disabled.\n", WHITE, BLUE, NORMAL);
        }
        return 0;
    }
    // Handle register command
    else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
       if (!serverRegistration(tx_pkt)) {
-         printf("%s --- Error:%s Server registration failed.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Server registration failed.\n", WHITE, RED, NORMAL);
          return 0;
       }
       else {
@@ -82,7 +84,7 @@ int userCommand(packet *tx_pkt) {
    // Handle login command
    else if (strncmp((void *)tx_pkt->buf, "/login", strlen("/login")) == 0) {
       if (!serverLogin(tx_pkt)) {
-         printf("%s --- Error:%s Server login failed.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Server login failed.\n", WHITE, RED, NORMAL);
          return 0;
       }
       else {
@@ -96,7 +98,7 @@ int userCommand(packet *tx_pkt) {
    // Handle setpass command
    else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
       if (!setPassword(tx_pkt)) {
-         printf("%s --- Error:%s Password mismatch.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Password mismatch.\n", WHITE, RED, NORMAL);
          return 0;
       }
       else {
@@ -226,11 +228,11 @@ int newServerConnection(char *buf) {
    }
    if (i > 2) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         printf("%s --- Error:%s Could not connect to server.\n", RED, NORMAL);
+         printf("%s --- %sError:%s Could not connect to server.\n", WHITE, RED, NORMAL);
          return 0;
       }
       if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         printf("%s --- Error: %s chatRX thread not created.\n", RED, NORMAL);
+         printf("%s --- %sError: %s chatRX thread not created.\n", WHITE, RED, NORMAL);
          return 0;
       }
       printf("Connected.\n");
@@ -257,7 +259,7 @@ int newServerConnection(char *buf) {
       return 1;
    }
    else {
-       printf("%s --- Error:%s Usage: /connect address port\n", RED, NORMAL);
+       printf("%s --- %sError:%s Usage: /connect address port\n", WHITE, RED, NORMAL);
        return 0;
    }
 }
@@ -284,7 +286,7 @@ int reconnect(char *buf) {
                else {
                   fclose(configfp);
                   pthread_mutex_unlock(&configFileMutex);
-                  printf("%s --- Error:%s No previous connection to reconnect to.\n", RED, NORMAL);
+                  printf("%s --- %sError:%s No previous connection to reconnect to.\n", WHITE, RED, NORMAL);
                   return 0;
                }
             }
@@ -347,7 +349,7 @@ int serverLogin(packet *tx_pkt) {
       return 1;
    }
    else {
-      printf("%s --- Error:%s Usage: /login username password\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /login username password\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -379,12 +381,12 @@ int serverRegistration(packet *tx_pkt) {
          return 1;
       }
       else {
-         printf("%s --- Error:%s Password mismatch\n", RED, NORMAL);
+         printf("%s --- %sError:%s Password mismatch\n", WHITE, RED, NORMAL);
          return 0;
       }
    }
    else {
-      printf("%s --- Error:%s Usage: /register username password password\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /register username password password\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -409,12 +411,12 @@ int setPassword(packet *tx_pkt) {
          return 1;
       }
       else {
-      printf("%s --- Error:%s New password mismatch\n", RED, NORMAL);
+      printf("%s --- %sError:%s New password mismatch\n", WHITE, RED, NORMAL);
       return 0;
       }
    }
    else {
-      printf("%s --- Error:%s Usage: /setpass oldpassword newpassword newpassword\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /setpass oldpassword newpassword newpassword\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -428,7 +430,7 @@ int setName(packet *tx_pkt) {
       return 1;
    }
    else {
-      printf("%s --- Error:%s Usage: /setname newname\n", RED, NORMAL);
+      printf("%s --- %sError:%s Usage: /setname newname\n", WHITE, RED, NORMAL);
       return 0;
    }
 }
@@ -448,6 +450,7 @@ void debugPacket(packet *rx_pkt) {
 
 /* Print helpful and unhelpful things */
 void showHelp() {
+   printf("%s--------------------------------[ %sCommand List%s ]--------------------------------------%s\n", BLACK, CYAN, BLACK, NORMAL);
    printf("%s\t/connect%s\t | Usage: /connect address port\n", YELLOW, NORMAL);
    printf("%s\t/reconnect%s\t | Connect to last known host\n", YELLOW, NORMAL);
    printf("%s\t/autoconnect%s\t | Toggle automatic connection to last known host on startup\n", YELLOW, NORMAL);
@@ -464,4 +467,5 @@ void showHelp() {
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
    printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
    printf("%s\t/leave%s\t\t | Leave the room you are in and return to the lobby\n", YELLOW, NORMAL);
+   printf("%s------------------------------------------------------------------------------------------%s\n", BLACK, NORMAL);
 }

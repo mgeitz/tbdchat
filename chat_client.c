@@ -220,7 +220,7 @@ void serverResponse(packet *rx_pkt) {
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room
-      currentRoom = 1000;
+      currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
    }
@@ -234,7 +234,7 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&nameMutex);
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room
-      currentRoom = 1000;
+      currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
    }
@@ -276,9 +276,9 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
    }
    else if(rx_pkt->options == MOTD) {
-      printf("%s ---------------------------------------------------------- %s\n", BLACK, NORMAL);
+      printf("%s ----------------------------------------[ MOTD ]------------------------------------------ %s\n", BLACK, NORMAL);
       printf("%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);
-      printf("%s ---------------------------------------------------------- %s\n", BLACK, NORMAL);
+      printf("%s ------------------------------------------------------------------------------------------ %s\n", BLACK, NORMAL);
    }
    else if(rx_pkt->options == EXIT) {
       printf("%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
@@ -337,13 +337,13 @@ int get_server_connection(char *hostname, char *port) {
    print_ip(servinfo);
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         printf("%s --- Error:%s socket socket \n", RED, NORMAL);
+         printf("%s --- %sError:%s socket socket \n", WHITE, RED, NORMAL);
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         printf("%s --- Error:%s socket connect \n", RED, NORMAL);
+         printf("%s --- %sError:%s socket connect \n", WHITE, RED, NORMAL);
          return -1;
       }
       break;
@@ -379,7 +379,7 @@ void print_ip( struct addrinfo *ai) {
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
-      printf("Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
+      printf("%sConnecting to %s: %s:%d . . .%s\n", WHITE, ipver, ipstr, ntohs(port), NORMAL);
    }
 }
 
