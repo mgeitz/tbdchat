@@ -238,7 +238,7 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- Success:%s Login successful!\n", GREEN, NORMAL);
    }
-   else if(rx_pkt->options == GETUSERS) {
+   else if(rx_pkt->options == GETUSERS || rx_pkt->options == GETALLUSERS || rx_pkt->options == GETUSER) {
       printf("%s\n", rx_pkt->buf);
    }
    else if(rx_pkt->options == PASSFAIL) {
@@ -246,6 +246,9 @@ void serverResponse(packet *rx_pkt) {
    }
    else if(rx_pkt->options == PASSSUC) {
       printf("%s --- Success:%s Password change successful!\n", GREEN, NORMAL);
+   }
+   else if(rx_pkt->options == WHOFAIL) {
+      printf("%s --- Error:%s User lookup failed.\n", RED, NORMAL);
    }
    else if(rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);

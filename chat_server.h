@@ -51,7 +51,6 @@
 #define JOINSUC 109
 #define MOTD 110
 #define WHOFAIL 111
-#define WHOSUC 112
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
