@@ -223,10 +223,16 @@ void *client_receive(void *ptr) {
             }
             else if(in_pkt.options == LEAVE) { 
                //leave(&in_pkt, client);
-               printf("%s%s wants to %s %s Unknown message received from client.\n", YELLOW, in_pkt.realname, in_pkt.buf, NORMAL);
+               printf("%s%s wants to %s %s Unknown message received from client.\n", YELLOW, in_pkt.username, in_pkt.buf, NORMAL);
+            }
+            else if(in_pkt.options == GETALLUSERS) {
+               get_active_users(client);
             }
             else if(in_pkt.options == GETUSERS) {
-               get_active_users(client);
+               get_room_users(&in_pkt, client);
+            }
+            else if(in_pkt.options == GETUSER) {
+               printf("%s%s wants to %s %s Unknown message received from client.\n", YELLOW, in_pkt.username, in_pkt.buf, NORMAL);
             }
             else if(in_pkt.options == GETROOMS) {
                get_room_list(client);
@@ -436,14 +442,54 @@ void send_message(packet *pkt, int clientfd) {
  */
 void get_active_users(int fd) {
    User *temp = active_users_list;
-   packet pkt;
-   pkt.options = GETUSERS;
-   strcpy(pkt.username, "SERVER");
+   packet ret;
+   ret.options = GETALLUSERS;
+   strcpy(ret.username, "SERVER");
    while(temp != NULL ) {
-      pkt.timestamp = time(NULL);
-      strcpy(pkt.buf, temp->username);
-      send(fd, &pkt, sizeof(pkt), 0);
+      ret.timestamp = time(NULL);
+      strcpy(ret.buf, temp->username);
+      send(fd, &ret, sizeof(packet), 0);
+      memset(&ret.buf, 0, sizeof(ret.buf));
       temp = temp->next;
+   }
+}
+
+
+/*
+ *Get users from specific room
+ */
+void get_room_users(packet *in_pkt, int fd) {
+   int i = 0, roomNum;
+   char *args[16];
+   char *tmp = in_pkt->buf;
+
+   // Split command args
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      roomNum = atoi(args[1]);
+      Room *currRoom = Rget_roomFID(&room_list, roomNum);
+      if (currRoom != NULL) {
+         User *temp = currRoom->user_list;
+         packet ret;
+         ret.options = GETUSERS;
+         strcpy(ret.username, "SERVER");
+         while(temp != NULL ) {
+            ret.timestamp = time(NULL);
+            strcpy(ret.buf, temp->username);
+            send(fd, &ret, sizeof(packet), 0);
+            memset(&ret.buf, 0, sizeof(ret.buf));
+            temp = temp->next;
+         }
+      }
+      else {
+         printf("%s --- Error:%s Trying to read user info but room is null.\n", RED, NORMAL);
+      }
+   }
+   else {
+      printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
    }
 }
 

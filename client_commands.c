@@ -128,14 +128,19 @@ int userCommand(packet *tx_pkt) {
    }
    // Handle who command
    else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
-       tx_pkt->options = GETUSERS;
        if (strncmp((void *)tx_pkt->buf, "/who all", strlen("/who all")) == 0) {
           tx_pkt->options = GETALLUSERS;
+          return 1;
        }
        else if (strlen(tx_pkt->buf) > strlen("/who ")) {
           tx_pkt->options = GETUSER;
+          return 1;
        }
-       return 1;;
+       tx_pkt->options = GETUSERS;
+       pthread_mutex_lock(&roomMutex);
+       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
+       pthread_mutex_unlock(&roomMutex);
+       return 1;
    }
    // Handle rooms command
    else if (strncmp((void *)tx_pkt->buf, "/list", strlen("/list")) == 0) {
