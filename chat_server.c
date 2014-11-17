@@ -12,6 +12,9 @@
 
 int chat_serv_sock_fd; //server socket
 int numRooms = DEFAULT_ROOM;
+pthread_mutex_t registered_users_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t active_users_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t rooms_mutex = PTHREAD_MUTEX_INITIALIZER;
 User *registered_users_list;
 User *active_users_list;
 Room *room_list;
@@ -254,8 +257,10 @@ void register_user(packet *pkt, int fd) {
    
    //Pull username
    args[1] = strsep(&tmp, " \t");
-   //
+   
+   pthread_mutex_lock(&registered_users_mutex);
    if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0) {
+      pthread_mutex_unlock(&registered_users_mutex);
       ret.timestamp = time(NULL);
       ret.options = REGFAIL;
       strcpy(ret.buf, "Username taken.");
@@ -264,6 +269,8 @@ void register_user(packet *pkt, int fd) {
       printf("sent\n");
       return;
    }
+   
+   else { pthread_mutex_unlock(&registered_users_mutex); }
    User *user = (User *)malloc(sizeof(User));
    
    //Pull password
@@ -274,12 +281,23 @@ void register_user(packet *pkt, int fd) {
    user->sock = fd;
    user->next = NULL;
    
+   //Insert user into registered_users_list
+   pthread_mutex_lock(&registered_users_mutex);
    insertUser(&registered_users_list, user);
+   pthread_mutex_unlock(&registered_users_mutex);
+
+   //Insert user into active users list
    user = clone_user(user);
+   pthread_mutex_lock(&active_users_mutex);
    insertUser(&active_users_list, user);
+   pthread_mutex_unlock(&active_users_mutex);
+
+   //Add user to default room
+   pthread_mutex_lock(&rooms_mutex);
    Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
    user = clone_user(user);
    insertUser(&(defaultRoom->user_list), user);
+   pthread_mutex_unlock(&rooms_mutex);
    RprintList(&room_list);  
    
    //Return success message
@@ -287,7 +305,9 @@ void register_user(packet *pkt, int fd) {
    ret.options = REGSUC;
    send(fd, &ret, sizeof(ret), 0);
    
+   pthread_mutex_lock(&registered_users_mutex);
    writeUserFile(&registered_users_list, "Users.bin");
+   pthread_mutex_unlock(&registered_users_mutex);
    printf("New User Registered\n");
 }
 
@@ -309,17 +329,25 @@ void login(packet *pkt, int fd) {
    
    //Pull username and check valid
    args[1] = strsep(&tmp, " \t");
+   
+   pthread_mutex_lock(&registered_users_mutex);
    if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") ==0) {
+      pthread_mutex_unlock(&registered_users_mutex);
       ret.options = LOGFAIL;
       ret.timestamp = time(NULL);
       strcpy(ret.buf, "Username not found.");
       send(fd, &ret, sizeof(ret), 0);
       return;
    }
+   else { pthread_mutex_unlock(&registered_users_mutex); }
+
    //Pull password and check if it is valid
    args[2] = strsep(&tmp, " \t");
+
+   pthread_mutex_lock(&registered_users_mutex);
    char *password = get_password(&registered_users_list, args[1]);
-   
+   pthread_mutex_unlock(&registered_users_mutex);
+
    if (strcmp(args[2], password) != 0) {
      ret.options = LOGFAIL;
      ret.timestamp = time(NULL);
@@ -328,11 +356,16 @@ void login(packet *pkt, int fd) {
      return;
    }
    //Login successful, send username to client and add to active_users
+   pthread_mutex_lock(&registered_users_mutex);
    User *user = get_user(&registered_users_list, args[1]);
+   pthread_mutex_unlock(&registered_users_mutex);
+
    user->sock = fd;
 
    user = clone_user(user);
    
+   pthread_mutex_lock(&active_users_mutex);
+   pthread_mutex_lock(&rooms_mutex);
    if(insertUser(&active_users_list, user) == 1) {
       Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
       user = clone_user(user);
@@ -343,10 +376,13 @@ void login(packet *pkt, int fd) {
       ret.options = LOGSUC;
       printf("User logged in\n");
    }
+
    else {
       ret.options = LOGFAIL;
       printf("User log in failed: alredy logged in");
    }
+   pthread_mutex_unlock(&rooms_mutex);
+   pthread_mutex_unlock(&active_users_mutex);
    ret.timestamp = time(NULL);
    send(fd, &ret, sizeof(ret), 0);
 }
@@ -379,6 +415,7 @@ void exit_client(int fd) {
  *Send Message
  */
 void send_message(packet *pkt, int clientfd) {
+   pthread_mutex_lock(&rooms_mutex);
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options);
    printList(&(currentRoom->user_list));
    User *tmp = currentRoom->user_list;
@@ -389,6 +426,7 @@ void send_message(packet *pkt, int clientfd) {
       }
       tmp = tmp->next;
    }
+   pthread_mutex_unlock(&rooms_mutex);
 }
 
 
@@ -396,6 +434,7 @@ void send_message(packet *pkt, int clientfd) {
  *Get active users
  */
 void get_active_users(int fd) {
+   pthread_mutex_lock(&active_users_mutex);
    User *temp = active_users_list;
    packet pkt;
    pkt.options = GETUSERS;
@@ -406,6 +445,7 @@ void get_active_users(int fd) {
       send(fd, &pkt, sizeof(pkt), 0);
       temp = temp->next;
    }
+   pthread_mutex_unlock(&active_users_mutex);
 }
 
 
@@ -422,6 +462,7 @@ void set_pass(packet *pkt, int fd) {
    args[1] = strsep(&tmp, " \t");
    args[2] = strsep(&tmp, " \t");
    
+   pthread_mutex_lock(&registered_users_mutex);
    User *user = get_user(&registered_users_list, pkt->username);
    if (user != NULL) {
       if(strcmp(user->password, args[1]) == 0) {
@@ -431,11 +472,11 @@ void set_pass(packet *pkt, int fd) {
          pkt->options = PASSSUC;
       }
    }
-   
+
    else {
       pkt->options = PASSFAIL;
    }
-   
+   pthread_mutex_unlock(&registered_users_mutex);
    send(fd, (void *)pkt, sizeof(packet), 0);
 }
 
@@ -450,9 +491,9 @@ void set_name(packet *pkt, int fd) {
    strncpy(name, pkt->buf, sizeof(name));
    strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
    
+   pthread_mutex_lock(&registered_users_mutex);
    //Submit name change to user list, write list
    User *user = get_user(&registered_users_list, pkt->username);
-   //printf("Username: %s, Real name: %s\n", user->username, user->real_name);
    
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));
@@ -464,8 +505,10 @@ void set_name(packet *pkt, int fd) {
       printf("%s --- Error:%s Trying to modify null user in user_list.\n", RED, NORMAL);
       ret.options = NAMEFAIL;
    }
+   pthread_mutex_unlock(&registered_users_mutex);
    
    // Submit name change to active users
+   pthread_mutex_lock(&active_users_mutex);
    user = get_user(&active_users_list, pkt->username);
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));
@@ -475,9 +518,10 @@ void set_name(packet *pkt, int fd) {
       printf("%s --- Error:%s Trying to modify null user in active_users.\n", RED, NORMAL);
       ret.options = NAMEFAIL;
    }
+   pthread_mutex_unlock(&active_users_mutex);
    
-   printList(&registered_users_list);
-   printList(&active_users_list);
+   //printList(&registered_users_list);
+   //printList(&active_users_list);
    ret.timestamp = time(NULL);
    send(fd, &ret, sizeof(packet), 0);
 }
@@ -497,6 +541,7 @@ void join(packet *pkt, int fd) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
       args[++i] = strsep(&tmp, " \t");
    }
+   pthread_mutex_lock(&rooms_mutex);
    if (i > 1) {
       // check if room exists
       printf("Checking if room exists . . .\n");
@@ -537,4 +582,5 @@ void join(packet *pkt, int fd) {
    else {
       printf("uhoh\n");
    }
+   pthread_mutex_unlock(&rooms_mutex);
 }
