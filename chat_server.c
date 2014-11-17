@@ -681,7 +681,6 @@ void join(packet *pkt, int fd) {
       Room *currentRoom = Rget_roomFID(&room_list, currRoomNum);//pkt->options);
       printf("Getting user node from current room user list.\n");
       User *currUser = get_user(&active_users_list, pkt->username);
-      currUser = clone_user(currUser);
       if(currentRoom != NULL) {
          printf("Removing user from his current rooms user list\n");
          removeUser(&(currentRoom->user_list), currUser);
@@ -689,6 +688,7 @@ void join(packet *pkt, int fd) {
       else {
          printf("Could not remove user: current room is NULL\n");
       }
+      currUser = clone_user(currUser);
       printf("Inserting user into new rooms user list\n");
       insertUser(&(newRoom->user_list), currUser);
       
@@ -711,7 +711,4 @@ void join(packet *pkt, int fd) {
       printf("Problem in join.\n");
    }
 }
-
-
-
 
