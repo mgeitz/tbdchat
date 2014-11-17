@@ -22,6 +22,7 @@ char username[64];
 pthread_t chat_rx_thread;
 char *config_file;
 
+
 int main(int argc, char **argv) {
    int bufSize, send_flag;
    packet tx_pkt;
@@ -34,9 +35,7 @@ int main(int argc, char **argv) {
    signal(SIGINT, sigintHandler);
 
    strcpy(full_config_path, getenv("HOME"));
-   printf("User home is %s\n", full_config_path);
    strcat(full_config_path, config_file_name);
-   printf("full config path is %s\n", full_config_path);
    config_file = full_config_path;
    pthread_mutex_lock(&configFileMutex);
    if (access(config_file, F_OK) == -1) {
@@ -49,7 +48,7 @@ int main(int argc, char **argv) {
 
    pthread_mutex_lock(&configFileMutex);
    if (auto_connect()) {
-      printf("Auto connecting to most recently connected host . . .\n");
+      printf("%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
       reconnect(tx_pkt.buf);
    }
    pthread_mutex_unlock(&configFileMutex);
@@ -83,7 +82,7 @@ int main(int argc, char **argv) {
             }
          }
          else if (send_flag && !serverfd)  {
-            printf("%s --- Error:%s Not connected to any server. See /help for command usage.\n", RED, NORMAL);
+            printf("%s --- %sError:%s Not connected to any server. See /help for command usage.\n", WHITE, RED, NORMAL);
          } 
       }
       if (tx_pkt.options == EXIT) {
@@ -96,7 +95,7 @@ int main(int argc, char **argv) {
    close(serverfd);
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         printf("%s --- Error:%s chatRX thread not joining.\n", RED, NORMAL);
+         printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
       }
    }
    printf("%sExiting client.%s\n", WHITE, NORMAL);
@@ -215,17 +214,17 @@ void *chatRX(void *ptr) {
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == REGFAIL) {
-      printf("%s --- Error:%s Registration failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Registration failed.\n", WHITE, RED, NORMAL);
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
       // Hardcoded lobby room
       currentRoom = 1000;
       pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Registration successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == LOGFAIL) {
-      printf("%s --- Error:%s Login failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Login failed.\n", WHITE, RED, NORMAL);
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -236,39 +235,39 @@ void serverResponse(packet *rx_pkt) {
       // Hardcoded lobby room
       currentRoom = 1000;
       pthread_mutex_unlock(&roomMutex);
-      printf("%s --- Success:%s Login successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
    }
    else if(rx_pkt->options == GETUSERS || rx_pkt->options == GETALLUSERS || rx_pkt->options == GETUSER) {
-      printf("%s\n", rx_pkt->buf);
+      printf("%s --- %sUser:%s %s\n", WHITE, WHITE, NORMAL, rx_pkt->buf);
    }
    else if(rx_pkt->options == PASSFAIL) {
-      printf("%s --- Error:%s Password change failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Password change failed.\n", WHITE, RED, NORMAL);
    }
    else if(rx_pkt->options == PASSSUC) {
-      printf("%s --- Success:%s Password change successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Password change successful!\n", WHITE, GREEN, NORMAL);
    }
    else if(rx_pkt->options == WHOFAIL) {
-      printf("%s --- Error:%s User lookup failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s User lookup failed.\n", WHITE, RED, NORMAL);
    }
    else if(rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      printf("%s --- Success:%s Name change successful!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Name change successful!\n", WHITE, GREEN, NORMAL);
    }
    else if(rx_pkt->options == NAMEFAIL) {
-      printf("%s --- Error:%s Name change failed.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Name change failed.\n", WHITE, RED, NORMAL);
    }
    else if(rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
    else if(rx_pkt->options == INVITE) {
-      printf("%s --- Success:%s Invite received!\n", GREEN, NORMAL);
+      printf("%s --- %sSuccess:%s Invite received!\n", WHITE, GREEN, NORMAL);
       printf("%s\n", rx_pkt->buf);
    }
    else if(rx_pkt->options == GETROOMS) {
-      printf("%s\n", rx_pkt->buf);
+      printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
    }
    else if(rx_pkt->options == MOTD) {
       printf("%s ---------------------------------------------------------- %s\n", BLACK, NORMAL);
@@ -281,7 +280,7 @@ void serverResponse(packet *rx_pkt) {
       close(serverfd);
    }
    else {
-      printf("%s --- Error:%s Unknown message received from server.\n", RED, NORMAL);
+      printf("%s --- %sError:%s Unknown message received from server.\n", WHITE, RED, NORMAL);
    }
 }
 
@@ -381,7 +380,7 @@ void print_ip( struct addrinfo *ai) {
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
+   printf("\b\b%s --- %sError:%s Forced Exit.\n", WHITE, RED, NORMAL);
    exit(1);
 }
 
