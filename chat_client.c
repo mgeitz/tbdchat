@@ -21,7 +21,7 @@ char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 char *config_file;
-
+char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                timestamp = asctime(localtime(&(tx_pkt.timestamp)));
                timestamp[strlen(timestamp) - 1] = '\0';
-               printf("%s%s [%s]:%s %s\n", BLUE, timestamp, tx_pkt.realname,
+               printf("%s%s [%s]:%s %s\n", RED, timestamp, tx_pkt.realname,
                    NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
@@ -190,12 +190,13 @@ void *chatRX(void *ptr) {
             timestamp = asctime(localtime(&(rx_pkt.timestamp)));
             timestamp[strlen(timestamp) - 1] = '\0';
             if(strcmp(rx_pkt.realname, "SERVER") == 0) {
-            printf("%s%s [%s]:%s %s\n", YELLOW, timestamp, rx_pkt.realname,
-                   NORMAL, rx_pkt.buf);
+               printf("%s%s [%s]:%s %s\n", YELLOW, timestamp, rx_pkt.realname,
+                      NORMAL, rx_pkt.buf);
             }
             else {
-            printf("%s%s [%s]:%s %s\n", RED, timestamp, rx_pkt.realname,
-                   NORMAL, rx_pkt.buf);
+               int i = hash(rx_pkt.username);
+               printf("%s%s [%s]:%s %s\n", USERCOLORS[i], timestamp, rx_pkt.realname,
+                      NORMAL, rx_pkt.buf);
             }
          }
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
@@ -433,3 +434,11 @@ void asciiSplash() {
    */
 }
 
+int hash(char *str) {
+   unsigned long hash = 5381;
+   int c;
+   while ((c = *str++)) {
+      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+   }
+   return hash % 4;
+}
