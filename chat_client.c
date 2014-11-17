@@ -267,6 +267,9 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- Success:%s Invite received!\n", GREEN, NORMAL);
       printf("%s\n", rx_pkt->buf);
    }
+   else if(rx_pkt->options == GETROOMS) {
+      printf("%s\n", rx_pkt->buf);
+   }
    else if(rx_pkt->options == MOTD) {
       printf("%s ---------------------------------------------------------- %s\n", BLACK, NORMAL);
       printf("%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);

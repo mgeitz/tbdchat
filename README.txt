@@ -5,8 +5,12 @@ Client:
          Usage: /help
 
       - /exit
-         Description: Inform the server you are quitting, proceed to disconnect and wonder why your client is still running.
+         Description: Safely disconnect from the server and end.
          Usage: /exit
+
+      - /quit
+         Description: Safely disconnect from the server and end.
+         Usage: /quit
 
       - /register
          Description: Register as a new user.
@@ -56,6 +60,14 @@ Client:
          Description: Leave the room you are current chatting in and return to the lobby.
          Usage: /leave
 
+      - /motd
+         Description: Print out the servers message of the day.
+         Usage: /motd
+
+      - /list
+         Description: Print out a list of public rooms with active users in them.
+         Usage: /list
+
    Features:
       - Supports orderless interaction
       - Configuration file
@@ -87,7 +99,6 @@ Known Bugs / Errors:
 
    Client:
       - Only supports being in one room.
-      - Does not support /invite yet
 
      
 Future Plans:
@@ -100,17 +111,9 @@ Future Plans:
         
       - Assign the creator of a room some unique flagged ability to make the room private
         
-      - Full encryption
+      - Full encryption, but we should start with trying to hash the stored passwords
    
    Things that should be added with rooms:
-      - Make join room show room number and name (going to be a pain the way we have 
-        it set up right now)
-         o should be done
-        
-      - Command to list all rooms
-         
-      - Command to list who is in your current room
-        o will expand on /who to include '/who all' connected, '/who' who in room, maybe '/who realname' too?
       - Invite command
         
       - Exit room command

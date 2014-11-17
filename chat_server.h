@@ -38,6 +38,7 @@
 #define GETUSER 10
 #define LEAVE 11
 #define GETMOTD 12
+#define GETROOMS 13
 // Server responses
 #define RECFAIL 100
 #define REGFAIL 101

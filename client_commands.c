@@ -23,6 +23,11 @@ int userCommand(packet *tx_pkt) {
        tx_pkt->options = EXIT;
        return 1;;
    }
+   // Handle quit command
+   else if (strncmp((void *)tx_pkt->buf, "/quit", strlen("/quit")) == 0) {
+       tx_pkt->options = EXIT;
+       return 1;;
+   }
    // Handle help command
    else if (strncmp((void *)tx_pkt->buf, "/help", strlen("/help")) == 0) {
        showHelp();
@@ -131,6 +136,11 @@ int userCommand(packet *tx_pkt) {
           tx_pkt->options = GETUSER;
        }
        return 1;;
+   }
+   // Handle rooms command
+   else if (strncmp((void *)tx_pkt->buf, "/list", strlen("/list")) == 0) {
+       tx_pkt->options = GETROOMS;
+       return 1;
    }
    // If it wasn't any of that, invalid command
    else {
@@ -418,6 +428,7 @@ void showHelp() {
    printf("%s\t/setname%s\t | Usage: /setname fname lname\n", YELLOW, NORMAL);
    printf("%s\t/who%s\t\t | Return a list of users in your current room or a specific user\n", YELLOW, NORMAL);
    printf("%s\t/who all%s\t\t | Return a list of all connected users\n", YELLOW, NORMAL);
+   printf("%s\t/list%s\t\t | Return a list of all public rooms with active users in them\n", YELLOW, NORMAL);
    printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
    printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
    printf("%s\t/leave%s\t\t | Leave the room you are in\n", YELLOW, NORMAL);

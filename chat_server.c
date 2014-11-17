@@ -221,6 +221,10 @@ void *client_receive(void *ptr) {
             else if(in_pkt.options == JOIN) { 
                join(&in_pkt, client);
             }
+            else if(in_pkt.options == LEAVE) { 
+               //leave(&in_pkt, client);
+               printf("%s%s wants to %s %s Unknown message received from client.\n", YELLOW, in_pkt.realname, in_pkt.buf, NORMAL);
+            }
             else if(in_pkt.options == GETUSERS) {
                get_active_users(client);
             }
@@ -576,3 +580,7 @@ void join(packet *pkt, int fd) {
       printf("uhoh\n");
    }
 }
+
+
+
+
