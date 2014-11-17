@@ -87,15 +87,12 @@ Server:
 Known Bugs / Errors:
    Server:
       - Can have a conversation between the same user logged in two times
-             
-      - No way of safely exiting server.  Currently CTRL-C is the only method,
-          which closes the server socket, but does not close any client sockets
-          or free the memory used for the user list.  Major problem.
 
       - Problems with accessing / modifying user lists
          o I think in order to establish private (invite required) rooms we will need to store an additional linked list
             of users with each room node to keep track of who has been invited to the channel. If that list is empty
             then I guess we can assume the channel to be public.
+         o Users not being removed from any lists after /exit is received from them
 
    Client:
       - Only supports being in one room.
@@ -108,7 +105,7 @@ Known Bugs / Errors:
          o List reading / writing 
      
 Future Plans:
-   Visual:
+   Visual: 
       - Use Curses library to take over terminal window.  Plan to have the top portion of the
          screen show conversation and bottom allow user to input message
       
@@ -122,5 +119,5 @@ Future Plans:
    Things that should be added with rooms:
       - Invite command
         
-      - Exit room command
+      - Leave room command
       
