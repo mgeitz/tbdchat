@@ -54,6 +54,7 @@
 #define WHOFAIL 111
 #define INVITESUC 112
 #define INVITEFAIL 113
+#define SERV_ERR 114
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"

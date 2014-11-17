@@ -270,6 +270,9 @@ void serverResponse(packet *rx_pkt) {
    else if(rx_pkt->options == INVITEFAIL) {
       printf("%s --- %sError:%s Invite not sent.\n", WHITE, RED, NORMAL);
    }
+   else if(rx_pkt->options == SERV_ERR) {
+      printf("%s --- %sError:%s %s\n", WHITE, RED, NORMAL, rx_pkt->buf);
+   }
    else if(rx_pkt->options == INVITESUC) {
       printf("%s --- %sSuccess:%s Invite sent!\n", WHITE, GREEN, NORMAL);
    }

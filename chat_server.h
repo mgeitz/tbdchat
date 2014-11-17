@@ -23,6 +23,8 @@
 #define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
 #define DEFAULT_ROOM 1000
+#define SERVER_NAME "Server"
+#define USERS_FILE "Users.bin"
 // Client options
 #define INVALID -1
 #define CONNECT 0
@@ -54,6 +56,7 @@
 #define WHOFAIL 111
 #define INVITESUC 112
 #define INVITEFAIL 113
+#define SERV_ERR 114
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -96,7 +99,7 @@ void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrI
 void sigintHandler(int sig_num);
 void establish_identity(int fd, char *ID, char *name, User **user_list);
 void *client_receive(void *ptr);
-void register_user(packet *pkt, int fd);
+void register_user(packet *in_pkt, int fd);
 void login(packet *pkt, int fd);
 void exit_client(int fd);
 void send_message(packet *pkt, int clientfd);
