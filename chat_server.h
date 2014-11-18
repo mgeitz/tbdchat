@@ -42,20 +42,14 @@
 #define GETMOTD 12
 #define GETROOMS 13
 // Server responses
-#define RECFAIL 100
-#define REGFAIL 101
 #define LOGFAIL 102
 #define LOGSUC 103
 #define REGSUC 104
 #define PASSSUC 105
-#define PASSFAIL 106
 #define NAMESUC 107
-#define NAMEFAIL 108
 #define JOINSUC 109
 #define MOTD 110
-#define WHOFAIL 111
 #define INVITESUC 112
-#define INVITEFAIL 113
 #define SERV_ERR 114
 // Defined color constants
 #define NORMAL "\x1B[0m"
@@ -69,8 +63,7 @@
 #define WHITE "\x1B[37;1m"
 
 /* Structures */
-struct Packet
-{
+struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
    char username[64];
@@ -79,8 +72,7 @@ struct Packet
 };
 typedef struct Packet packet;
 
-struct chatSession
-{
+struct chatSession {
    char aliases[2][32];
    int clients[2];
    int this_client;
@@ -94,6 +86,7 @@ int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
 void *subserver(void *ptr);
+void sanitizeBuffer(char *buf);
 void end(session *ptr);
 void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);
 void sigintHandler(int sig_num);
