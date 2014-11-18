@@ -216,6 +216,15 @@ void *client_receive(void *ptr) {
                close(client);
                return NULL;
             }
+            else {
+               packet ret;
+               ret.timestamp = time(NULL);
+               ret.options = SERV_ERR;
+               strcpy(ret.username, SERVER_NAME);
+               strcpy(ret.realname, SERVER_NAME);
+               strcpy(ret.buf, "Not logged in, use /help for a list of available commands.");
+               send(client, &ret, sizeof(packet), 0);
+            }
          }
          // Handle command messages
          else if (in_pkt.options < 1000 && logged_in) {
