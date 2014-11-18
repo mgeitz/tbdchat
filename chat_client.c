@@ -98,6 +98,10 @@ int main(int argc, char **argv) {
          printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
       }
    }
+   pthread_mutex_destroy(&nameMutex);
+   pthread_mutex_destroy(&debugModeMutex);
+   pthread_mutex_destroy(&configFileMutex);
+   pthread_mutex_destroy(&roomMutex);
    printf("%sExiting client.%s\n", WHITE, NORMAL);
    exit(0);
 }
