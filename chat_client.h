@@ -42,19 +42,13 @@
 #define GETROOMS 13
 // Server responses
 #define RECFAIL 100 
-#define REGFAIL 101
-#define LOGFAIL 102
 #define LOGSUC 103
 #define REGSUC 104
 #define PASSSUC 105
-#define PASSFAIL 106
 #define NAMESUC 107
-#define NAMEFAIL 108
 #define JOINSUC 109
 #define MOTD 110
-#define WHOFAIL 111
 #define INVITESUC 112
-#define INVITEFAIL 113
 #define SERV_ERR 114
 // Defined color constants
 #define NORMAL "\x1B[0m"
