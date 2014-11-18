@@ -129,7 +129,7 @@ int userCommand(packet *tx_pkt) {
    }
    // Handle who command
    else if (strncmp((void *)tx_pkt->buf, "/who", strlen("/who")) == 0) {
-       if (strncmp((void *)tx_pkt->buf, "/who all", strlen("/who all")) == 0) {
+       if (strcmp((void *)tx_pkt->buf, "/who all") == 0) {
           tx_pkt->options = GETALLUSERS;
           return 1;
        }
