@@ -18,7 +18,9 @@ pthread_mutex_t rooms_mutex = PTHREAD_MUTEX_INITIALIZER;
 User *registered_users_list;
 User *active_users_list;
 Room *room_list;
-char *server_MOTD = "Welcome to The Best Damn Chat Server! This is a temporary MOTD without version numbers or anything particularly useful.";
+char *server_MOTD = "Welcome to The Best Damn Chat Server!"
+                    " This is a temporary MOTD without version numbers"
+                    " or anything particularly useful.";
 
 int main(int argc, char **argv) {
    if(argc < 3) {
@@ -97,7 +99,7 @@ int get_server_socket(char *hostname, char *port) {
       }
       break;
    }
-   freeaddrinfo(servinfo);   // servinfo structure is no longer needed. free it.
+   freeaddrinfo(servinfo);
    
    return server_socket;
 }
@@ -325,7 +327,9 @@ int register_user(packet *in_pkt, int fd) {
    }
    if (i > 3) {
       pthread_mutex_lock(&registered_users_mutex);
-      if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0 || !(strcmp(SERVER_NAME, args[1])) || strcmp(args[2], args[3]) != 0) {
+      if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0 || \
+                              !(strcmp(SERVER_NAME, args[1])) || \
+                              strcmp(args[2], args[3]) != 0) {
          pthread_mutex_unlock(&registered_users_mutex);
          packet ret;
          ret.timestamp = time(NULL);
@@ -354,7 +358,8 @@ int register_user(packet *in_pkt, int fd) {
       return login(in_pkt, fd);
    }
    else {
-      printf("%s --- %sError:%s Malformed registration packet received from %s on %d, ignoring.\n", WHITE, RED, NORMAL, args[1], fd); 
+      printf("%s --- %sError:%s Malformed reg packet received from %s on %d, ignoring.\n", \
+             WHITE, RED, NORMAL, args[1], fd); 
    }
    return 0;
 }
@@ -452,7 +457,8 @@ int login(packet *pkt, int fd) {
       return 1;
    }
    else {
-      printf("%s --- %sError:%s Malformed login packet received from %s on %d, ignoring.\n", WHITE, RED, NORMAL, args[1], fd); 
+      printf("%s --- %sError:%s Malformed login packet received from %s on %d, ignoring.\n", \
+             WHITE, RED, NORMAL, args[1], fd); 
    }
    return 0;
 }
@@ -480,7 +486,8 @@ void invite(packet *in_pkt, int fd) {
             ret.options = INVITE;
             strcpy(ret.username, SERVER_NAME);
             memset(&ret.buf, 0, sizeof(ret.buf));
-            sprintf(ret.buf, "%s has invited you to join %s", in_pkt->realname, Rget_name(&room_list, roomNum));
+            sprintf(ret.buf, "%s has invited you to join %s", \
+                    in_pkt->realname, Rget_name(&room_list, roomNum));
             send(inviteUser->sock, &ret, sizeof(packet), 0);
             memset(&ret, 0, sizeof(packet));
             ret.options = INVITESUC;

@@ -37,15 +37,12 @@ int removeUser(User **head, User *user){
    printf("Removing user: %s\n", user->username);
    printList(head);
    User *current = *head;
-   printf("Here0\n");
    if (*head == NULL) {
       printf("Can't remove from empty list.\n");
       return 0;
    }
    
-   printf("Here1\n");
    if (strcmp(current->username, user->username) == 0) {
-      printf("Here1.5\n");
       *head = user->next;
       //current->next = user->next;
       //user->next = NULL;
@@ -53,7 +50,6 @@ int removeUser(User **head, User *user){
      printList(head);
      return 1;
    }
-   printf("Here22\n");
    while (current->next != NULL) {
       if (strcmp(current->next->username, user->username) == 0) {
          current->next = user->next;
