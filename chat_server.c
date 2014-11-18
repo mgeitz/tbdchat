@@ -424,13 +424,13 @@ void invite(packet *in_pkt, int fd) {
          User *inviteUser = get_user(&active_users_list, args[0]);
          if (inviteUser != NULL) {
             ret.options = INVITE;
-            strcpy(ret.username, "SERVER");
+            strcpy(ret.username, SERVER_NAME);
             memset(&ret.buf, 0, sizeof(ret.buf));
             sprintf(ret.buf, "%s has invited you to join %s", in_pkt->realname, Rget_name(&room_list, roomNum));
             send(inviteUser->sock, &ret, sizeof(packet), 0);
             memset(&ret, 0, sizeof(packet));
             ret.options = INVITESUC;
-            strcpy(ret.username, "SERVER");
+            strcpy(ret.username, SERVER_NAME);
             send(fd, &ret, sizeof(packet), 0);
             return;
          }
@@ -442,8 +442,10 @@ void invite(packet *in_pkt, int fd) {
    else {
       printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
    }
-   ret.options = INVITEFAIL;
-   strcpy(ret.username, "SERVER");
+   ret.options = SERV_ERR;
+   strcpy(ret.username, SERVER_NAME);
+   strcpy(ret.realname, SERVER_NAME);
+   sprintf(ret.buf, "An invitation could not be sent to %s.", args[0]);
    send(fd, &ret, sizeof(packet), 0);
 }
 
@@ -464,12 +466,13 @@ void sendMOTD(int fd) {
  */
 void exit_client(int fd) {
    packet ret;
-   strcpy(ret.realname, "SERVER");
+   strcpy(ret.realname, SERVER_NAME);
+   strcpy(ret.username, SERVER_NAME);
    ret.options = EXIT;
-   strcat(ret.buf, "Closing connection.");
+   strcat(ret.buf, "Goodbye!");
    ret.timestamp = time(NULL);
    printf("Sending close message to %d\n", fd);
-   send(fd, &ret, sizeof(ret), 0);
+   send(fd, &ret, sizeof(packet), 0);
    close(fd);
 }
 
@@ -501,7 +504,7 @@ void get_active_users(int fd) {
    User *temp = active_users_list;
    packet ret;
    ret.options = GETALLUSERS;
-   strcpy(ret.username, "SERVER");
+   strcpy(ret.username, SERVER_NAME);
    while(temp != NULL ) {
       ret.timestamp = time(NULL);
       strcpy(ret.buf, temp->username);
@@ -527,12 +530,15 @@ void user_lookup(packet *in_pkt, int fd) {
    if (i > 1) {
       packet ret;
       ret.options = GETUSER;
-      strcpy(ret.username, "SERVER");
+      strcpy(ret.username, SERVER_NAME);
       char *realname = get_real_name(&active_users_list, args[1]);
       if (strcmp(realname, "ERROR") == 0) {
-         ret.options = WHOFAIL;
+         ret.options = SERV_ERR;
+         sprintf(ret.buf, "%s not found.", args[1]);
       }
-      strcpy(ret.buf, realname);
+      else {
+         strcpy(ret.buf, realname);
+      }
       ret.timestamp = time(NULL);
       send(fd, &ret, sizeof(packet), 0);
    }
@@ -603,30 +609,43 @@ void get_room_list(int fd) {
  *Set user password
  */
 void set_pass(packet *pkt, int fd) {
-   char *args[3];
-   char *tmp = pkt->buf;
-   
-   // We should loop this incase a malformed command gets through and segfaults
-   //Pull command, old pw, new pw
-   args[0] = strsep(&tmp, " \t");
-   args[1] = strsep(&tmp, " \t");
-   args[2] = strsep(&tmp, " \t");
-   
-   pthread_mutex_lock(&registered_users_mutex);
-   User *user = get_user(&registered_users_list, pkt->username);
-   if (user != NULL) {
-      if(strcmp(user->password, args[1]) == 0) {
-         memset(user->password, 0, 32);
-         strcpy(user->password, args[2]);
-         writeUserFile(&registered_users_list, "Users.bin");
-         pkt->options = PASSSUC;
+   int i = 0;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 3) {
+      pthread_mutex_lock(&registered_users_mutex);
+      User *user = get_user(&registered_users_list, pkt->username);
+      pthread_mutex_unlock(&registered_users_mutex);
+      if (user != NULL) {
+         if(strcmp(user->password, args[1]) == 0) {
+            memset(user->password, 0, 32);
+            strcpy(user->password, args[2]);
+            pthread_mutex_lock(&registered_users_mutex);
+            writeUserFile(&registered_users_list, "Users.bin");
+            pthread_mutex_unlock(&registered_users_mutex);
+            pkt->options = PASSSUC;
+         }
+         else {
+            pkt->options = SERV_ERR;
+            strcpy(pkt->buf, "Password change failed, password mismatch.");
+         }
+      }
+      else {
+         pkt->options = SERV_ERR;
+         strcpy(pkt->buf, "Password change failed, for some reason we couldn't find you.");
       }
    }
-
    else {
-      pkt->options = PASSFAIL;
+      pkt->options = SERV_ERR;
+      strcpy(pkt->buf, "Password change failed, malformed request.");
    }
-   pthread_mutex_unlock(&registered_users_mutex);
    send(fd, (void *)pkt, sizeof(packet), 0);
 }
 
@@ -653,7 +672,8 @@ void set_name(packet *pkt, int fd) {
    }
    else {
       printf("%s --- Error:%s Trying to modify null user in user_list.\n", RED, NORMAL);
-      ret.options = NAMEFAIL;
+      strcpy(ret.buf, "Name change failed, for some reason we couldn't find you.");
+      ret.options = SERV_ERR;
    }
    pthread_mutex_unlock(&registered_users_mutex);
    
@@ -666,7 +686,8 @@ void set_name(packet *pkt, int fd) {
    }
    else {
       printf("%s --- Error:%s Trying to modify null user in active_users.\n", RED, NORMAL);
-      ret.options = NAMEFAIL;
+      strcpy(ret.buf, "Name change failed, for some reason we couldn't find you.");
+      ret.options = SERV_ERR;
    }
    pthread_mutex_unlock(&active_users_mutex);
    
@@ -723,13 +744,13 @@ void join(packet *pkt, int fd) {
       RprintList(&room_list);  
 
       ret.options = JOINSUC;
-      strcpy(ret.realname, "SERVER");
+      strcpy(ret.realname, SERVER_NAME);
       sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
       send(fd, (void *)&ret, sizeof(packet), 0);
       memset(&ret, 0, sizeof(ret));
       
       ret.options = newRoom->ID;
-      strcpy(ret.realname, "SERVER");
+      strcpy(ret.realname, SERVER_NAME);
       strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
       strcat(ret.buf, " has joined the room.");
       ret.timestamp = time(NULL);
@@ -766,13 +787,13 @@ void leave(packet *pkt, int fd) {
                
                insertUser(&(defaultRoom->user_list), currUser);
                ret.options = JOINSUC;
-               strcpy(ret.realname, "SERVER");
+               strcpy(ret.realname, SERVER_NAME);
                sprintf(ret.buf, "%s %d", defaultRoom->name, defaultRoom->ID);
                send(fd, (void *)&ret, sizeof(packet), 0);
                memset(&ret, 0, sizeof(ret));
 
                ret.options = defaultRoom->ID;
-               strcpy(ret.realname, "SERVER");
+               strcpy(ret.realname, SERVER_NAME);
                strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
                strcat(ret.buf, " has joined the room.");
                ret.timestamp = time(NULL);

@@ -215,8 +215,8 @@ void *chatRX(void *ptr) {
 
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
-   if (rx_pkt->options == REGFAIL) {
-      printf("%s --- %sError:%s Registration failed.\n", WHITE, RED, NORMAL);
+   if (rx_pkt->options == SERV_ERR) {
+      printf("%s --- %sError:%s %s\n", WHITE, RED, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
@@ -224,9 +224,6 @@ void serverResponse(packet *rx_pkt) {
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
-   }
-   else if (rx_pkt->options == LOGFAIL) {
-      printf("%s --- %sError:%s Login failed.\n", WHITE, RED, NORMAL);
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -239,47 +236,32 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
    }
-   else if(rx_pkt->options == GETUSERS || rx_pkt->options == GETALLUSERS || rx_pkt->options == GETUSER) {
+   else if (rx_pkt->options == GETUSERS || rx_pkt->options == GETALLUSERS || rx_pkt->options == GETUSER) {
       printf("%s --- %sUser:%s %s\n", WHITE, WHITE, NORMAL, rx_pkt->buf);
    }
-   else if(rx_pkt->options == PASSFAIL) {
-      printf("%s --- %sError:%s Password change failed.\n", WHITE, RED, NORMAL);
-   }
-   else if(rx_pkt->options == PASSSUC) {
+   else if (rx_pkt->options == PASSSUC) {
       printf("%s --- %sSuccess:%s Password change successful!\n", WHITE, GREEN, NORMAL);
    }
-   else if(rx_pkt->options == WHOFAIL) {
-      printf("%s --- %sError:%s User lookup failed.\n", WHITE, RED, NORMAL);
-   }
-   else if(rx_pkt->options == NAMESUC) {
+   else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
       printf("%s --- %sSuccess:%s Name change successful!\n", WHITE, GREEN, NORMAL);
    }
-   else if(rx_pkt->options == NAMEFAIL) {
-      printf("%s --- %sError:%s Name change failed.\n", WHITE, RED, NORMAL);
-   }
-   else if(rx_pkt->options == JOINSUC) {
+   else if (rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
-   else if(rx_pkt->options == INVITE) {
+   else if (rx_pkt->options == INVITE) {
       printf("%s --- %sInvite: %s%s\n", WHITE, MAGENTA, NORMAL, rx_pkt->buf);
    }
-   else if(rx_pkt->options == INVITEFAIL) {
-      printf("%s --- %sError:%s Invite not sent.\n", WHITE, RED, NORMAL);
-   }
-   else if(rx_pkt->options == SERV_ERR) {
-      printf("%s --- %sError:%s %s\n", WHITE, RED, NORMAL, rx_pkt->buf);
-   }
-   else if(rx_pkt->options == INVITESUC) {
+   else if (rx_pkt->options == INVITESUC) {
       printf("%s --- %sSuccess:%s Invite sent!\n", WHITE, GREEN, NORMAL);
    }
-   else if(rx_pkt->options == GETROOMS) {
+   else if (rx_pkt->options == GETROOMS) {
       printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
    }
-   else if(rx_pkt->options == MOTD) {
+   else if (rx_pkt->options == MOTD) {
       printf("%s ----------------------------------------[ MOTD ]------------------------------------------ %s\n", BLACK, NORMAL);
       printf("%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);
       printf("%s ------------------------------------------------------------------------------------------ %s\n", BLACK, NORMAL);
