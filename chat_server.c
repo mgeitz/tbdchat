@@ -161,12 +161,16 @@ void sigintHandler(int sig_num) {
    //Closing client sockets and freeing memory from user lists
    User *temp = active_users_list;
    User *next;
+   packet ret;
+   strcpy(ret.username, SERVER_NAME);
+   strcpy(ret.realname, SERVER_NAME);
+   ret.timestamp = time(NULL);
 
    printf("--------CLOSING ACTIVE USERS--------\n");
    while(temp != NULL) {
       printf("Closing %s's socket\n", temp->username);
       next = temp->next;
-      exit_client(temp->sock);
+      exit_client(&ret, temp->sock);
       free(temp);
       temp = next;
    }
@@ -208,6 +212,10 @@ void *client_receive(void *ptr) {
             else if(in_pkt.options == LOGIN) {
                logged_in = login(&in_pkt, client);
             }
+            else if(in_pkt.options == EXIT) {
+               close(client);
+               return NULL;
+            }
          }
          // Handle command messages
          else if (in_pkt.options < 1000 && logged_in) {
@@ -224,7 +232,7 @@ void *client_receive(void *ptr) {
                login(&in_pkt, client);
             }
             else if(in_pkt.options == EXIT) {
-               exit_client(client);
+               exit_client(&in_pkt, client);
                return NULL;
             }
             else if(in_pkt.options == INVITE) {
@@ -478,8 +486,29 @@ void sendMOTD(int fd) {
 /*
  *Exit
  */
-void exit_client(int fd) {
+void exit_client(packet *pkt, int fd) {
    packet ret;
+
+   //User *user = get_user_from_fd(fd)
+   //pthread_mutex_lock(&active_users_mutex);
+   //if(insertUser(&active_users_list, user) == 1) {
+   //   pthread_mutex_unlock(&active_users_mutex);
+   //   removeUser(active_users_list, user);
+   //
+   //   // Obtain current (or all) rooms with user, somehow
+   //   // remove them  
+   //
+   //}
+
+   // Send disconnect message to lobby
+   ret.options = DEFAULT_ROOM;
+   strcpy(ret.realname, SERVER_NAME);
+   strcpy(ret.username, SERVER_NAME);
+   sprintf(ret.buf, "%s has disconnected.", pkt->realname);
+   ret.timestamp = time(NULL);
+   send_message(&ret, -1);
+
+   memset(&ret, 0, sizeof(packet));
    strcpy(ret.realname, SERVER_NAME);
    strcpy(ret.username, SERVER_NAME);
    ret.options = EXIT;

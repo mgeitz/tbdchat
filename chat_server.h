@@ -101,7 +101,7 @@ void establish_identity(int fd, char *ID, char *name, User **user_list);
 void *client_receive(void *ptr);
 int register_user(packet *in_pkt, int fd);
 int login(packet *pkt, int fd);
-void exit_client(int fd);
+void exit_client(packet *pkt, int fd);
 void send_message(packet *pkt, int clientfd);
 void sendMOTD(int fd);
 void get_active_users(int fd);
