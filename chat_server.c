@@ -512,6 +512,7 @@ void get_active_users(int fd) {
       memset(&ret.buf, 0, sizeof(ret.buf));
       temp = temp->next;
    }
+   pthread_mutex_unlock(&active_users_mutex);
 }
 
 
