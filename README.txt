@@ -82,27 +82,26 @@ Server:
          o Saves username/realname/password to a file so registration persists after server is shutdown
       - Chat with n clients at a time
       - Rooms containing unique chat sessions simultaneously
-    
+         o Create or join rooms
+         o invite others to join your room 
  
 Known Bugs / Errors:
    Server:
-      - Can have a conversation between the same user logged in two times
-
       - Problems with accessing / modifying user lists
          o I think in order to establish private (invite required) rooms we will need to store an additional linked list
             of users with each room node to keep track of who has been invited to the channel. If that list is empty
             then I guess we can assume the channel to be public.
-         o Users not being removed from any lists after /exit is received from them
+         o Users not being removed from any lists after /exit is received from them, sending messages to disconnected sockfds
 
    Client:
       - Only supports being in one room.
+      - User input is not sanatized at all; formatting strings and other terribe things can be transmitted in the buffer, could be resolved on the server.
+      - CTRL+C does not safely exit; however, /quit and /exit will.
 
    Potential race conditions to still address
 :
       - Client: 
-         o Printing anything on the client (any cli or gui will solve this)
-      - Server:
-         o List reading / writing 
+         o Printing anything while typing on the client (any cli or gui will solve this)
      
 Future Plans / To Do:
       - Use Curses library to take over terminal window.  Plan to have the top portion of the
@@ -116,8 +115,6 @@ Future Plans / To Do:
    
       - logout command to put user back in not-logged-in state, disconnect command to close serverfd and chatrxthread but not close client
 
-      - Generalize many FAIL responses into a SERVERR response with the error message in buffer
-
       - Remove a user from active_users_list and their room list when they send a /exit
 
       - Shorten the printed timestamp a lot
@@ -126,6 +123,6 @@ Future Plans / To Do:
 
       - Probably move the primary execution loop in main of client to its own method again.
 
-   Things that should be added with rooms:
       - Notify all in room when someone else in the room leaves
-      
+     
+      - Sanatize client buffer input on the server 

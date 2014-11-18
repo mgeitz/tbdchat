@@ -23,6 +23,7 @@
 // Client buffer size
 #define BUFFERSIZE 128
 #define DEFAULT_ROOM 1000
+#define SERVER_NAME "SERVER"
 // Client options
 #define INVALID -1
 #define CONNECT 0
