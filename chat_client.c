@@ -10,7 +10,7 @@
 */
 #include "chat_client.h"
 
-int serverfd;
+int serverfd = 0;
 pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t nameMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -375,12 +375,33 @@ void print_ip( struct addrinfo *ai) {
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
    printf("\b\b%s --- %sError:%s Forced Exit.\n", WHITE, RED, NORMAL);
-   exit(1);
+   if (serverfd) { 
+      packet tx_pkt;
+      pthread_mutex_lock(&nameMutex);
+      strcpy(tx_pkt.username, username);
+      strcpy(tx_pkt.realname, realname);
+      strcpy(tx_pkt.buf, "/exit");
+      pthread_mutex_unlock(&nameMutex);
+      tx_pkt.timestamp = time(NULL);
+      tx_pkt.options = EXIT;
+      send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
+      close(serverfd); 
+      if (chat_rx_thread) {
+         if(pthread_join(chat_rx_thread, NULL)) {
+            printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
+         }
+      }
+   }
+   pthread_mutex_destroy(&nameMutex);
+   pthread_mutex_destroy(&debugModeMutex);
+   pthread_mutex_destroy(&configFileMutex);
+   pthread_mutex_destroy(&roomMutex);
+   exit(0);
 }
 
 
+/* Print message on startup */
 void asciiSplash() {
-
    printf("%s         __%s\n", GREEN, NORMAL);
    printf("%s        /_/%s\\        %s_____ %s____  %s____    %s ____ _           _   %s\n", GREEN, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
    printf("%s       / /%s\\ \\      %s|_   _%s| __ )%s|  _ \\ %s  / ___| |__   __ _| |_ %s\n", RED, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
@@ -390,37 +411,10 @@ void asciiSplash() {
    printf("%s   /_/%s______%s\\%s_%s\\%s/%s\\%s\n", RED, BLUE, GREEN, BLUE, GREEN, BLUE, BLUE, NORMAL);
    printf("%s   \\_\\%s_________\\/%s\n\n", RED, BLUE, NORMAL);
    printf("%sEnter /help to view a list of available commands.%s\n\n", WHITE, NORMAL);
-   
-   /*
-   printf("%s", GREEN);
-   printf(" ___       __   _______   ___       ________  ________  _____ ______   _______                      \n");
-   printf("|\\  \\     |\\  \\|\\  ___ \\ |\\  \\     |\\   ____\\|\\   __  \\|\\   _ \\  _   \\|\\  ___ \\                     \n");
-   printf("\\ \\  \\    \\ \\  \\ \\   __/|\\ \\  \\    \\ \\  \\___|\\ \\  \\|\\  \\ \\  \\\\\\__\\ \\  \\ \\   __/|                    \n");
-   printf(" \\ \\  \\  __\\ \\  \\ \\  \\_|/_\\ \\  \\    \\ \\  \\    \\ \\  \\\\\\  \\ \\  \\\\|__| \\  \\ \\  \\_|/__                  \n");
-   printf("  \\ \\  \\|\\__\\_\\  \\ \\  \\_|\\ \\ \\  \\____\\ \\  \\____\\ \\  \\\\\\  \\ \\  \\    \\ \\  \\ \\  \\_|\\ \\                 \n");
-   printf("   \\ \\____________\\ \\_______\\ \\_______\\ \\_______\\ \\_______\\ \\__\\    \\ \\__\\ \\_______\\                \n");
-   printf("    \\|____________|\\|_______|\\|_______|\\|_______|\\|_______|\\|__|     \\|__|\\|_______|                \n");
-   printf(" _________  ________          _________  _______   ________  _____ ______   ________                \n");
-   printf("|\\___   ___\\\\   __  \\        |\\___   ___\\\\  ___ \\ |\\   __  \\|\\   _ \\  _   \\|\\_____  \\               \n");
-   printf("\\|___ \\  \\_\\ \\  \\|\\  \\       \\|___ \\  \\_\\ \\   __/|\\ \\  \\|\\  \\ \\  \\\\\\__\\ \\  \\|____|\\ /_              \n");
-   printf("     \\ \\  \\ \\ \\  \\\\\\  \\           \\ \\  \\ \\ \\  \\_|/_\\ \\   __  \\ \\  \\\\|__| \\  \\    \\|\\  \\             \n");
-   printf("      \\ \\  \\ \\ \\  \\\\\\  \\           \\ \\  \\ \\ \\  \\_|\\ \\ \\  \\ \\  \\ \\  \\    \\ \\  \\  __\\_\\  \\            \n");
-   printf("       \\ \\__\\ \\ \\_______\\           \\ \\__\\ \\ \\_______\\ \\__\\ \\__\\ \\__\\    \\ \\__\\|\\_______\\           \n");
-   printf("        \\|__|  \\|_______|            \\|__|  \\|_______|\\|__|\\|__|\\|__|     \\|__|\\|_______|           \n");
-   printf(" ________  ___  ___  ________  _________  ________  ___       ___  _______   ________   _________   \n");
-   printf("|\\   ____\\|\\  \\|\\  \\|\\   __  \\|\\___   ___\\\\   ____\\|\\  \\     |\\  \\|\\  ___ \\ |\\   ___  \\|\\___   ___\\ \n");
-   printf("\\ \\  \\___|\\ \\  \\\\\\  \\ \\  \\|\\  \\|___ \\  \\_\\ \\  \\___|\\ \\  \\    \\ \\  \\ \\   __/|\\ \\  \\\\ \\  \\|___ \\  \\_| \n");
-   printf(" \\ \\  \\    \\ \\   __  \\ \\   __  \\   \\ \\  \\ \\ \\  \\    \\ \\  \\    \\ \\  \\ \\  \\_|/_\\ \\  \\\\ \\  \\   \\ \\  \\  \n");
-   printf("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\ \\  \\   \\ \\  \\ \\ \\  \\____\\ \\  \\____\\ \\  \\ \\  \\_|\\ \\ \\  \\\\ \\  \\   \\ \\  \\ \n");
-   printf("   \\ \\_______\\ \\__\\ \\__\\ \\__\\ \\__\\   \\ \\__\\ \\ \\_______\\ \\_______\\ \\__\\ \\_______\\ \\__\\\\ \\__\\   \\ \\__\\\n");
-   printf("    \\|_______|\\|__|\\|__|\\|__|\\|__|    \\|__|  \\|_______|\\|_______|\\|__|\\|_______|\\|__| \\|__|    \\|__|\n");
-   printf("                                                                                                    \n");
-   printf("                                                                                                    \n");
-   printf("                                                                                                    \n");
-   printf("%s", NORMAL);
-   */
 }
 
+
+/* Return number between 0-4 determined from string passed in */
 int hash(char *str) {
    unsigned long hash = 5381;
    int c;

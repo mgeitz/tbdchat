@@ -194,14 +194,23 @@ void sigintHandler(int sig_num) {
 void *client_receive(void *ptr) {
    int client = *(int *) ptr;
    int received;
+   int logged_in = 0;
    packet in_pkt, *client_message_ptr = &in_pkt;
    while (1) {
       received = recv(client, &in_pkt, sizeof(packet), 0);
       if (received) { 
          debugPacket(client_message_ptr); 
-         
+
+         if (!logged_in) {
+            if(in_pkt.options == REGISTER) { 
+               logged_in = register_user(&in_pkt, client);
+            }
+            else if(in_pkt.options == LOGIN) {
+               logged_in = login(&in_pkt, client);
+            }
+         }
          // Handle command messages
-         if (in_pkt.options < 1000) {
+         else if (in_pkt.options < 1000 && logged_in) {
             if(in_pkt.options == REGISTER) { 
                register_user(&in_pkt, client);
             }
@@ -246,10 +255,12 @@ void *client_receive(void *ptr) {
                printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
             }
          }
-         
          // Handle conversation message
-         else { 
+         else if (logged_in) { 
             send_message(&in_pkt, client);
+         }
+         else {
+            printf("%s --- Error:%s client trying to cause problems.\n", RED, NORMAL);
          }
          memset(&in_pkt, 0, sizeof(packet));
       }
@@ -261,7 +272,7 @@ void *client_receive(void *ptr) {
 /*
  *Register
  */
-void register_user(packet *in_pkt, int fd) {
+int register_user(packet *in_pkt, int fd) {
    int i = 0;
    char *args[16];
    char cpy[BUFFERSIZE];
@@ -283,7 +294,7 @@ void register_user(packet *in_pkt, int fd) {
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.buf, "Username unavailable.");
          send(fd, &ret, sizeof(packet), 0);
-         return;
+         return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
 
@@ -300,18 +311,19 @@ void register_user(packet *in_pkt, int fd) {
 
       memset(&in_pkt->buf, 0, sizeof(in_pkt->buf));
       sprintf(in_pkt->buf, "/login %s %s", args[1], args[2]);
-      login(in_pkt, fd);
+      return login(in_pkt, fd);
    }
    else {
       printf("%s --- %sError:%s Malformed registration packet received from %s on %d, ignoring.\n", WHITE, RED, NORMAL, args[1], fd); 
    }
+   return 0;
 }
 
 
 /*
  *Login
  */
-void login(packet *pkt, int fd) {
+int login(packet *pkt, int fd) {
    int i = 0;
    char *args[16];
    char cpy[BUFFERSIZE];
@@ -335,7 +347,7 @@ void login(packet *pkt, int fd) {
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.buf, "Username not found.");
          send(fd, &ret, sizeof(packet), 0);
-         return;
+         return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
 
@@ -350,7 +362,7 @@ void login(packet *pkt, int fd) {
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.buf, "Incorrect password.");
          send(fd, &ret, sizeof(packet), 0);
-         return;
+         return 0;
       }
 
       //Login successful, send username to client and add to active_users
@@ -397,10 +409,12 @@ void login(packet *pkt, int fd) {
          send_message(&ret, -1);
          sendMOTD(fd);
       }
+      return 1;
    }
    else {
       printf("%s --- %sError:%s Malformed login packet received from %s on %d, ignoring.\n", WHITE, RED, NORMAL, args[1], fd); 
    }
+   return 0;
 }
 
 

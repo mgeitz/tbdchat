@@ -99,8 +99,8 @@ void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrI
 void sigintHandler(int sig_num);
 void establish_identity(int fd, char *ID, char *name, User **user_list);
 void *client_receive(void *ptr);
-void register_user(packet *in_pkt, int fd);
-void login(packet *pkt, int fd);
+int register_user(packet *in_pkt, int fd);
+int login(packet *pkt, int fd);
 void exit_client(int fd);
 void send_message(packet *pkt, int clientfd);
 void sendMOTD(int fd);
