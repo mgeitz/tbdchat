@@ -756,24 +756,6 @@ void join(packet *pkt, int fd) {
          ret.timestamp = time(NULL);
          send_message(&ret, -1);
       }
-      User *currUser = clone_user(currUser);
-      printf("Inserting user into new rooms user list\n");
-      insertUser(&(newRoom->user_list), currUser);
-      
-      RprintList(&room_list);  
-
-      ret.options = JOINSUC;
-      strcpy(ret.realname, SERVER_NAME);
-      sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
-      send(fd, (void *)&ret, sizeof(packet), 0);
-      memset(&ret, 0, sizeof(ret));
-      
-      ret.options = newRoom->ID;
-      strcpy(ret.realname, SERVER_NAME);
-      strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
-      strcat(ret.buf, " has joined the room.");
-      ret.timestamp = time(NULL);
-      send_message(&ret, -1);
    }
    else {
       printf("Problem in join.\n");
