@@ -14,4 +14,4 @@ chat_server: chat_server.c
 .PHONY: clean all
 
 clean:
-	rm -f chat_client chat_server Users.bin
+	rm -f tbdchat tbdchat_server Users.bin

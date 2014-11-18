@@ -202,11 +202,16 @@ void *client_receive(void *ptr) {
    packet in_pkt, *client_message_ptr = &in_pkt;
    while (1) {
       received = recv(client, &in_pkt, sizeof(packet), 0);
-      if (received) { 
-         debugPacket(client_message_ptr); 
-
+      if (received) {
+         // Sanitize client buffer
+         if (strlen(in_pkt.buf) > 0) {
+            sanitizeBuffer((void *)&in_pkt.buf);
+         }
+         // Print packet contents
+         debugPacket(client_message_ptr);
+         // Responses to not logged in clients
          if (!logged_in) {
-            if(in_pkt.options == REGISTER) { 
+            if(in_pkt.options == REGISTER) {
                logged_in = register_user(&in_pkt, client);
             }
             else if(in_pkt.options == LOGIN) {
@@ -222,59 +227,64 @@ void *client_receive(void *ptr) {
                ret.options = SERV_ERR;
                strcpy(ret.username, SERVER_NAME);
                strcpy(ret.realname, SERVER_NAME);
-               strcpy(ret.buf, "Not logged in, use /help for a list of available commands.");
+               strcpy(ret.buf, "Not logged in.");
                send(client, &ret, sizeof(packet), 0);
             }
          }
-         // Handle command messages
-         else if (in_pkt.options < 1000 && logged_in) {
-            if(in_pkt.options == REGISTER) { 
-               register_user(&in_pkt, client);
+         // Responses to logged in clients
+         else if (logged_in) {
+            if (in_pkt.options < 1000) {
+               //if(in_pkt.options == REGISTER) { 
+               //   register_user(&in_pkt, client);
+               //}
+               if(in_pkt.options == SETPASS) {
+                  set_pass(&in_pkt, client);
+               }
+               else if(in_pkt.options == SETNAME) {
+                  set_name(&in_pkt, client);
+               }
+               //else if(in_pkt.options == LOGIN) {
+               //   login(&in_pkt, client);
+               //}
+               else if(in_pkt.options == EXIT) {
+                  exit_client(&in_pkt, client);
+                  return NULL;
+               }
+               else if(in_pkt.options == INVITE) {
+                  invite(&in_pkt, client);
+               }
+               else if(in_pkt.options == JOIN) {
+                  join(&in_pkt, client);
+               }
+               else if(in_pkt.options == LEAVE) {
+                  leave(&in_pkt, client);
+               }
+               else if(in_pkt.options == GETALLUSERS) {
+                  get_active_users(client);
+               }
+               else if(in_pkt.options == GETUSERS) {
+                  get_room_users(&in_pkt, client);
+               }
+               else if(in_pkt.options == GETUSER) {
+                  user_lookup(&in_pkt, client);
+               }
+               else if(in_pkt.options == GETROOMS) {
+                  get_room_list(client);
+               }
+               else if(in_pkt.options == GETMOTD) {
+                  sendMOTD(client);
+               }
+               else if(in_pkt.options == 0) {
+                  printf("%s --- Error:%s Potential abrupt disconnect on client.\n", RED, NORMAL);
+               }
+               else {
+                  printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
+               }
             }
-            else if(in_pkt.options == SETPASS) {
-               set_pass(&in_pkt, client);
-            }
-            else if(in_pkt.options == SETNAME) {
-               set_name(&in_pkt, client);
-            }
-            else if(in_pkt.options == LOGIN) {
-               login(&in_pkt, client);
-            }
-            else if(in_pkt.options == EXIT) {
-               exit_client(&in_pkt, client);
-               return NULL;
-            }
-            else if(in_pkt.options == INVITE) {
-               invite(&in_pkt, client);
-            }
-            else if(in_pkt.options == JOIN) { 
-               join(&in_pkt, client);
-            }
-            else if(in_pkt.options == LEAVE) { 
-               leave(&in_pkt, client);
-            }
-            else if(in_pkt.options == GETALLUSERS) {
-               get_active_users(client);
-            }
-            else if(in_pkt.options == GETUSERS) {
-               get_room_users(&in_pkt, client);
-            }
-            else if(in_pkt.options == GETUSER) {
-               user_lookup(&in_pkt, client);
-            }
-            else if(in_pkt.options == GETROOMS) {
-               get_room_list(client);
-            }
-            else if(in_pkt.options == GETMOTD) {
-               sendMOTD(client);
-            }
+            // Handle conversation message
             else {
-               printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
+               send_message(&in_pkt, client);
             }
-         }
-         // Handle conversation message
-         else if (logged_in) { 
-            send_message(&in_pkt, client);
          }
          else {
             printf("%s --- Error:%s client trying to cause problems.\n", RED, NORMAL);
@@ -283,6 +293,19 @@ void *client_receive(void *ptr) {
       }
    }
    return NULL;
+}
+
+
+/* Replace any char in buffer not listed in safe_chars */
+void sanitizeBuffer(char *buf) {
+   char safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
+                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                       " _,.-/@()*&^%$#!?<>'\";:+=[]{}|"
+                       "1234567890";
+   char *end = buf + strlen(buf);
+   for (buf += strspn(buf, safe_chars); buf != end; buf += strspn(buf, safe_chars)) {
+      *buf = '_';
+   }
 }
 
 

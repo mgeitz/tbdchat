@@ -41,7 +41,6 @@
 #define GETMOTD 12
 #define GETROOMS 13
 // Server responses
-#define RECFAIL 100 
 #define LOGSUC 103
 #define REGSUC 104
 #define PASSSUC 105
