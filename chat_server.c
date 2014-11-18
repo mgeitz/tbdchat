@@ -756,7 +756,7 @@ void join(packet *pkt, int fd) {
          ret.timestamp = time(NULL);
          send_message(&ret, -1);
       }
-      currUser = clone_user(currUser);
+      User *currUser = clone_user(currUser);
       printf("Inserting user into new rooms user list\n");
       insertUser(&(newRoom->user_list), currUser);
       
