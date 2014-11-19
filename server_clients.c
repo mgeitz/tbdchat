@@ -98,7 +98,9 @@ void *client_receive(void *ptr) {
                   sendMOTD(client);
                }
                else if(in_pkt.options == 0) {
-                  printf("%s --- Error:%s Potential abrupt disconnect on client.\n", RED, NORMAL);
+                  printf("%s --- Error:%s Abrupt disconnect on client.\n", RED, NORMAL);
+                  exit_client(&in_pkt, client);
+                  return NULL;
                }
                else {
                   printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
@@ -556,7 +558,7 @@ void exit_client(packet *pkt, int fd) {
    ret.options = DEFAULT_ROOM;
    strcpy(ret.realname, SERVER_NAME);
    strcpy(ret.username, SERVER_NAME);
-   sprintf(ret.buf, "%s has disconnected.", pkt->realname);
+   sprintf(ret.buf, "User %s has disconnected.", pkt->realname);
    ret.timestamp = time(NULL);
    send_message(&ret, -1);
 
