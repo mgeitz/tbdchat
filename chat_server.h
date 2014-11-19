@@ -28,7 +28,6 @@
 #define USERS_FILE "Users.bin"
 // Client options
 #define INVALID -1
-#define CONNECT 0
 #define REGISTER 1
 #define SETPASS 2
 #define SETNAME 3
@@ -43,14 +42,14 @@
 #define GETMOTD 12
 #define GETROOMS 13
 // Server responses
-#define LOGSUC 103
-#define REGSUC 104
-#define PASSSUC 105
-#define NAMESUC 107
-#define JOINSUC 109
-#define MOTD 110
-#define INVITESUC 112
-#define SERV_ERR 114
+#define LOGSUC 100
+#define REGSUC 101
+#define PASSSUC 102
+#define NAMESUC 103
+#define JOINSUC 104
+#define MOTD 105
+#define INVITESUC 106
+#define SERV_ERR 107
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"

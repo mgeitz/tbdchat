@@ -1,12 +1,12 @@
-/* Program:             Simple Chat Client
-   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
-   Date:                10/23/2014
-   File Name:           chat_client.c
-   Compile:             gcc -o chat_client chat_client.c -l pthread
-   Run:                 ./chat_client IP_ADDRESS PORT
-
-   The client program for a simple two way chat utility
-
+/* 
+//   Program:             TBD Chat Client
+//   File Name:           chat_client.c
+//   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
+//   Date Started:        10/23/2014
+//   Compile:             gcc -Wall -l pthread client_commands.c chat_client.c -o chat_client
+//   Run:                 ./chat_client
+//
+//   The client for a simple chat utility
 */
 #include "chat_client.h"
 

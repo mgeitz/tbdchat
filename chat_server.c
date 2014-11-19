@@ -1,12 +1,12 @@
-/* Program:             Simple Chat Server
-   Authors:             Matthew Owens, Michale Geitz, Shayne Wierbowski
-   Date:                10/23/2014
-   File Name:           chat_server.c
-   Compile:             gcc -o chat_server chat_server.c -l pthread
-   Run:                 ./chat_server IP_ADDRESS PORT
-
-   The server program for a simple two way chat utility
-
+/* 
+//   Program:             TBD Chat Server
+//   File Name:           chat_server.c
+//   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
+//   Date Started:        10/23/2014
+//   Compile:             gcc -Wall -l pthread linked_list.c server_clients.c chat_server.c -o chat_server
+//   Run:                 ./chat_server IP_ADDRESS PORT
+//
+//   The server for a simple chat utility
 */
 #include "chat_server.h"
 
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n", RED, NORMAL, argv[0]);
       exit(0);
    }
-   
+  
    signal(SIGINT, sigintHandler);
    
    room_list = NULL;

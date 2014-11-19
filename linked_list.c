@@ -1,3 +1,9 @@
+/* 
+//   Program:             TBD Chat Server
+//   File Name:           linked_list.c
+//   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
+*/
+
 #include "linked_list.h"
 
 extern int numRooms;

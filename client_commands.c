@@ -1,3 +1,9 @@
+/* 
+//   Program:             TBD Chat Client
+//   File Name:           client_commands.c
+//   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
+*/
+
 #include "chat_client.h"
 
 /* Declared.  Defined and allocated in chat_client.c */

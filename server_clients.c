@@ -1,3 +1,8 @@
+/* 
+//   Program:             TBD Chat Server
+//   File Name:           server_clients.c
+//   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
+*/
 #include "chat_server.h"
 
 
