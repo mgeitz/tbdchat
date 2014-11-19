@@ -63,8 +63,7 @@
 #define WHITE "\x1B[37;1m"
 
 /* Structures */
-struct Packet
-{
+struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
    char username[64];
@@ -73,8 +72,7 @@ struct Packet
 };
 typedef struct Packet packet;
 
-struct chatSession
-{
+struct chatSession {
    char aliases[2][32];
    int clients[2];
    int this_client;
@@ -84,20 +82,20 @@ struct chatSession
 typedef struct chatSession session;
 
 /* Function Prototypes */
+// chat_server.c
 int get_server_socket(char *hostname, char *port);
 int start_server(int serv_socket, int backlog);
-int accept_client(int serv_sock);
-void *subserver(void *ptr);
-void end(session *ptr);
-void sanitizeBuffer(char *buf);
-void start_subserver(int A_fd, int B_fd, char* clientA_usrID, char* clientB_usrID);
+void debugPacket(packet *rx_pkt);
 void sigintHandler(int sig_num);
-void establish_identity(int fd, char *ID, char *name, User **user_list);
+int accept_client(int serv_sock);
+// server_clients.c
+void sanitizeBuffer(char *buf);
 void *client_receive(void *ptr);
 int register_user(packet *in_pkt, int fd);
 int login(packet *pkt, int fd);
 void exit_client(packet *pkt, int fd);
 void send_message(packet *pkt, int clientfd);
+void sendError(char *error, int clientfd);
 void sendMOTD(int fd);
 void get_active_users(int fd);
 void get_room_users(packet *in_pkt, int fd);
@@ -108,6 +106,5 @@ void set_name(packet *pkt, int fd);
 void join(packet *pkt, int fd);
 void invite(packet *in_pkt, int fd);
 void leave(packet *pkt, int fd);
-void debugPacket(packet *rx_pkt);
 
 #endif

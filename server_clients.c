@@ -45,13 +45,7 @@ void *client_receive(void *ptr) {
                return NULL;
             }
             else {
-               packet ret;
-               ret.timestamp = time(NULL);
-               ret.options = SERV_ERR;
-               strcpy(ret.username, SERVER_NAME);
-               strcpy(ret.realname, SERVER_NAME);
-               strcpy(ret.buf, "Not logged in.");
-               send(client, &ret, sizeof(packet), MSG_NOSIGNAL);
+               sendError("Not logged in.", client);
             }
          }
 
@@ -59,13 +53,7 @@ void *client_receive(void *ptr) {
          else if (logged_in) {
             if (in_pkt.options < 1000) {
                if(in_pkt.options == REGISTER) { 
-                  packet ret;
-                  ret.timestamp = time(NULL);
-                  ret.options = SERV_ERR;
-                  strcpy(ret.username, SERVER_NAME);
-                  strcpy(ret.realname, SERVER_NAME);
-                  strcpy(ret.buf, "You may not register while logged in.");
-                  send(client, &ret, sizeof(packet), MSG_NOSIGNAL);
+                  sendError("You may not register while logged in.", client);
                }
                if(in_pkt.options == SETPASS) {
                   set_pass(&in_pkt, client);
@@ -74,13 +62,7 @@ void *client_receive(void *ptr) {
                   set_name(&in_pkt, client);
                }
                else if(in_pkt.options == LOGIN) {
-                  packet ret;
-                  ret.timestamp = time(NULL);
-                  ret.options = SERV_ERR;
-                  strcpy(ret.username, SERVER_NAME);
-                  strcpy(ret.realname, SERVER_NAME);
-                  strcpy(ret.buf, "Already logged in.");
-                  send(client, &ret, sizeof(packet), MSG_NOSIGNAL);
+                  sendError("Already logged in.", client);
                }
                else if(in_pkt.options == EXIT) {
                   exit_client(&in_pkt, client);
@@ -135,6 +117,18 @@ void *client_receive(void *ptr) {
 }
 
 
+/* Send an error message to a client */
+void sendError(char *error, int clientfd) {
+   packet ret;
+   ret.timestamp = time(NULL);
+   ret.options = SERV_ERR;
+   strcpy(ret.username, SERVER_NAME);
+   strcpy(ret.realname, SERVER_NAME);
+   strcpy(ret.buf, error);
+   send(clientfd, &ret, sizeof(packet), MSG_NOSIGNAL);
+}
+
+
 /* Replace any char in buffer not listed in safe_chars */
 void sanitizeBuffer(char *buf) {
    char safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
@@ -168,13 +162,7 @@ int register_user(packet *in_pkt, int fd) {
                               !(strcmp(SERVER_NAME, args[1])) || \
                               strcmp(args[2], args[3]) != 0) {
          pthread_mutex_unlock(&registered_users_mutex);
-         packet ret;
-         ret.timestamp = time(NULL);
-         ret.options = SERV_ERR;
-         strcpy(ret.username, SERVER_NAME);
-         strcpy(ret.realname, SERVER_NAME);
-         strcpy(ret.buf, "Username unavailable.");
-         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+         sendError("Username unavailable.", fd);
          return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
@@ -222,13 +210,7 @@ int login(packet *pkt, int fd) {
       // Check if user exists 
       pthread_mutex_lock(&registered_users_mutex);
       if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") == 0) {
-         pthread_mutex_unlock(&registered_users_mutex);
-         ret.timestamp = time(NULL);
-         ret.options = SERV_ERR;
-         strcpy(ret.username, SERVER_NAME);
-         strcpy(ret.realname, SERVER_NAME);
-         strcpy(ret.buf, "Username not found.");
-         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+         sendError("Username not found.", fd);
          return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
@@ -238,24 +220,21 @@ int login(packet *pkt, int fd) {
       char *password = get_password(&registered_users_list, args[1]);
       pthread_mutex_unlock(&registered_users_mutex);
       if (strcmp(args[2], password) != 0) {
-         ret.timestamp = time(NULL);
-         ret.options = SERV_ERR;
-         strcpy(ret.username, SERVER_NAME);
-         strcpy(ret.realname, SERVER_NAME);
-         strcpy(ret.buf, "Incorrect password.");
-         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+         sendError("Incorrect password.", fd);
          return 0;
       }
 
-      //Login successful, send username to client and add to active_users
+      // Login input is valid, read user data from registered users
       pthread_mutex_lock(&registered_users_mutex);
       User *user = get_user(&registered_users_list, args[1]);
       pthread_mutex_unlock(&registered_users_mutex);
       user->sock = fd;
       user = clone_user(user);
 
+      // Check if the user is already logged in
       pthread_mutex_lock(&active_users_mutex);
       if(insertUser(&active_users_list, user) == 1) {
+        // Login success
          pthread_mutex_unlock(&active_users_mutex);
          pthread_mutex_lock(&rooms_mutex);
          Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
@@ -269,19 +248,8 @@ int login(packet *pkt, int fd) {
          strcpy(ret.username, args[1]);
          ret.options = LOGSUC;
          printf("%s logged in\n", ret.username);
-      }
-      else {
-         pthread_mutex_unlock(&active_users_mutex);
-         ret.options = SERV_ERR;
-         strcpy(ret.realname, SERVER_NAME);
-         strcpy(ret.username, SERVER_NAME);
-         sprintf(ret.buf, "%s already logged in.", args[1]);
-         printf("%s log in failed: already logged in", args[1]);
-      }
-
-      ret.timestamp = time(NULL);
-      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
-      if (ret.options == LOGSUC) {
+         ret.timestamp = time(NULL);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
          memset(&ret, 0, sizeof(packet));
          ret.options = DEFAULT_ROOM;
          strcpy(ret.realname, SERVER_NAME);
@@ -290,8 +258,14 @@ int login(packet *pkt, int fd) {
          ret.timestamp = time(NULL);
          send_message(&ret, -1);
          sendMOTD(fd);
+         return 1;
       }
-      return 1;
+      else {
+         pthread_mutex_unlock(&active_users_mutex);
+         sendError("User already logged in.", fd);
+         printf("%s log in failed: already logged in", args[1]);
+         return 0;
+      }
    }
    else {
       printf("%s --- %sError:%s Malformed login packet received from %s on %d, ignoring.\n", \
@@ -409,6 +383,7 @@ void join(packet *pkt, int fd) {
    }
    else {
       printf("Problem in join.\n");
+      sendError("We were unable to put you in that room, sorry.", fd);
    }
    pthread_mutex_unlock(&rooms_mutex);
 }
@@ -475,7 +450,7 @@ void set_name(packet *pkt, int fd) {
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));
       strncpy(user->real_name, name, sizeof(name));
-      writeUserFile(&registered_users_list, "Users.bin");
+      writeUserFile(&registered_users_list, USERS_FILE);
       ret.options = NAMESUC;
    }
    else {
@@ -499,8 +474,6 @@ void set_name(packet *pkt, int fd) {
    }
    pthread_mutex_unlock(&active_users_mutex);
 
-   //printList(&registered_users_list);
-   //printList(&active_users_list);
    ret.timestamp = time(NULL);
    send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
@@ -529,7 +502,7 @@ void set_pass(packet *pkt, int fd) {
             memset(user->password, 0, 32);
             strcpy(user->password, args[2]);
             pthread_mutex_lock(&registered_users_mutex);
-            writeUserFile(&registered_users_list, "Users.bin");
+            writeUserFile(&registered_users_list, USERS_FILE);
             pthread_mutex_unlock(&registered_users_mutex);
             pkt->options = PASSSUC;
          }
@@ -555,43 +528,6 @@ void set_pass(packet *pkt, int fd) {
  *Exit
  */
 void exit_client(packet *pkt, int fd) {
-   packet ret;
-
-   //User *user = get_user_from_fd(fd)
-   //pthread_mutex_lock(&active_users_mutex);
-   //if(insertUser(&active_users_list, user) == 1) {
-   //   pthread_mutex_unlock(&active_users_mutex);
-   //   removeUser(active_users_list, user);
-   //
-   //   // Obtain current (or all) rooms with user, somehow
-   //   // remove them  
-   //
-   //}
-
-   // Send disconnect message to lobby
-   ret.options = DEFAULT_ROOM;
-   strcpy(ret.realname, SERVER_NAME);
-   strcpy(ret.username, SERVER_NAME);
-   sprintf(ret.buf, "User %s has disconnected.", pkt->realname);
-   ret.timestamp = time(NULL);
-   send_message(&ret, -1);
-
-   memset(&ret, 0, sizeof(packet));
-   strcpy(ret.realname, SERVER_NAME);
-   strcpy(ret.username, SERVER_NAME);
-   ret.options = EXIT;
-   strcat(ret.buf, "Goodbye!");
-   ret.timestamp = time(NULL);
-   printf("Sending close message to %d\n", fd);
-   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
-   close(fd);
-}
-
-
-/*
- * Exit a logged in user
- */
-void exit_user(packet *pkt, int fd) {
    packet ret;
 
    //User *user = get_user_from_fd(fd)
