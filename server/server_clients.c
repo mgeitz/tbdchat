@@ -5,8 +5,6 @@
 */
 #include "chat_server.h"
 
-
-extern int chat_serv_sock_fd; //server socket
 extern int numRooms;
 extern pthread_mutex_t registered_users_mutex;
 extern pthread_mutex_t active_users_mutex;
@@ -28,13 +26,12 @@ void *client_receive(void *ptr) {
    int received;
    int logged_in = 0;
    packet in_pkt, *client_message_ptr = &in_pkt;
+
    while (1) {
       received = recv(client, &in_pkt, sizeof(packet), 0);
       if (received) {
          // Sanitize client buffer
-         if (strlen(in_pkt.buf) > 0) {
-            sanitizeBuffer((void *)&in_pkt.buf);
-         }
+         sanitizeBuffer((void *)&in_pkt.buf);
          debugPacket(client_message_ptr);
 
          // Responses to not logged in clients
@@ -56,11 +53,12 @@ void *client_receive(void *ptr) {
 
          // Responses to logged in clients
          else if (logged_in) {
+            // Handle option messages for logged in client
             if (in_pkt.options < 1000) {
                if(in_pkt.options == REGISTER) { 
                   sendError("You may not register while logged in.", client);
                }
-               if(in_pkt.options == SETPASS) {
+               else if(in_pkt.options == SETPASS) {
                   set_pass(&in_pkt, client);
                }
                else if(in_pkt.options == SETNAME) {
@@ -98,23 +96,20 @@ void *client_receive(void *ptr) {
                   sendMOTD(client);
                }
                else if(in_pkt.options == 0) {
-                  printf("%s --- Error:%s Abrupt disconnect on client.\n", RED, NORMAL);
+                  printf("%s --- Error:%s Abrupt disconnect on logged in client.\n", RED, NORMAL);
                   exit_client(&in_pkt, client);
                   return NULL;
                }
                else {
                   printf("%s --- Error:%s Unknown message received from client.\n", RED, NORMAL);
-               }
+	       }
             }
-
-            // Handle conversation message
+            // Handle conversation message for logged in client
             else {
                send_message(&in_pkt, client);
             }
          }
-         else {
-            printf("%s --- Error:%s client trying to cause problems.\n", RED, NORMAL);
-         }
+
          memset(&in_pkt, 0, sizeof(packet));
       }
    }
@@ -212,7 +207,7 @@ int login(packet *pkt, int fd) {
    if (i > 2) {
       packet ret;
 
-      // Check if user exists 
+      // Check if user exists as registered user
       pthread_mutex_lock(&registered_users_mutex);
       if (strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") == 0) {
          sendError("Username not found.", fd);
@@ -220,7 +215,7 @@ int login(packet *pkt, int fd) {
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
 
-      // Check for password patch
+      // Check for password patch against registered user data
       pthread_mutex_lock(&registered_users_mutex);
       char *password = get_password(&registered_users_list, args[1]);
       pthread_mutex_unlock(&registered_users_mutex);
@@ -241,15 +236,18 @@ int login(packet *pkt, int fd) {
       if(insertUser(&active_users_list, user) == 1) {
         // Login success
          pthread_mutex_unlock(&active_users_mutex);
+
          pthread_mutex_lock(&rooms_mutex);
          Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM);
          user = clone_user(user);
          insertUser(&(defaultRoom->user_list), user);
          RprintList(&room_list);
          pthread_mutex_unlock(&rooms_mutex);
+
          pthread_mutex_lock(&registered_users_mutex);
          strcpy(ret.realname, get_real_name(&registered_users_list, args[1]));
          pthread_mutex_unlock(&registered_users_mutex);
+
          strcpy(ret.username, args[1]);
          ret.options = LOGSUC;
          printf("%s logged in\n", ret.username);
@@ -262,6 +260,7 @@ int login(packet *pkt, int fd) {
          sprintf(ret.buf, "%s has joined the lobby.", user->real_name);
          ret.timestamp = time(NULL);
          send_message(&ret, -1);
+
          sendMOTD(fd);
          return 1;
       }
