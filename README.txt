@@ -138,5 +138,3 @@ TO-DO LIST:
       - Probably move the primary execution loop in main of client to its own method again.
 
       - Notify all in room when someone else in the room leaves (currently sends message to default channel when a user disconnects)
-     
-      - Sanatize client buffer input on the server 
