@@ -79,23 +79,11 @@ int userCommand(packet *tx_pkt) {
    }
    // Handle register command
    else if (strncmp((void *)tx_pkt->buf, "/register", strlen("/register")) == 0) {
-      if (!serverRegistration(tx_pkt)) {
-         printf("%s --- %sError:%s Server registration failed.\n", WHITE, RED, NORMAL);
-         return 0;
-      }
-      else {
-         return 1;
-      }
+      return (serverRegistration(tx_pkt));
    }
    // Handle login command
    else if (strncmp((void *)tx_pkt->buf, "/login", strlen("/login")) == 0) {
-      if (!serverLogin(tx_pkt)) {
-         printf("%s --- %sError:%s Server login failed.\n", WHITE, RED, NORMAL);
-         return 0;
-      }
-      else {
-         return 1;
-      }
+      return (serverLogin(tx_pkt));
    }
    // Handle setname command
    else if (strncmp((void *)tx_pkt->buf, "/setname", strlen("/setname")) == 0) {

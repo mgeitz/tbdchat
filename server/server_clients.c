@@ -30,8 +30,6 @@ void *client_receive(void *ptr) {
    while (1) {
       received = recv(client, &in_pkt, sizeof(packet), 0);
       if (received) {
-         // Sanitize client buffer
-         sanitizeBuffer((void *)&in_pkt.buf);
          debugPacket(client_message_ptr);
 
          // Responses to not logged in clients
@@ -55,6 +53,8 @@ void *client_receive(void *ptr) {
          else if (logged_in) {
             // Handle option messages for logged in client
             if (in_pkt.options < 1000) {
+               // Will be treated as a message packet, safe to santize entire buffer
+               sanitizeInput((void *)&in_pkt.buf);
                if(in_pkt.options == REGISTER) { 
                   sendError("You may not register while logged in.", client);
                }
@@ -129,16 +129,20 @@ void sendError(char *error, int clientfd) {
 }
 
 
-/* Replace any char in buffer not listed in safe_chars */
-void sanitizeBuffer(char *buf) {
+/* Replace any char in buffer not in safe_chars, return number of unsafe chars changed */
+int sanitizeInput(char *buf) {
+   int i = 0;
    char safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        " _,.-/@()*~`&^%$#!?<>'\";:+=[]{}|"
                        "1234567890";
    char *end = buf + strlen(buf);
    for (buf += strspn(buf, safe_chars); buf != end; buf += strspn(buf, safe_chars)) {
+      printf("Found bad char! Increment return value.\n");
       *buf = '_';
+      i++;
    }
+   return i;
 }
 
 
@@ -157,6 +161,10 @@ int register_user(packet *in_pkt, int fd) {
        args[++i] = strsep(&tmp, " \t");
    }
    if (i > 3) {
+      if (sanitizeInput(args[1])) {
+         sendError("Invalid characters in username.", fd);
+         return 0;
+      }
       pthread_mutex_lock(&registered_users_mutex);
       if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0 || \
                               !(strcmp(SERVER_NAME, args[1])) || \
@@ -166,6 +174,22 @@ int register_user(packet *in_pkt, int fd) {
          return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
+      if (strcmp(args[2], args[3])) {
+         sendError("Password requested does not match.", fd);
+         return 0;
+      }
+      if (sanitizeInput(args[2])) {
+         sendError("Invalid characters in password.", fd);
+         return 0;
+      }
+      if (strlen(args[1]) < 3) {
+         sendError("Username is too short.", fd);
+         return 0;
+      }
+      if (strlen(args[2]) < 3) {
+         sendError("Password is too short.", fd);
+         return 0;
+      }
 
       User *user = (User *)malloc(sizeof(User));
       strcpy(user->username, args[1]);
@@ -443,13 +467,21 @@ void leave(packet *pkt, int fd) {
 void set_name(packet *pkt, int fd) {
    char name[64];
    packet ret;
-
+   printf("--- Before checking realname input\n");
+   // Check requested username for invalid chars
+   if (sanitizeInput(name)) {
+      printf("--- Bad chars were found.\n");
+      sendError("Invalid characters in username.", fd);
+      return;
+   }
+   printf("--- No bad chars were found\n");
    strncpy(name, pkt->buf, sizeof(name));
    strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
    pthread_mutex_lock(&registered_users_mutex);
    //Submit name change to user list, write list
    User *user = get_user(&registered_users_list, pkt->username);
+
 
    if(user != NULL) {
       memset(user->real_name, 0, sizeof(user->real_name));
@@ -498,6 +530,19 @@ void set_pass(packet *pkt, int fd) {
        args[++i] = strsep(&tmp, " \t");
    }
    if (i > 3) {
+      // Ensure redundant password input matches
+      if (strcmp(args[2], args[3])) {
+         sendError("Password requested does not match.", fd);
+         return;
+      }
+      // Check requested password for invalid chars
+      printf("--- Before checking password input\n");
+      if (sanitizeInput(args[2])) {
+         printf("--- Bad chars were found.\n");
+         sendError("Invalid characters in password.", fd);
+         return;
+      }
+      printf("--- No bad chars were found\n");
       pthread_mutex_lock(&registered_users_mutex);
       User *user = get_user(&registered_users_list, pkt->username);
       pthread_mutex_unlock(&registered_users_mutex);

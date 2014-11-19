@@ -88,7 +88,7 @@ void debugPacket(packet *rx_pkt);
 void sigintHandler(int sig_num);
 int accept_client(int serv_sock);
 // server_clients.c
-void sanitizeBuffer(char *buf);
+int sanitizeInput(char *buf);
 void *client_receive(void *ptr);
 int register_user(packet *in_pkt, int fd);
 int login(packet *pkt, int fd);
