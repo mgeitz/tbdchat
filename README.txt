@@ -1,8 +1,12 @@
 
 TO-DO LIST:
 
-      - Curses
+   Smaller adjustments:
+
+      - Remove a user from active_users_list and their room list when they send a /exit
       
+      - Send notification to all users in a room when another user leaves it
+
       - Private / Public room settings, room admins, other room variables
  
       - Hash stored passwords, hash input on compare
@@ -11,16 +15,41 @@ TO-DO LIST:
 
       - /disconnect command (same as /exit but allows the client to /connect again)
 
-      - Remove a user from active_users_list and their room list when they send a /exit
+      - Send a notification to all users in a room when another user disconnects entirely
 
-      - Logging on client and server
 
-      - Send notification to room when user leaves it
+   Requires considerable time:
+
+      - Curses
+
+      - Server logging; connections, logins, regisrations, disconnects, messages, etc
+
+      - Client message archiving; by room name, readable format and easy to parse to read back on client 
+
+      - Full encryption using something like openssl or libsodium
+
+      - Implement per-room user list mutexes
+
+      - Allow clients to be in n rooms at a time
+
+
+
+KNOWN BUGS:
+
+   Server:
+
+      -
+            
+   Client:
+
+      -
+
 
 
 CLIENT FEATURES:
 
    Commands:
+
       - /help
          Description: Display a list of all available commands.
          Usage: /help
@@ -90,35 +119,34 @@ CLIENT FEATURES:
          Usage: /list
 
    Features:
+
       - Supports orderless interaction
+
       - Configuration file
+
       - auto-reconnect
+
      
  
 SERVER FEATURES:
 
    Features:
+
       - Register
          o Allows a single registration for any given unique username 
          o Stores a password associated with each username
          o Saves username/realname/password to a file so registration persists after server is shutdown
+
       - Reacts to accordingly to all client commands
+
       - Chat with n clients at a time
+
       - Rooms containing unique chat sessions simultaneously
          o Create or join rooms
          o invite others to join your room 
+
+      - Sanitizes all processed input from connections
  
-
-KNOWN BUGS / ERRORS:
-
-   Server:
-      - Problems with accessing / modifying user lists
-         o Users not being removed from any lists after /exit is received from them, sending messages to disconnected sockfds
-            
-   Client:
-      - Only supports being in one room.
-      - User input is not sanatized at all; formatting strings and other terribe things can be transmitted in the buffer, could be resolved on the server.
-
 
 POTENTIAL RACE CONDITIONS:
 
