@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
    int bufSize, send_flag;
    packet tx_pkt;
    struct tm *timestamp;
-   char *config_file_name = "/tbd_chat.ini";
+   char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
    packet *tx_pkt_ptr = &tx_pkt;
    
@@ -192,12 +192,14 @@ void *chatRX(void *ptr) {
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
-               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, WHITE, YELLOW, rx_pkt.realname,
+               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
+                      timestamp->tm_sec, WHITE, YELLOW, rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
             }
             else {
                int i = hash(rx_pkt.username);
-               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, WHITE, USERCOLORS[i], rx_pkt.realname,
+               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
+                      timestamp->tm_sec, WHITE, USERCOLORS[i], rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
             }
          }
@@ -238,7 +240,9 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
    }
-   else if (rx_pkt->options == GETUSERS || rx_pkt->options == GETALLUSERS || rx_pkt->options == GETUSER) {
+   else if (rx_pkt->options == GETUSERS || \
+            rx_pkt->options == GETALLUSERS || \
+            rx_pkt->options == GETUSER) {
       printf("%s --- %sUser:%s %s\n", WHITE, WHITE, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == PASSSUC) {
@@ -264,9 +268,9 @@ void serverResponse(packet *rx_pkt) {
       printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == MOTD) {
-      printf("%s ----------------------------------------[ MOTD ]------------------------------------------ %s\n", BLACK, NORMAL);
+      printf("%s ------------------------------------------------------------------- %s\n", BLACK, NORMAL);
       printf("%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);
-      printf("%s ------------------------------------------------------------------------------------------ %s\n", BLACK, NORMAL);
+      printf("%s ------------------------------------------------------------------- %s\n", BLACK, NORMAL);
    }
    else if(rx_pkt->options == EXIT) {
       printf("%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
@@ -296,7 +300,8 @@ void newRoom(char *buf) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         printf("%s --- %sSuccess:%s Joined room %s%s%s.\n", WHITE, GREEN, NORMAL, WHITE, args[0], NORMAL);
+         printf("%s --- %sSuccess:%s Joined room %s%s%s.\n", \
+                WHITE, GREEN, NORMAL, WHITE, args[0], NORMAL);
       }
       pthread_mutex_unlock(&roomMutex);
    }

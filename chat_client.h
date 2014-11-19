@@ -24,6 +24,7 @@
 #define BUFFERSIZE 128
 #define DEFAULT_ROOM 1000
 #define SERVER_NAME "SERVER"
+#define CONFIG_FILENAME "/tbd_chat.ini"
 // Client options
 #define INVALID -1
 #define CONNECT 0

@@ -29,17 +29,16 @@ int main(int argc, char **argv) {
       exit(0);
    }
    
-   // Handle CTRL+C
    signal(SIGINT, sigintHandler);
    
    room_list = NULL;
    registered_users_list = NULL;
    active_users_list = NULL;
-   
-   createRoom(&room_list, numRooms, "Lobby");
+
+   createRoom(&room_list, numRooms, DEFAULT_ROOM_NAME);
    RprintList(&room_list);
-   
-   readUserFile(&registered_users_list, "Users.bin");
+
+   readUserFile(&registered_users_list, USERS_FILE);
    printList(&registered_users_list);  
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);

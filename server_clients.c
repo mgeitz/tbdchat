@@ -123,7 +123,7 @@ void *client_receive(void *ptr) {
 void sanitizeBuffer(char *buf) {
    char safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                       " _,.-/@()*&^%$#!?<>'\";:+=[]{}|"
+                       " _,.-/@()*~`&^%$#!?<>'\";:+=[]{}|"
                        "1234567890";
    char *end = buf + strlen(buf);
    for (buf += strspn(buf, safe_chars); buf != end; buf += strspn(buf, safe_chars)) {
@@ -594,7 +594,7 @@ void send_message(packet *pkt, int clientfd) {
 /* Send the server MOTD to the socket passed in */
 void sendMOTD(int fd) {
    packet ret;
-   strcpy(ret.realname, "SERVER");
+   strcpy(ret.realname, SERVER_NAME);
    ret.options = MOTD;
    strcpy(ret.buf, server_MOTD);
    ret.timestamp = time(NULL);
@@ -675,7 +675,7 @@ void get_room_users(packet *in_pkt, int fd) {
          User *temp = currRoom->user_list;
          packet ret;
          ret.options = GETUSERS;
-         strcpy(ret.username, "SERVER");
+         strcpy(ret.username, SERVER_NAME);
          while(temp != NULL ) {
             ret.timestamp = time(NULL);
             strcpy(ret.buf, temp->username);
@@ -701,7 +701,7 @@ void get_room_list(int fd) {
    Room *temp = room_list;
    packet pkt;
    pkt.options = GETROOMS;
-   strcpy(pkt.username, "SERVER");
+   strcpy(pkt.username, SERVER_NAME);
    while(temp != NULL ) {
       pkt.timestamp = time(NULL);
       strcpy(pkt.buf, temp->name);
@@ -710,5 +710,3 @@ void get_room_list(int fd) {
    }
    pthread_mutex_unlock(&active_users_mutex);
 }
-
-
