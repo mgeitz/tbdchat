@@ -38,11 +38,11 @@ KNOWN BUGS:
 
    Server:
 
-      -
+      - Rooms with a space as the name can be created, we should enforce room names of a certain length? May also need to enforce a min length on usernames and realnames, as well as a more reasonable max length on realname.
             
    Client:
 
-      -
+      - 
 
 
 
