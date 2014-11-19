@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
             }
             pthread_mutex_unlock(&roomMutex);
             if (tx_pkt.options > 0) {
-               send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
+               send(serverfd, (void *)&tx_pkt, sizeof(packet), MSG_NOSIGNAL);
             }
          }
          else if (send_flag && !serverfd)  {

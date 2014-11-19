@@ -230,7 +230,7 @@ void *client_receive(void *ptr) {
                strcpy(ret.username, SERVER_NAME);
                strcpy(ret.realname, SERVER_NAME);
                strcpy(ret.buf, "Not logged in.");
-               send(client, &ret, sizeof(packet), 0);
+               send(client, &ret, sizeof(packet), MSG_NOSIGNAL);
             }
          }
          // Responses to logged in clients
@@ -337,7 +337,7 @@ int register_user(packet *in_pkt, int fd) {
          strcpy(ret.username, SERVER_NAME);
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.buf, "Username unavailable.");
-         send(fd, &ret, sizeof(packet), 0);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
          return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
@@ -391,7 +391,7 @@ int login(packet *pkt, int fd) {
          strcpy(ret.username, SERVER_NAME);
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.buf, "Username not found.");
-         send(fd, &ret, sizeof(packet), 0);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
          return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
@@ -406,7 +406,7 @@ int login(packet *pkt, int fd) {
          strcpy(ret.username, SERVER_NAME);
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.buf, "Incorrect password.");
-         send(fd, &ret, sizeof(packet), 0);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
          return 0;
       }
 
@@ -443,7 +443,7 @@ int login(packet *pkt, int fd) {
       }
 
       ret.timestamp = time(NULL);
-      send(fd, &ret, sizeof(packet), 0);
+      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
       if (ret.options == LOGSUC) {
          memset(&ret, 0, sizeof(packet));
          ret.options = DEFAULT_ROOM;
@@ -488,11 +488,11 @@ void invite(packet *in_pkt, int fd) {
             memset(&ret.buf, 0, sizeof(ret.buf));
             sprintf(ret.buf, "%s has invited you to join %s", \
                     in_pkt->realname, Rget_name(&room_list, roomNum));
-            send(inviteUser->sock, &ret, sizeof(packet), 0);
+            send(inviteUser->sock, &ret, sizeof(packet), MSG_NOSIGNAL);
             memset(&ret, 0, sizeof(packet));
             ret.options = INVITESUC;
             strcpy(ret.username, SERVER_NAME);
-            send(fd, &ret, sizeof(packet), 0);
+            send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
             return;
          }
       }
@@ -507,7 +507,7 @@ void invite(packet *in_pkt, int fd) {
    strcpy(ret.username, SERVER_NAME);
    strcpy(ret.realname, SERVER_NAME);
    sprintf(ret.buf, "An invitation could not be sent to %s.", args[0]);
-   send(fd, &ret, sizeof(packet), 0);
+   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
 
 
@@ -518,7 +518,7 @@ void sendMOTD(int fd) {
    ret.options = MOTD;
    strcpy(ret.buf, server_MOTD);
    ret.timestamp = time(NULL);
-   send(fd, &ret, sizeof(ret), 0);
+   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
 
 
@@ -554,7 +554,7 @@ void exit_client(packet *pkt, int fd) {
    strcat(ret.buf, "Goodbye!");
    ret.timestamp = time(NULL);
    printf("Sending close message to %d\n", fd);
-   send(fd, &ret, sizeof(packet), 0);
+   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
    close(fd);
 }
 
@@ -570,7 +570,7 @@ void send_message(packet *pkt, int clientfd) {
    
    while(tmp != NULL) {
       if (clientfd != tmp->sock) {
-         send(tmp->sock, (void *)pkt, sizeof(packet), 0);
+         send(tmp->sock, (void *)pkt, sizeof(packet), MSG_NOSIGNAL);
       }
       tmp = tmp->next;
    }
@@ -590,7 +590,7 @@ void get_active_users(int fd) {
    while(temp != NULL ) {
       ret.timestamp = time(NULL);
       strcpy(ret.buf, temp->username);
-      send(fd, &ret, sizeof(packet), 0);
+      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
       memset(&ret.buf, 0, sizeof(ret.buf));
       temp = temp->next;
    }
@@ -623,7 +623,7 @@ void user_lookup(packet *in_pkt, int fd) {
          strcpy(ret.buf, realname);
       }
       ret.timestamp = time(NULL);
-      send(fd, &ret, sizeof(packet), 0);
+      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
    }
    else {
       printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
@@ -655,7 +655,7 @@ void get_room_users(packet *in_pkt, int fd) {
          while(temp != NULL ) {
             ret.timestamp = time(NULL);
             strcpy(ret.buf, temp->username);
-            send(fd, &ret, sizeof(packet), 0);
+            send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
             memset(&ret.buf, 0, sizeof(ret.buf));
             temp = temp->next;
          }
@@ -681,7 +681,7 @@ void get_room_list(int fd) {
    while(temp != NULL ) {
       pkt.timestamp = time(NULL);
       strcpy(pkt.buf, temp->name);
-      send(fd, &pkt, sizeof(pkt), 0);
+      send(fd, &pkt, sizeof(pkt), MSG_NOSIGNAL);
       temp = temp->next;
    }
    pthread_mutex_unlock(&active_users_mutex);
@@ -729,7 +729,7 @@ void set_pass(packet *pkt, int fd) {
       pkt->options = SERV_ERR;
       strcpy(pkt->buf, "Password change failed, malformed request.");
    }
-   send(fd, (void *)pkt, sizeof(packet), 0);
+   send(fd, (void *)pkt, sizeof(packet), MSG_NOSIGNAL);
 }
 
 
@@ -777,7 +777,7 @@ void set_name(packet *pkt, int fd) {
    //printList(&registered_users_list);
    //printList(&active_users_list);
    ret.timestamp = time(NULL);
-   send(fd, &ret, sizeof(packet), 0);
+   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
 
 
@@ -829,7 +829,7 @@ void join(packet *pkt, int fd) {
          ret.options = JOINSUC;
          strcpy(ret.realname, SERVER_NAME);
          sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
-         send(fd, (void *)&ret, sizeof(packet), 0);
+         send(fd, (void *)&ret, sizeof(packet), MSG_NOSIGNAL);
          memset(&ret, 0, sizeof(ret));
          
          ret.options = newRoom->ID;
@@ -874,7 +874,7 @@ void leave(packet *pkt, int fd) {
                ret.options = JOINSUC;
                strcpy(ret.realname, SERVER_NAME);
                sprintf(ret.buf, "%s %d", defaultRoom->name, defaultRoom->ID);
-               send(fd, (void *)&ret, sizeof(packet), 0);
+               send(fd, (void *)&ret, sizeof(packet), MSG_NOSIGNAL);
                memset(&ret, 0, sizeof(ret));
                
                ret.options = defaultRoom->ID;
