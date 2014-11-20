@@ -9,18 +9,21 @@
 extern int numRooms;
 
 /* Insert a new user node into the list over user nodes passed in */
-int insertUser(User **head, User *new_user){
+int insertUser(User **head, User *new_user, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    printf("Inserting %s\n", new_user->username);
    User *temp = *head;
    if (*head == NULL) {
       new_user->next = NULL;
       *head = new_user;
       printf("Insert Success\n");
+      pthread_mutex_unlock(&mutex);
       return 1;
    } 
    
    if (strcmp(temp->username, new_user->username) == 0) {
       printf("Insert Failure\n");
+      pthread_mutex_unlock(&mutex);
       return 0;
    }
    
@@ -28,23 +31,27 @@ int insertUser(User **head, User *new_user){
       temp = temp->next;
       if (strcmp(temp->username, new_user->username) == 0) {
          printf("Insert Failure\n");
+         pthread_mutex_unlock(&mutex);
          return 0;
       }
    }
    temp->next = new_user;
    new_user->next = NULL;
    printf("Insert Success\n");
+   pthread_mutex_unlock(&mutex);
    return 1;
 }
 
 
 /* Remove a user node from the list of user nodes passed in */
-int removeUser(User **head, User *user){
+int removeUser(User **head, User *user, pthread_mutex_t mutex) {
    printf("Removing user: %s\n", user->username);
-   printList(head);
+   pthread_mutex_lock(&mutex);
+   printList(head, NULL);
    User *current = *head;
    if (*head == NULL) {
       printf("Can't remove from empty list.\n");
+      pthread_mutex_unlock(&mutex);
       return 0;
    }
    
@@ -53,15 +60,17 @@ int removeUser(User **head, User *user){
       //current->next = user->next;
       //user->next = NULL;
       printf("Potentially removed a user from a list.\n");
-     printList(head);
-     return 1;
+      printList(head, NULL);
+      pthread_mutex_unlock(&mutex);
+      return 1;
    }
    while (current->next != NULL) {
       if (strcmp(current->next->username, user->username) == 0) {
          current->next = user->next;
          //user->next = NULL;
          printf("Potentially removed a user from a list.\n");
-         printList(head);
+         printList(head, NULL);
+         pthread_mutex_unlock(&mutex);
          return 1;
       }
       current = current->next;
@@ -69,57 +78,81 @@ int removeUser(User **head, User *user){
    //temp->next = new_user;
    //new_user->next = NULL;
    printf("User not found in list, nothing removed.\n");
+   pthread_mutex_unlock(&mutex);
    return 0;
 }
 
 
 /* Return the display name for given user name in the list */
-char *get_real_name(User **head, char *user) {
+char *get_real_name(User **head, char *user, pthread_mutex_t mutex) {
    char *error = "ERROR";
+   pthread_mutex_lock(&mutex);
    User *temp = *head;
    
-   if (*head == NULL) return error;
-   
+   if (*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return error;
+   }
+
    while (strcmp(user, temp->username) != 0) {
-      if (temp->next == NULL) return error;
+      if (temp->next == NULL) { 
+         pthread_mutex_unlock(&mutex);
+         return error;
+      }
       temp=temp->next;
    }
    
+   pthread_mutex_unlock(&mutex);
    return temp->real_name;
 }
 
 
 /* Return stored password for user */
-char *get_password(User **head, char *user) {
+char *get_password(User **head, char *user, pthread_mutex_t mutex) {
    char *error = "ERROR";
+   pthread_mutex_lock(&mutex);
    User *temp = *head;
    
-   if(*head == NULL) return error;
-   
+   if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return error;
+   }
    while(strcmp(user, temp->username) != 0) {
-      if(temp->next == NULL) return error;
+      if(temp->next == NULL) {
+         pthread_mutex_unlock(&mutex);
+         return error;
+      }
       temp=temp->next;
    }
-   
+   pthread_mutex_unlock(&mutex);
    return temp->password;
 }
 
 
-User *get_user(User **head, char *user) {
+User *get_user(User **head, char *user, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    User *temp = *head;
    
-   if(*head == NULL) return NULL;
-   
+   if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return NULL;
+   }
+
    while(strcmp(user, temp->username) != 0) {
-      if(temp->next == NULL) return NULL;
+      if(temp->next == NULL) {
+         pthread_mutex_unlock(&mutex);
+         return NULL;
+      }
       temp = temp->next;
    }
    
+   pthread_mutex_unlock(&mutex);
    return temp;
 }
 
-User *clone_user(User *user) {
+User *clone_user(User *user, pthread_mutex_t mutex) {
    printf("Cloning User\n");
+   pthread_mutex_lock(&mutex);
    printf("Old User: %s, %s, %s\n", user->username, user->real_name,
            user->password);
    User *new_user = (User *)malloc(sizeof(User));
@@ -130,12 +163,13 @@ User *clone_user(User *user) {
    new_user-> next = NULL;
    printf("New User: %s, %s, %s\n", new_user->username, new_user->real_name,
            new_user->password);
+   pthread_mutex_unlock(&mutex);
    return new_user;
 }
 
 
 /* Populate user list from Users.bin */
-void readUserFile(User **head, char *filename) {
+void readUserFile(User **head, char *filename, pthread_mutex_t mutex) {
    int fd = open(filename, O_RDONLY);
    int n;
    int i;
@@ -156,7 +190,7 @@ void readUserFile(User **head, char *filename) {
          read(fd, temp, sizeof(User));
          temp->next = NULL;
          //printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
-         insertUser(head, temp);
+         insertUser(head, temp, mutex);
       }
    }
    close(fd);
@@ -164,11 +198,13 @@ void readUserFile(User **head, char *filename) {
 
 
 /* Write user list to Users.bin */
-void writeUserFile(User **head, char *filename) {
+void writeUserFile(User **head, char *filename, pthread_mutex_t mutex) {
    int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
+   pthread_mutex_lock(&mutex);
    User *temp = *head;
    
    if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
       close(fd);
       return;
    }
@@ -180,15 +216,18 @@ void writeUserFile(User **head, char *filename) {
       //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
       write(fd, temp, sizeof(User));
    }
+   pthread_mutex_unlock(&mutex);
 }
 
 
 /* Print contents of list */
-void printList(User **head) {
+void printList(User **head, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    User *temp = *head;
    printf("Printing User List\n");
    if(*head == NULL) {
       printf("NULL\n");
+      pthread_mutex_unlock(&mutex);
       return;
    }
    
@@ -199,6 +238,7 @@ void printList(User **head) {
       printf("%s, %s, %s, %d\n", temp->username, temp->real_name, temp->password,
              temp->sock);
    }
+   pthread_mutex_unlock(&mutex);
    printf("End User List\n");
 }
 
@@ -207,119 +247,153 @@ void printList(User **head) {
 
 
 /* Insert new room node to room list */
-int insertRoom(Room **head, Room *new_room){
+int insertRoom(Room **head, Room *new_room, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    Room *temp = *head;
    if(*head == NULL) {
       new_room->next = NULL;
       *head = new_room;
+      pthread_mutex_unlock(&mutex);
       return 1;
    }
    
    if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID) {
+      pthread_mutex_unlock(&mutex);
       return 0;
    }
    
    while(temp->next != NULL) {
       temp = temp->next;
       if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID) {
+         pthread_mutex_unlock(&mutex);
          return 0;
       }
    }
    temp->next = new_room;
    new_room->next = NULL;
+   pthread_mutex_unlock(&mutex);
    return 1;
 }
 
 
-int createRoom(Room **head, int ID, char *name) {
+int createRoom(Room **head, int ID, char *name, pthread_mutex_t mutex) {
    printf("Creating room %d %s\n", ID, name);
    Room *newRoom = (Room *) malloc(sizeof(Room));
    newRoom->ID = ID;
+   newRoom->user_list_mutex = PTHREAD_MUTEX_INITIALIZER;
    strncpy(newRoom->name, name, sizeof(newRoom->name));
    newRoom->user_list = NULL;
    numRooms++;
-   return insertRoom(head, newRoom);
+   return insertRoom(head, newRoom, mutex);
 }
 
 /* Return ID of room node from its name*/
-int Rget_ID(Room **head, char *name) {
+int Rget_ID(Room **head, char *name, pthread_mutex_t mutex) {
    int error = -1;
+   pthread_mutex_lock(&mutex);
    Room *temp = *head;
    
-   if(*head == NULL) return error;
-   
+   if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return error;
+   }
    while(strcmp(name, temp->name) != 0) {
-      if(temp->next == NULL) return error;
+      if(temp->next == NULL) {
+         pthread_mutex_unlock(&mutex);
+         return error;
+      }
       temp=temp->next;
    }
-   
+   pthread_mutex_unlock(&mutex);
    return temp->ID;
 }
 
 
 /* Return name of room node from ID */
-char *Rget_name(Room **head, int ID) {
+char *Rget_name(Room **head, int ID, pthread_mutex_t mutex) {
    char *error = "ERROR";
+   pthread_mutex_lock(&mutex);
    Room *temp = *head;
    
-   if(*head == NULL) return error;
-   
+   if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return error;
+   }
    while(ID != temp->ID) {
-      if(temp->next == NULL) return error;
+      if(temp->next == NULL) {
+         pthread_mutex_unlock(&mutex);
+         return error;
+      }
       temp=temp->next;
    }
-   
+   pthread_mutex_unlock(&mutex);
    return temp->name;
 }
 
 
 /* Print contents of room list */
-void RprintList(Room **head) {
+void RprintList(Room **head, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    Room *temp = *head;
    printf("Printing Room List\n");
    if(*head == NULL) {
       printf("NULL\n");
+      pthread_mutex_unlock(&mutex);
       return;
    }
    
    printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
    printf("Contains Users...\n");
-   printList(&(temp->user_list));
+   //printList(&(temp->user_list));
    while(temp->next != NULL) {
       temp = temp->next;
       printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
       printf("Contains Users...\n");
-      printList(&(temp->user_list));
+      printList(&(temp->user_list), temp->user_list_mutex);
    }
    printf("End Room List\n");
+   pthread_mutex_unlock(&mutex);
 }
 
 
 /*  */
-Room *Rget_roomFID(Room **head, int ID) {
+Room *Rget_roomFID(Room **head, int ID, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    Room *temp = *head;
    
-   if(*head == NULL) return NULL;
-   
+   if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return NULL;
+   }
    while(ID != temp->ID) {
-      if(temp->next == NULL) return NULL;
+      if(temp->next == NULL) {
+         pthread_mutex_unlock(&mutex);
+         return NULL;
+      }
       temp = temp->next;
    }
-   
+   pthread_mutex_unlock(&mutex);
    return temp;
 }
 
 
 /*  */
-Room *Rget_roomFNAME(Room **head, char *name) {
+Room *Rget_roomFNAME(Room **head, char *name, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
    Room *temp = *head;
    
-   if(*head == NULL) return NULL;
-   
+   if(*head == NULL) {
+      pthread_mutex_unlock(&mutex);
+      return NULL;
+   }
    while(strcmp(name, temp->name) != 0) {
-      if(temp->next == NULL) return NULL;
+      if(temp->next == NULL) {
+         pthread_mutex_unlock(&mutex);
+         return NULL;
+      }
       temp = temp->next;
    }
    
+   pthread_mutex_unlock(&mutex);
    return temp;
 }

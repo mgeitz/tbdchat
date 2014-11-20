@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <pthread.h>
 
 /* Structures */
 struct user {
@@ -24,6 +25,7 @@ typedef struct user User;
 struct room {
    int ID;
    char name[32];
+   pthread_mutex_t user_list_mutex;
    struct user *user_list;
    struct room *next;
 };
@@ -31,22 +33,22 @@ typedef struct room Room;
 
 /* Function Prototypes */
 // user nodes
-int insertUser(User **head, User *new_user);
-int removeUser(User **head, User *new_user);
-char *get_real_name(User **head, char *user);
-char *get_password(User **head, char *user);
-User *clone_user(User *user);
-void readUserFile(User **head, char *filename);
-void writeUserFile(User **head, char *filename);
-void printList(User **head);
-User *get_user(User **head, char *user);
+int insertUser(User **head, User *new_user, pthread_mutex_t mutex);
+int removeUser(User **head, User *new_user, pthread_mutex_t mutex);
+char *get_real_name(User **head, char *user, pthread_mutex_t mutex);
+char *get_password(User **head, char *user, pthread_mutex_t mutex);
+User *clone_user(User *user, pthread_mutex_t mutex);
+void readUserFile(User **head, char *filename, pthread_mutex_t mutex);
+void writeUserFile(User **head, char *filename, pthread_mutex_t mutex);
+void printList(User **head, pthread_mutex_t mutex);
+User *get_user(User **head, char *user, pthread_mutex_t mutex);
 // room nodes
-int insertRoom(Room **head, Room *new_room);
-int Rget_ID(Room **head, char *name);
-char *Rget_name(Room **head, int ID);
-void RprintList(Room **head);
-Room *Rget_roomFID(Room **head, int ID);
-Room *Rget_roomFNAME(Room **head, char *name);
-int createRoom(Room **head, int ID, char *name);
+int insertRoom(Room **head, Room *new_room, pthread_mutex_t mutex);
+int Rget_ID(Room **head, char *name, pthread_mutex_t mutex);
+char *Rget_name(Room **head, int ID, pthread_mutex_t mutex);
+void RprintList(Room **head, pthread_mutex_t mutex);
+Room *Rget_roomFID(Room **head, int ID, pthread_mutex_t mutex);
+Room *Rget_roomFNAME(Room **head, char *name, pthread_mutex_t mutex);
+int createRoom(Room **head, int ID, char *name, pthread_mutex_t mutex);
 
 #endif

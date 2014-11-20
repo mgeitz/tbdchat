@@ -35,11 +35,11 @@ int main(int argc, char **argv) {
    registered_users_list = NULL;
    active_users_list = NULL;
 
-   createRoom(&room_list, numRooms, DEFAULT_ROOM_NAME);
-   RprintList(&room_list);
+   createRoom(&room_list, numRooms, DEFAULT_ROOM_NAME, rooms_mutex);
+   RprintList(&room_list, rooms_mutex);
 
-   readUserFile(&registered_users_list, USERS_FILE);
-   printList(&registered_users_list);  
+   readUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
+   printList(&registered_users_list, registered_users_mutex);  
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
    
@@ -54,8 +54,7 @@ int main(int argc, char **argv) {
       int new_client = accept_client(chat_serv_sock_fd);
       if(new_client != -1) {
          pthread_t new_client_thread;
-         int iret;
-         iret  = pthread_create(&new_client_thread, NULL, client_receive, (void *)&new_client);
+         pthread_create(&new_client_thread, NULL, client_receive, (void *)&new_client);
       }
    }
    
