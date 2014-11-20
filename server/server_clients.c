@@ -53,8 +53,6 @@ void *client_receive(void *ptr) {
          else if (logged_in) {
             // Handle option messages for logged in client
             if (in_pkt.options < 1000) {
-               // Will be treated as a message packet, safe to santize entire buffer
-               sanitizeInput((void *)&in_pkt.buf);
                if(in_pkt.options == REGISTER) { 
                   sendError("You may not register while logged in.", client);
                }
@@ -106,6 +104,8 @@ void *client_receive(void *ptr) {
             }
             // Handle conversation message for logged in client
             else {
+               // Will be treated as a message packet, safe to santize entire buffer
+               sanitizeInput((void *)&in_pkt.buf);
                send_message(&in_pkt, client);
             }
          }
@@ -138,7 +138,6 @@ int sanitizeInput(char *buf) {
                        "1234567890";
    char *end = buf + strlen(buf);
    for (buf += strspn(buf, safe_chars); buf != end; buf += strspn(buf, safe_chars)) {
-      printf("Found bad char! Increment return value.\n");
       *buf = '_';
       i++;
    }
@@ -467,15 +466,18 @@ void leave(packet *pkt, int fd) {
 void set_name(packet *pkt, int fd) {
    char name[64];
    packet ret;
-   printf("--- Before checking realname input\n");
+
+   strncpy(name, pkt->buf, sizeof(name));
    // Check requested username for invalid chars
    if (sanitizeInput(name)) {
-      printf("--- Bad chars were found.\n");
       sendError("Invalid characters in username.", fd);
       return;
    }
-   printf("--- No bad chars were found\n");
-   strncpy(name, pkt->buf, sizeof(name));
+   // Enforce minimum realname length length
+   if (strlen(name) < 3) {
+      sendError("Requested name is too short.", fd);
+      return;
+   }
    strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
    pthread_mutex_lock(&registered_users_mutex);
@@ -535,14 +537,16 @@ void set_pass(packet *pkt, int fd) {
          sendError("Password requested does not match.", fd);
          return;
       }
+      // Enforce minimum password length
+      if (strlen(args[2]) < 3) {
+         sendError("Password is too short.", fd);
+         return;
+      }
       // Check requested password for invalid chars
-      printf("--- Before checking password input\n");
       if (sanitizeInput(args[2])) {
-         printf("--- Bad chars were found.\n");
          sendError("Invalid characters in password.", fd);
          return;
       }
-      printf("--- No bad chars were found\n");
       pthread_mutex_lock(&registered_users_mutex);
       User *user = get_user(&registered_users_list, pkt->username);
       pthread_mutex_unlock(&registered_users_mutex);
