@@ -224,7 +224,6 @@ void serverResponse(packet *rx_pkt) {
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
-      // Hardcoded lobby room
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
@@ -235,7 +234,6 @@ void serverResponse(packet *rx_pkt) {
       strcpy(realname, rx_pkt->realname);
       pthread_mutex_unlock(&nameMutex);
       pthread_mutex_lock(&roomMutex);
-      // Hardcoded lobby room
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);

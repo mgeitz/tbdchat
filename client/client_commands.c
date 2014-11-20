@@ -335,11 +335,9 @@ int serverLogin(packet *tx_pkt) {
       args[++i] = strsep(&tmp, " \t");
    }
    if (i == 3) {
-      pthread_mutex_lock(&nameMutex);
-      strcpy(username, args[1]);
-      strcpy(realname, args[1]);
-      pthread_mutex_unlock(&nameMutex);
       tx_pkt->options = LOGIN;
+      strcpy(tx_pkt->username, args[1]);
+      strcpy(tx_pkt->realname, args[1]);
       return 1;
    }
    else {
@@ -366,12 +364,8 @@ int serverRegistration(packet *tx_pkt) {
       // if the passwords patch mark options
       if (strcmp(args[2], args[3]) == 0) {
          tx_pkt->options = REGISTER;
-         pthread_mutex_lock(&nameMutex);
-         strcpy(username, args[1]);
-         strcpy(tx_pkt->username, username);
-         strcpy(realname, args[1]);
-         strcpy(tx_pkt->realname, realname);
-         pthread_mutex_unlock(&nameMutex);
+         strcpy(tx_pkt->username, args[1]);
+         strcpy(tx_pkt->realname, args[1]);
          return 1;
       }
       else {
