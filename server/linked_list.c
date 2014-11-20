@@ -152,18 +152,18 @@ User *get_user(User **head, char *user, pthread_mutex_t mutex) {
 
 User *clone_user(User *user, pthread_mutex_t mutex) {
    printf("Cloning User\n");
+   User *new_user = (User *)malloc(sizeof(User));
    pthread_mutex_lock(&mutex);
    printf("Old User: %s, %s, %s\n", user->username, user->real_name,
            user->password);
-   User *new_user = (User *)malloc(sizeof(User));
    strcpy(new_user->username, user->username);
    strcpy(new_user->real_name, user->real_name);
    strcpy(new_user->password, user->password);
    new_user->sock = user->sock;
+   pthread_mutex_unlock(&mutex);
    new_user-> next = NULL;
    printf("New User: %s, %s, %s\n", new_user->username, new_user->real_name,
            new_user->password);
-   pthread_mutex_unlock(&mutex);
    return new_user;
 }
 

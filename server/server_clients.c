@@ -347,8 +347,8 @@ void join(packet *pkt, int fd) {
       else {
          User *currUser = get_user(&(currentRoom->user_list), pkt->username, currentRoom->user_list_mutex);
          printf("Removing user from his current rooms user list\n");
-         currUser = clone_user(currUser, currentRoom->user_list_mutex);
          removeUser(&(currentRoom->user_list), currUser, currentRoom->user_list_mutex);
+         currUser = clone_user(currUser, currentRoom->user_list_mutex);
 
          printf("Inserting user into new rooms user list\n");
          insertUser(&(newRoom->user_list), currUser, newRoom->user_list_mutex);
@@ -594,7 +594,6 @@ void exit_client(packet *pkt, int fd) {
 void send_message(packet *pkt, int clientfd) {
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options, rooms_mutex);
    printList(&(currentRoom->user_list), currentRoom->user_list_mutex);
-   pthread_mutex_lock(&currentRoom->user_list_mutex);
    User *tmp = currentRoom->user_list;
 
    while(tmp != NULL) {
@@ -622,11 +621,11 @@ void sendMOTD(int fd) {
  *Get active users
  */
 void get_active_users(int fd) {
-   pthread_mutex_lock(&active_users_mutex);
-   User *temp = active_users_list;
    packet ret;
    ret.options = GETALLUSERS;
    strcpy(ret.username, SERVER_NAME);
+   pthread_mutex_lock(&active_users_mutex);
+   User *temp = active_users_list;
    while(temp != NULL ) {
       ret.timestamp = time(NULL);
       strcpy(ret.buf, temp->username);
