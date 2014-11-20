@@ -32,12 +32,6 @@ int main(int argc, char **argv) {
    char full_config_path[64];
    packet *tx_pkt_ptr = &tx_pkt;
 
-   // Curses init
-   setup_screens();
-   WINDOW *text_win = create_text_window();
-   WINDOW *in_win = create_input_window();
-
-   
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
 
@@ -52,8 +46,8 @@ int main(int argc, char **argv) {
    }
    pthread_mutex_unlock(&configFileMutex);
 
-   //printf("\33[2J\33[H"); // Removed anticipating curses
-   //asciiSplash();
+   printf("\33[2J\33[H");
+   asciiSplash();
 
    // Check autoconnect, run if set
    pthread_mutex_lock(&configFileMutex);
