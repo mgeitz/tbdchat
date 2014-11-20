@@ -1,11 +1,18 @@
+/* 
+//   Program:             TBD Chat Client
+//   File Name:           visual.c
+//   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
+*/
 #include "visual.h"
 
+/* Initialize some things */
 void setup_screens() {
    initscr();
    cbreak();
    keypad(stdscr, TRUE);
 }
 
+/* Primary output window */
 WINDOW *create_text_window() {
    WINDOW *tmp;
 
@@ -18,6 +25,7 @@ WINDOW *create_text_window() {
    return tmp;
 }
 
+/* Primary input window */
 WINDOW *create_input_window() {
    WINDOW *tmp;
 
