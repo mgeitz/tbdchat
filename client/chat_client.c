@@ -25,76 +25,96 @@ char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 
 int main(int argc, char **argv) {
-   setup_screens();
-   WINDOW *text_win = create_text_window();
-   WINDOW *in_win = create_input_window();
-
    int bufSize, send_flag;
    packet tx_pkt;
    struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
    packet *tx_pkt_ptr = &tx_pkt;
+
+   // Curses init
+   setup_screens();
+   WINDOW *text_win = create_text_window();
+   WINDOW *in_win = create_input_window();
+
    
    // Handle CTRL+C
    signal(SIGINT, sigintHandler);
 
+   // Get home dir, check config
    strcpy(full_config_path, getenv("HOME"));
    strcat(full_config_path, config_file_name);
    config_file = full_config_path;
    pthread_mutex_lock(&configFileMutex);
+   // If config does not exist, create the default config file
    if (access(config_file, F_OK) == -1) {
       buildDefaultConfig();
    }
    pthread_mutex_unlock(&configFileMutex);
 
-   printf("\33[2J\33[H");
-   asciiSplash();
+   //printf("\33[2J\33[H"); // Removed anticipating curses
+   //asciiSplash();
 
+   // Check autoconnect, run if set
    pthread_mutex_lock(&configFileMutex);
    if (auto_connect()) {
       printf("%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
       reconnect(tx_pkt.buf);
    }
    pthread_mutex_unlock(&configFileMutex);
-   
+  
+   // Primary execution loop 
    while (1) {
+      // Wipe packet space
       memset(&tx_pkt, 0, sizeof(packet));
+      // Set packet options as untouched
       tx_pkt.options = INVALID;
+      // Read user kb input, return number of chars
       bufSize = userInput(tx_pkt_ptr);
+      // Set default send flag to True
       send_flag = 1;
+      // If the input buffer is not empty
       if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
+         // Check if the input should be read as a command, if so process the command
          if(strncmp("/", (void *)tx_pkt.buf, 1) == 0) {
+             
              send_flag = userCommand(tx_pkt_ptr);
          }
+         // If connected and handling a packet flagged to be sent
          if (send_flag && serverfd) {
+            // Copy current username and realname to packet
             pthread_mutex_lock(&nameMutex);
             strcpy(tx_pkt.username, username);
             strcpy(tx_pkt.realname, realname);
             pthread_mutex_unlock(&nameMutex);
+            // Timestamp packet
             tx_pkt.timestamp = time(NULL);
+            // If sending a message, print the message client side
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                timestamp = localtime(&(tx_pkt.timestamp));
-               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, WHITE, RED, tx_pkt.realname,
-                   WHITE, NORMAL, tx_pkt.buf);
+               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+                     WHITE, RED, tx_pkt.realname, WHITE, NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
             pthread_mutex_unlock(&roomMutex);
+            // If packet options has been altered appropriately, send it
             if (tx_pkt.options > 0) {
                send(serverfd, (void *)&tx_pkt, sizeof(packet), MSG_NOSIGNAL);
             }
          }
+         // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
             printf("%s --- %sError:%s Not connected to any server. See /help for command usage.\n", WHITE, RED, NORMAL);
          } 
       }
+      // If an exit packet was just transmitted, break from primary execution loop
       if (tx_pkt.options == EXIT) {
          break;
       }
    }
    
-   // Close connection
+   // Safely close connection
    printf("%sPreparing to exit . . .%s\n", WHITE, NORMAL);
    close(serverfd);
    if (chat_rx_thread) {
@@ -188,11 +208,13 @@ void *chatRX(void *ptr) {
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
       if(received) {
+         // If debug mode is enabled, dump packet contents
          pthread_mutex_lock(&debugModeMutex);
          if (debugMode) {
             debugPacket(rx_pkt_ptr);
          }
          pthread_mutex_unlock(&debugModeMutex);
+         // If the received packet is a message packet, print accordingly
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
@@ -207,14 +229,17 @@ void *chatRX(void *ptr) {
                    WHITE, NORMAL, rx_pkt.buf);
             }
          }
+         // If the received packet is a nonmessage option, handle option response
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
             serverResponse(rx_pkt_ptr);
          }
+         // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
             printf("%sCommunication with server has terminated.%s\n", WHITE, NORMAL);
             break;
          }
       }
+      // Wipe packet space
       memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
@@ -382,6 +407,7 @@ void print_ip( struct addrinfo *ai) {
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
    printf("\b\b%s --- %sError:%s Forced Exit.\n", WHITE, RED, NORMAL);
+   // If the client is connected, safely close the connection
    if (serverfd) { 
       packet tx_pkt;
       pthread_mutex_lock(&nameMutex);
