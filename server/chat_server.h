@@ -88,8 +88,11 @@ void debugPacket(packet *rx_pkt);
 void sigintHandler(int sig_num);
 int accept_client(int serv_sock);
 // server_clients.c
-int sanitizeInput(char *buf);
 void *client_receive(void *ptr);
+int sanitizeInput(char *buf);
+int validUsername(char *username, int client);
+int validRealname(char *realname, int client);
+int validPassword(char *pass1, char *pass2, int client);
 int register_user(packet *in_pkt, int fd);
 int login(packet *pkt, int fd);
 void exit_client(packet *pkt, int fd);

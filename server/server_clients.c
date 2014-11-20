@@ -160,10 +160,7 @@ int register_user(packet *in_pkt, int fd) {
        args[++i] = strsep(&tmp, " \t");
    }
    if (i > 3) {
-      if (sanitizeInput(args[1])) {
-         sendError("Invalid characters in username.", fd);
-         return 0;
-      }
+      if (!validUsername(args[1], fd)) { return 0; }
       pthread_mutex_lock(&registered_users_mutex);
       if(strcmp(get_real_name(&registered_users_list, args[1]), "ERROR") !=0 || \
                               !(strcmp(SERVER_NAME, args[1])) || \
@@ -173,23 +170,7 @@ int register_user(packet *in_pkt, int fd) {
          return 0;
       }
       else { pthread_mutex_unlock(&registered_users_mutex); }
-      if (strcmp(args[2], args[3])) {
-         sendError("Password requested does not match.", fd);
-         return 0;
-      }
-      if (sanitizeInput(args[2])) {
-         sendError("Invalid characters in password.", fd);
-         return 0;
-      }
-      if (strlen(args[1]) < 3) {
-         sendError("Username is too short.", fd);
-         return 0;
-      }
-      if (strlen(args[2]) < 3) {
-         sendError("Password is too short.", fd);
-         return 0;
-      }
-
+      if (!validPassword(args[2], args[3], fd)) { return 0; }
       User *user = (User *)malloc(sizeof(User));
       strcpy(user->username, args[1]);
       strcpy(user->real_name, args[1]);
@@ -468,16 +449,7 @@ void set_name(packet *pkt, int fd) {
    packet ret;
 
    strncpy(name, pkt->buf, sizeof(name));
-   // Check requested username for invalid chars
-   if (sanitizeInput(name)) {
-      sendError("Invalid characters in username.", fd);
-      return;
-   }
-   // Enforce minimum realname length length
-   if (strlen(name) < 3) {
-      sendError("Requested name is too short.", fd);
-      return;
-   }
+   if (!validRealname(name, fd)) { return; }
    strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
    pthread_mutex_lock(&registered_users_mutex);
@@ -532,21 +504,7 @@ void set_pass(packet *pkt, int fd) {
        args[++i] = strsep(&tmp, " \t");
    }
    if (i > 3) {
-      // Ensure redundant password input matches
-      if (strcmp(args[2], args[3])) {
-         sendError("Password requested does not match.", fd);
-         return;
-      }
-      // Enforce minimum password length
-      if (strlen(args[2]) < 3) {
-         sendError("Password is too short.", fd);
-         return;
-      }
-      // Check requested password for invalid chars
-      if (sanitizeInput(args[2])) {
-         sendError("Invalid characters in password.", fd);
-         return;
-      }
+      if (!validPassword(args[2], args[3], fd)) { return; }
       pthread_mutex_lock(&registered_users_mutex);
       User *user = get_user(&registered_users_list, pkt->username);
       pthread_mutex_unlock(&registered_users_mutex);
@@ -574,6 +532,52 @@ void set_pass(packet *pkt, int fd) {
       strcpy(pkt->buf, "Password change failed, malformed request.");
    }
    send(fd, (void *)pkt, sizeof(packet), MSG_NOSIGNAL);
+}
+
+
+/* Check requested username */
+int validUsername (char *username, int client) {
+   if (sanitizeInput(username)) {
+      sendError("Invalid characters in username.", client);
+      return 0;
+   }
+   if (strlen(username) < 3) {
+      sendError("Username is too short.", client);
+      return 0;
+   }
+   return 1;
+}
+
+
+/* Check requested realname */
+int validRealname (char *realname, int client) {
+   if (sanitizeInput(realname)) {
+      sendError("Invalid characters in username.", client);
+      return 0;
+   }
+   if (strlen(realname) < 3) {
+      sendError("Requested name is too short.", client);
+      return 0;
+   }
+   return 1;
+}
+
+
+/* Check password input */
+int validPassword (char *pass1, char *pass2, int client) {
+   if (strcmp(pass1, pass2)) {
+      sendError("Password requested does not match.", client);
+      return 0;
+   }
+   if (sanitizeInput(pass1)) {
+      sendError("Invalid characters in password.", client);
+      return 0;
+   }
+   if (strlen(pass1) < 3) {
+      sendError("Password is too short.", client);
+      return 0;
+   }
+   return 1;
 }
 
 
