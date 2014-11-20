@@ -3,34 +3,39 @@ TO-DO LIST:
 
    Smaller adjustments:
 
-      - Remove a user from active_users_list and their room list when they send a /exit
+      - [Server] Remove a user from active_users_list and their room list when they send a /exit
       
-      - Send notification to all users in a room when another user leaves it
-
-      - Private / Public room settings, room admins, other room variables
+      - [Server] Send notification to all users in a room when another user leaves it
  
-      - Hash stored passwords, hash input on compare
+      - [Server] Hash stored passwords, hash input on compare
+
+      - [Server] Send a notification to all users in a room when another user disconnects entirely
    
-      - /logout command (remove from rooms/active users, set logged out, keep connection)
+      - [Client/Server] /logout command (remove from rooms/active users, set logged out, keep connection)
 
-      - /disconnect command (same as /exit but allows the client to /connect again)
+      - [Client/Server] /disconnect command (same as /exit but allows the client to /connect again)
 
-      - Send a notification to all users in a room when another user disconnects entirely
+      - [Server(mostly/Client(for possible room admin commands))]Private / Public room settings, room admins, other room variables
 
 
    Requires considerable time:
 
-      - Curses
+      - [client] Curses
+         o (probably first move as much in the main method to dedicated methods) create main draw calls, key catches,
+ and sig handlers in main. Very much not sure how this will coincide with input to the buffer, all key catches may just need to be in userInput method and we won't have to touch main much.
+         o Draw basic primary screen; input window, output window
+         o Modify all error/alerts/notifications to use unified format with timestamp, etc for output window.
+         o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
+         o If multiple rooms, catch ALT+(LEFT&&RIGHT||RIGHT)(or something similar) to change rooms (not limiting client to a maximum room number as F# ultimately would)
+         o Add client window to primary screen to display clients currently in room
 
-      - Server logging; connections, logins, regisrations, disconnects, messages, etc
+      - [Server] Logging, preferably 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc
 
-      - Client message archiving; by room name, readable format and easy to parse to read back on client 
+      - [Client] Client message archiving; by room name, readable format and easy to parse to read back on client
 
-      - Full encryption using something like openssl or libsodium
+      - [Client/Server] Full encryption using something like openssl or libsodium
 
-      - Implement per-room user list mutexes
-
-      - Allow clients to be in n rooms at a time
+      - [Client/Server] Allow clients to be in n rooms at a time
 
 
 
@@ -38,7 +43,8 @@ KNOWN BUGS:
 
    Server:
 
-      - Rooms with a space as the name can be created, we should enforce room names of a certain length? May also need to enforce a min length on usernames and realnames, as well as a more reasonable max length on realname.
+      - Users persist in active users and as users in rooms after exiting.
+
             
    Client:
 
