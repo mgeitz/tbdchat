@@ -6,6 +6,7 @@
 #include "visual.h"
 
 /* Initialize some things */
+// I think initscr needs to be called for each window separately
 void setup_screens() {
    initscr();
    cbreak();
