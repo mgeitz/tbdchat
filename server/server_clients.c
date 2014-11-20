@@ -159,28 +159,37 @@ int register_user(packet *in_pkt, int fd) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
    }
+   // Check there are enough arguements to safely inspect them
    if (i > 3) {
+      // Ensure requested username is valid
       if (!validUsername(args[1], fd)) { return 0; }
+      // Check if the requested username is unique
       if(strcmp(get_real_name(&registered_users_list, args[1], registered_users_mutex), "ERROR") !=0 || \
                               !(strcmp(SERVER_NAME, args[1])) || \
                               strcmp(args[2], args[3]) != 0) {
          sendError("Username unavailable.", fd);
          return 0;
       }
+      // Ensure password requested is valid
       if (!validPassword(args[2], args[3], fd)) { return 0; }
+
+      // Allocate memory space for new user node, populate node with new user data
       User *user = (User *)malloc(sizeof(User));
       strcpy(user->username, args[1]);
       strcpy(user->real_name, args[1]);
       strcpy(user->password, args[2]);
       user->sock = fd;
       user->next = NULL;
+      // Insert user as registered user, write new user data to file
       insertUser(&registered_users_list, user, registered_users_mutex);
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
 
+      // Reform packet as valid login, pass new user data to login
       memset(&in_pkt->buf, 0, sizeof(in_pkt->buf));
       sprintf(in_pkt->buf, "/login %s %s", args[1], args[2]);
       return login(in_pkt, fd);
    }
+   // There were not enough arguements received to correctly read them
    else {
       printf("%s --- %sError:%s Malformed reg packet received from %s on %d, ignoring.\n", \
              WHITE, RED, NORMAL, args[1], fd);
@@ -203,6 +212,7 @@ int login(packet *pkt, int fd) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
    }
+   // Check there are enough arguements to safely inspect them
    if (i > 2) {
       packet ret;
 
@@ -226,18 +236,20 @@ int login(packet *pkt, int fd) {
 
       // Check if the user is already logged in
       if(insertUser(&active_users_list, user, active_users_mutex) == 1) {
-        // Login success
+         // Login successful, add user to default room
          Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
          insertUser(&(defaultRoom->user_list), user, defaultRoom->user_list_mutex);
-         RprintList(&room_list, rooms_mutex);
+         // RprintList(&room_list, rooms_mutex);
 
+         // Inform client of successful login
          strcpy(ret.realname, get_real_name(&registered_users_list, args[1], registered_users_mutex));
-
          strcpy(ret.username, args[1]);
          ret.options = LOGSUC;
          printf("%s logged in\n", ret.username);
          ret.timestamp = time(NULL);
          send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+
+         // Inform lobby of successful login
          memset(&ret, 0, sizeof(packet));
          ret.options = DEFAULT_ROOM;
          strcpy(ret.realname, SERVER_NAME);
@@ -246,9 +258,11 @@ int login(packet *pkt, int fd) {
          ret.timestamp = time(NULL);
          send_message(&ret, -1);
 
+         // Send MOTD to client
          sendMOTD(fd);
          return 1;
       }
+      // Valid login data received, but user is already in active users
       else {
          sendError("User already logged in.", fd);
          printf("%s log in failed: already logged in", args[1]);
@@ -256,6 +270,7 @@ int login(packet *pkt, int fd) {
          return 0;
       }
    }
+   // Not enough arguements received to properly parse input, ignore it
    else {
       printf("%s --- %sError:%s Malformed login packet received from %s on %d, ignoring.\n", \
              WHITE, RED, NORMAL, args[1], fd);
@@ -390,22 +405,30 @@ void leave(packet *pkt, int fd) {
    }
    if (i > 1) {
       roomNum = atoi(args[1]);
+      // If user is not in the lobby
       if (roomNum != DEFAULT_ROOM) {
+         // Get current room information
          Room *currRoom = Rget_roomFID(&room_list, roomNum, rooms_mutex);
          if (currRoom != NULL) {
+            // Find users node in room
             User *currUser = get_user(&(currRoom->user_list), pkt->username, currRoom->user_list_mutex);
             if (currUser != NULL) {
+               // Remove user from their current room
                removeUser(&(currRoom->user_list), currUser, currRoom->user_list_mutex);
                currUser = clone_user(currUser, currRoom->user_list_mutex);
-               Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
 
+               // Place user in lobby room
+               Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
                insertUser(&(defaultRoom->user_list), currUser, defaultRoom->user_list_mutex);
+
+               // Send join success to client
                ret.options = JOINSUC;
                strcpy(ret.realname, SERVER_NAME);
                sprintf(ret.buf, "%s %d", defaultRoom->name, defaultRoom->ID);
                send(fd, (void *)&ret, sizeof(packet), MSG_NOSIGNAL);
                memset(&ret, 0, sizeof(ret));
 
+               // Send join notification to lobby room
                ret.options = defaultRoom->ID;
                strcpy(ret.realname, SERVER_NAME);
                strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
