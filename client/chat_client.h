@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include "visual.h"
 
 /* Preprocessor Macros */
 // Client buffer size

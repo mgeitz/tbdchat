@@ -8,7 +8,7 @@ CLIENT=$(CPATH)chat_client.c
 SERVER=$(SPATH)chat_server.c
 
 CC=gcc
-CFLAGS_CLIENT=-Wall -l pthread $(CPATH)client_commands.c
+CFLAGS_CLIENT=-Wall -l pthread -l ncurses $(CPATH)client_commands.c $(CPATH)visual.c
 CFLAGS_SERVER=-Wall -l pthread $(SPATH)linked_list.c $(SPATH)server_clients.c
 
 all: chat_client chat_server

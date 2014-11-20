@@ -25,6 +25,10 @@ char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 
 int main(int argc, char **argv) {
+   setup_screens();
+   WINDOW *text_win = create_text_window();
+   WINDOW *in_win = create_input_window();
+
    int bufSize, send_flag;
    packet tx_pkt;
    struct tm *timestamp;
