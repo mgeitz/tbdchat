@@ -98,4 +98,6 @@ void showHelp();
 int validJoin(packet *tx_pkt);
 int validInvite(packet *tx_pkt);
 int hash(char *str);
+// other
+void resizeHandler(int sig);
 #endif

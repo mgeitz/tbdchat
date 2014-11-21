@@ -9,9 +9,13 @@
 // I think initscr needs to be called for each window separately
 void setup_screens() {
    initscr();
+   // Read input one char at a time
+   noecho();
    cbreak();
+   // Capture special keys
    keypad(stdscr, TRUE);
 }
+
 
 /* Primary output window */
 WINDOW *create_text_window() {
@@ -21,10 +25,11 @@ WINDOW *create_text_window() {
 
    tmp = newwin(end_y, COLS, 0, 0);
    box(tmp, 0, 0);
-   wrefresh(tmp);
+   //wrefresh(tmp);
 
    return tmp;
 }
+
 
 /* Primary input window */
 WINDOW *create_input_window() {
@@ -35,7 +40,7 @@ WINDOW *create_input_window() {
 
    tmp = newwin(height, COLS, start_y, 0);
    box(tmp, 0, 0);
-   wrefresh(tmp);
+   //wrefresh(tmp);
 
    return tmp;
 }

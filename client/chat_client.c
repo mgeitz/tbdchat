@@ -23,6 +23,9 @@ pthread_t chat_rx_thread;
 char *config_file;
 char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
+// Curses Windows
+WINDOW *text_win;
+WINDOW *in_win;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -32,14 +35,16 @@ int main(int argc, char **argv) {
    char full_config_path[64];
    packet *tx_pkt_ptr = &tx_pkt;
 
-   // Curses init
-   setup_screens();
-   WINDOW *text_win = create_text_window();
-   WINDOW *in_win = create_input_window();
-
-   
-   // Handle CTRL+C
+   // Sig Handlers
    signal(SIGINT, sigintHandler);
+   signal(SIGWINCH, resizeHandler);
+
+   // Initialize curses
+   setup_screens();
+   text_win = create_text_window();
+   wrefresh(text_win);
+   in_win = create_input_window();
+   wrefresh(in_win);
 
    // Get home dir, check config
    strcpy(full_config_path, getenv("HOME"));
@@ -117,15 +122,19 @@ int main(int argc, char **argv) {
    // Safely close connection
    printf("%sPreparing to exit . . .%s\n", WHITE, NORMAL);
    close(serverfd);
+   // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
          printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
       }
    }
+   // Destroy mutexes
    pthread_mutex_destroy(&nameMutex);
    pthread_mutex_destroy(&debugModeMutex);
    pthread_mutex_destroy(&configFileMutex);
    pthread_mutex_destroy(&roomMutex);
+   // Close curses
+   endwin();
    printf("%sExiting client.%s\n", WHITE, NORMAL);
    exit(0);
 }
@@ -172,25 +181,29 @@ int auto_connect() {
 /* Read keyboard input into buffer */
 int userInput(packet *tx_pkt) {
    int i = 0;
-   
-   // Read up to 126 input chars into packet buffer until newline or EOF (CTRL+D)
-   tx_pkt->buf[i] = getc(stdin);
-   while(tx_pkt->buf[i] != '\n' && tx_pkt->buf[i] != EOF) {
-      tx_pkt->buf[++i] = getc(stdin);
-      // Automatically send message once it reaches 127 characters
-      if (i >= 126) {
-         tx_pkt->buf[++i] = '\n';
-         break;
+   int ch;
+
+   // Read 1 char at a time
+   while ((ch = getch()) != '\n') {
+      // Process command keys
+      if (ch == 'j') {
+         wprintw(text_win, "Hey you pressed j");
+         wrefresh(text_win);
+      }
+      // Otherwise put in buffer
+      else {
+         strcat(tx_pkt->buf, (char *)&ch);
+         ++i;
+         wprintw(in_win, (char *)&ch);
+         wrefresh(in_win);
       }
    }
-   printf("\33[1A\33[J");
-   // If EOF is read, exit?
-   if(tx_pkt->buf[i] == EOF) {
-      exit(1);
-   }
-   else { 
-      tx_pkt->buf[i] = '\0';
-   }
+   // Null terminate buffer, clear input
+   // NOTE: missing length checks, should we autosend at length, buffer a larger length to simulate tty driver, or just not allow new input after a certain length except a newline?
+   // NOTE: no backspace support yet
+   tx_pkt->buf[i+1] = '\0';
+   werase(in_win);
+   wrefresh(in_win);
    return i;
 }
 
@@ -221,12 +234,16 @@ void *chatRX(void *ptr) {
                printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
                       timestamp->tm_sec, WHITE, YELLOW, rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
+               // For curses testing  
+               wrefresh(text_win);
             }
             else {
                int i = hash(rx_pkt.username);
                printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
                       timestamp->tm_sec, WHITE, USERCOLORS[i], rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
+               // For curses testing  
+               wrefresh(text_win);
             }
          }
          // If the received packet is a nonmessage option, handle option response
@@ -429,7 +446,19 @@ void sigintHandler(int sig_num) {
    pthread_mutex_destroy(&debugModeMutex);
    pthread_mutex_destroy(&configFileMutex);
    pthread_mutex_destroy(&roomMutex);
+   endwin();
    exit(0);
+}
+
+
+/* Handle window resizing */
+void resizeHandler(int sig) {
+   // This currently is not working, although has stopped segfault on resize
+
+   //int nh, nw;
+   //getmaxyx(stdscr, nh, nw);
+   create_text_window(); 
+   create_input_window(); 
 }
 
 
