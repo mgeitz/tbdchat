@@ -24,8 +24,7 @@ char *config_file;
 char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 // Curses Windows
-WINDOW *text_win;
-WINDOW *in_win;
+WINDOW *mainWin, *inputWin, *chatWin;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -39,12 +38,23 @@ int main(int argc, char **argv) {
    signal(SIGINT, sigintHandler);
    signal(SIGWINCH, resizeHandler);
 
+   if ((mainWin = initscr()) == NULL) { exit(1); }
+   chatWin = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
+   box(chatWin, 0, 0);
+   inputWin = subwin(mainWin, (LINES * 0.2), COLS, (LINES * 0.8), 0);
+   box(inputWin, 0, 0);
+
+   //use_default_colors();
+   cbreak();
+   noecho();
+   keypad(mainWin, TRUE);
+
    // Initialize curses
-   setup_screens();
-   text_win = create_text_window();
-   wrefresh(text_win);
-   in_win = create_input_window();
-   wrefresh(in_win);
+   //setup_screens();
+   //text_win = create_text_window();
+   //wrefresh(text_win);
+   //in_win = create_input_window();
+   //wrefresh(in_win);
 
    // Get home dir, check config
    strcpy(full_config_path, getenv("HOME"));
@@ -64,6 +74,7 @@ int main(int argc, char **argv) {
    pthread_mutex_lock(&configFileMutex);
    if (auto_connect()) {
       printf("%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
+      //wprintw(text_win,"%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
       reconnect(tx_pkt.buf);
    }
    pthread_mutex_unlock(&configFileMutex);
@@ -182,28 +193,29 @@ int auto_connect() {
 int userInput(packet *tx_pkt) {
    int i = 0;
    int ch;
-
+   wmove(inputWin, 1, 1);
    // Read 1 char at a time
    while ((ch = getch()) != '\n') {
       // Process command keys
       if (ch == 'j') {
-         wprintw(text_win, "Hey you pressed j");
-         wrefresh(text_win);
+         //wprintw(text_win, "Hey you pressed j");
+         //wrefresh(text_win);
       }
       // Otherwise put in buffer
       else {
          strcat(tx_pkt->buf, (char *)&ch);
          ++i;
-         wprintw(in_win, (char *)&ch);
-         wrefresh(in_win);
+         wprintw(inputWin, (char *)&ch);
+         wrefresh(inputWin);
       }
    }
    // Null terminate buffer, clear input
    // NOTE: missing length checks, should we autosend at length, buffer a larger length to simulate tty driver, or just not allow new input after a certain length except a newline?
    // NOTE: no backspace support yet
    tx_pkt->buf[i+1] = '\0';
-   werase(in_win);
-   wrefresh(in_win);
+   werase(inputWin);
+   box(inputWin, 0, 0);
+   //wrefresh(inputWin);
    return i;
 }
 
@@ -235,7 +247,7 @@ void *chatRX(void *ptr) {
                       timestamp->tm_sec, WHITE, YELLOW, rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
                // For curses testing  
-               wrefresh(text_win);
+               //wrefresh(text_win);
             }
             else {
                int i = hash(rx_pkt.username);
@@ -243,7 +255,7 @@ void *chatRX(void *ptr) {
                       timestamp->tm_sec, WHITE, USERCOLORS[i], rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
                // For curses testing  
-               wrefresh(text_win);
+               //wrefresh(text_win);
             }
          }
          // If the received packet is a nonmessage option, handle option response
@@ -457,8 +469,8 @@ void resizeHandler(int sig) {
 
    //int nh, nw;
    //getmaxyx(stdscr, nh, nw);
-   create_text_window(); 
-   create_input_window(); 
+   //create_text_window(); 
+   //create_input_window(); 
 }
 
 
