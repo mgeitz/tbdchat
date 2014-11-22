@@ -197,9 +197,10 @@ int userInput(packet *tx_pkt) {
    // Read 1 char at a time
    while ((ch = getch()) != '\n') {
       // Process command keys
-      if (ch == 'j') {
-         //wprintw(text_win, "Hey you pressed j");
-         //wrefresh(text_win);
+      if (ch == 8 || ch == 127 || ch == KEY_LEFT) {
+         wprintw(inputWin, "\b");
+         i--;
+         wrefresh(mainWin);
       }
       // Otherwise put in buffer
       else {
@@ -213,9 +214,10 @@ int userInput(packet *tx_pkt) {
    // NOTE: missing length checks, should we autosend at length, buffer a larger length to simulate tty driver, or just not allow new input after a certain length except a newline?
    // NOTE: no backspace support yet
    tx_pkt->buf[i+1] = '\0';
-   werase(inputWin);
+   wclear(inputWin);
    box(inputWin, 0, 0);
-   //wrefresh(inputWin);
+   wrefresh(inputWin);
+   wrefresh(mainWin);
    return i;
 }
 
