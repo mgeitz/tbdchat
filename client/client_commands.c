@@ -13,7 +13,7 @@ extern volatile int debugMode;
 extern char username[64];
 extern char realname[64];
 extern char *config_file;
-
+extern WINDOW *mainWin, *chatWin, *inputWin;
 extern pthread_t chat_rx_thread;
 extern pthread_mutex_t roomMutex;
 extern pthread_mutex_t nameMutex;
@@ -439,22 +439,25 @@ void debugPacket(packet *rx_pkt) {
 
 /* Print helpful and unhelpful things */
 void showHelp() {
-   printf("%s--------------------------------[ %sCommand List%s ]--------------------------------------%s\n", BLACK, CYAN, BLACK, NORMAL);
-   printf("%s\t/connect%s\t | Usage: /connect address port\n", YELLOW, NORMAL);
-   printf("%s\t/reconnect%s\t | Connect to last known host\n", YELLOW, NORMAL);
-   printf("%s\t/autoconnect%s\t | Toggle automatic connection to last known host on startup\n", YELLOW, NORMAL);
-   printf("%s\t/help%s\t\t | Display a list of commands\n", YELLOW, NORMAL);
-   printf("%s\t/debug%s\t\t | Toggle debug mode\n", YELLOW, NORMAL);
-   printf("%s\t/exit%s\t\t | Exit the client\n", YELLOW, NORMAL);
-   printf("%s\t/register%s\t | Usage: /register username password password\n", YELLOW, NORMAL);
-   printf("%s\t/login%s\t\t | Usage: /login username password\n", YELLOW, NORMAL);
-   printf("%s\t/setpass%s\t | Usage: /setpass oldpassword newpassword newpassword\n", YELLOW, NORMAL);
-   printf("%s\t/setname%s\t | Usage: /setname fname lname\n", YELLOW, NORMAL);
-   printf("%s\t/who%s\t\t | Return a list of users in your current room or a specific user real name\n", YELLOW, NORMAL);
-   printf("%s\t/who all%s\t | Return a list of all connected users\n", YELLOW, NORMAL);
-   printf("%s\t/list%s\t\t | Return a list of all public rooms with active users in them\n", YELLOW, NORMAL);
-   printf("%s\t/invite%s\t\t | Usage: /invite username\n", YELLOW, NORMAL);
-   printf("%s\t/join%s\t\t | Usage: /join roomname\n", YELLOW, NORMAL);
-   printf("%s\t/leave%s\t\t | Leave the room you are in and return to the lobby\n", YELLOW, NORMAL);
-   printf("%s------------------------------------------------------------------------------------------%s\n", BLACK, NORMAL);
+   wprintw(chatWin, "--------------------------------[ Command List%s ]--------------------------------------\n");
+   wprintw(chatWin, "\t/connect\t | Usage: /connect address port\n");
+   wprintw(chatWin, "\t/reconnect\t | Connect to last known host\n");
+   wprintw(chatWin, "\t/autoconnect\t | Toggle automatic connection to last known host on startup\n");
+   wprintw(chatWin, "\t/help\t\t | Display a list of commands\n");
+   wprintw(chatWin, "\t/debug\t\t | Toggle debug mode\n");
+   wprintw(chatWin, "\t/exit\t\t | Exit the client\n");
+   wprintw(chatWin, "\t/register\t | Usage: /register username password password\n");
+   wprintw(chatWin, "\t/login\t\t | Usage: /login username password\n");
+   wprintw(chatWin, "\t/setpass\t | Usage: /setpass oldpassword newpassword newpassword\n");
+   wprintw(chatWin, "\t/setname\t | Usage: /setname fname lname\n");
+   wprintw(chatWin, "\t/who\t\t | Return a list of users in your current room or a specific user real name\n");
+   wprintw(chatWin, "\t/who all\t | Return a list of all connected users\n");
+   wprintw(chatWin, "\t/list\t\t | Return a list of all public rooms with active users in them\n");
+   wprintw(chatWin, "\t/invite\t\t | Usage: /invite username\n");
+   wprintw(chatWin, "\t/join\t\t | Usage: /join roomname\n");
+   wprintw(chatWin, "\t/leave\t\t | Leave the room you are in and return to the lobby\n");
+   wprintw(chatWin, "------------------------------------------------------------------------------------------\n", BLACK, NORMAL);
+   box(chatWin, 0, 0);
+   wrefresh(chatWin);
+   wrefresh(mainWin);
 }
