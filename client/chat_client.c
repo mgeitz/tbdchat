@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
    }
 
    //printf("\33[2J\33[H"); // Removed anticipating curses
-   //asciiSplash();
+   asciiSplash();
 
    // Check autoconnect, run if set
    if (auto_connect()) {
@@ -476,15 +476,18 @@ void resizeHandler(int sig) {
 
 /* Print message on startup */
 void asciiSplash() {
-   printf("%s         __%s\n", GREEN, NORMAL);
-   printf("%s        /_/%s\\        %s_____ %s____  %s____    %s ____ _           _   %s\n", GREEN, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
-   printf("%s       / /%s\\ \\      %s|_   _%s| __ )%s|  _ \\ %s  / ___| |__   __ _| |_ %s\n", RED, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
-   printf("%s      / / /%s\\ \\       %s| | %s|  _ \\%s| | | |%s | |   | '_ \\ / _` | __|%s\n", RED, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
-   printf("%s     / / /%s\\ \\ \\      %s| | %s| |_) %s| |_| |%s | |___| | | | (_| | |_ %s\n", RED, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
-   printf("%s    / /%s_%s/%s__%s\\ \\ \\     %s|_| %s|____/%s|____/ %s  \\____|_| |_|\\__,_|\\__|%s\n", RED, BLUE, RED, BLUE, GREEN, CYAN, CYAN, CYAN, WHITE, NORMAL);
-   printf("%s   /_/%s______%s\\%s_%s\\%s/%s\\%s\n", RED, BLUE, GREEN, BLUE, GREEN, BLUE, BLUE, NORMAL);
-   printf("%s   \\_\\%s_________\\/%s\n\n", RED, BLUE, NORMAL);
-   printf("%sEnter /help to view a list of available commands.%s\n\n", WHITE, NORMAL);
+   wprintw(chatWin, "\n");
+   wprintw(chatWin, "         __\n");
+   wprintw(chatWin, "        /_/\\        _____ ____  ____     ____ _           _   \n");
+   wprintw(chatWin, "       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
+   wprintw(chatWin, "      / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
+   wprintw(chatWin, "     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ \n");
+   wprintw(chatWin, "    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
+   wprintw(chatWin, "   /_/______\\_\\/\\\n");
+   wprintw(chatWin, "   \\_\\_________\\/\n\n");
+   wprintw(chatWin, " Enter /help to view a list of available commands.\n\n");
+   box(chatWin, 0, 0);
+   wrefresh(mainWin);
 }
 
 
