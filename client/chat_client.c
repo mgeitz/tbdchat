@@ -60,24 +60,19 @@ int main(int argc, char **argv) {
    strcpy(full_config_path, getenv("HOME"));
    strcat(full_config_path, config_file_name);
    config_file = full_config_path;
-   pthread_mutex_lock(&configFileMutex);
    // If config does not exist, create the default config file
    if (access(config_file, F_OK) == -1) {
       buildDefaultConfig();
    }
-   pthread_mutex_unlock(&configFileMutex);
 
    //printf("\33[2J\33[H"); // Removed anticipating curses
    //asciiSplash();
 
    // Check autoconnect, run if set
-   pthread_mutex_lock(&configFileMutex);
    if (auto_connect()) {
       printf("%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
-      //wprintw(text_win,"%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
       reconnect(tx_pkt.buf);
    }
-   pthread_mutex_unlock(&configFileMutex);
   
    // Primary execution loop 
    while (1) {
@@ -153,12 +148,14 @@ int main(int argc, char **argv) {
 
 /* Build the default config file */
 void buildDefaultConfig() {
+      pthread_mutex_lock(&configFileMutex);
       FILE *configfp;
       configfp = fopen(config_file, "a+");
       fputs("###\n#\n#\tTBD Chat Configuration\n#\n###\n\n\n", configfp);
       fputs("## Stores auto reconnect state\nauto-reconnect: 0\n\n", configfp);
       fputs("## Stores last client connection\nlast connection:\n", configfp);
       fclose(configfp);
+      pthread_mutex_unlock(&configFileMutex);
 }
 
 
@@ -167,12 +164,14 @@ int auto_connect() {
    FILE *configfp;
    char line[128];
    
+   pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r");
    if (configfp != NULL) {
       while (!feof(configfp)) {
          if (fgets(line, sizeof(line), configfp)) {
             if (strncmp(line, "auto-reconnect:", strlen("auto-reconnect:")) == 0) {
                fclose(configfp);
+               pthread_mutex_unlock(&configFileMutex);
                strncpy(line, line + strlen("auto-reconnect: "), 1);
                if (strncmp(line, "0", 1) == 0) {
                   return 0;
@@ -185,6 +184,7 @@ int auto_connect() {
       }
    }
    fclose(configfp);
+   pthread_mutex_unlock(&configFileMutex);
    return 0;
 }
 

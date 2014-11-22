@@ -293,6 +293,7 @@ int reconnect(char *buf) {
 }
 
 
+/* Toggle autoconnect state in config file */
 int toggleAutoConnect() {
    FILE *configfp;
    char line[128];
