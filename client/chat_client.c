@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
    box(chatWin, 0, 0);
    inputWin = subwin(mainWin, (LINES * 0.2), COLS, (LINES * 0.8), 0);
    box(inputWin, 0, 0);
+   scrollok(chatWin, TRUE);
 
    //use_default_colors();
    cbreak();
