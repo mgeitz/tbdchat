@@ -3,7 +3,7 @@ TO-DO LIST:
 
    Smaller adjustments:
 
-      - [Server] Redo several lists structures to be lists of pointers to registers users nodes and solve all of our problems.
+      - [Server] Lists of pointers to registers users nodes and solve all of our problems.
       
       - [Server] Send notification to all users in a room when another user leaves it
  
@@ -21,10 +21,9 @@ TO-DO LIST:
       - [client] Curses
          o Modify all error/alerts/notifications to use unified format with timestamp, etc for output window.
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
-         o If multiple rooms, catch ALT+(LEFT&&RIGHT||RIGHT)(or something similar) to change rooms (not limiting client to a maximum room number as F# ultimately would)
          o Add client window to primary screen to display clients currently in room
 
-      - [Server] Logging, preferably 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc
+      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc
 
       - [Client] Client message archiving; by room name, readable format and easy to parse to read back on client
 
@@ -43,7 +42,11 @@ KNOWN BUGS:
             
    Client:
 
-      - 
+      - !!! segfaults server when too much input is entered
+      - box printing around new input for chat window doesn't show
+      - All text wrap overwrites the border
+      - No colors
+      - Backspace not working
 
 
 
