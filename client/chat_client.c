@@ -24,7 +24,7 @@ char *config_file;
 char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 // Curses Windows
-WINDOW *mainWin, *inputWin, *chatWin;
+WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -41,11 +41,15 @@ int main(int argc, char **argv) {
 
    // Initialize curses
    if ((mainWin = initscr()) == NULL) { exit(1); }
-   chatWin = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
-   box(chatWin, 0, 0);
-   inputWin = subwin(mainWin, (LINES * 0.2), COLS, (LINES * 0.8), 0);
-   box(inputWin, 0, 0);
+   chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
+   box(chatWinBox, 0, 0);
+   chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
+   //box(chatWin, 0, 0);
+   
+   inputWinBox = subwin(mainWin, (LINES * 0.2), COLS, (LINES * 0.8), 0);
+   box(inputWinBox, 0, 0);
+   inputWin = subwin(inputWinBox, (LINES * 0.2) - 2, COLS - 2, (LINES * 0.8) + 1, 1);
 
    cbreak();
    noecho();
@@ -71,9 +75,9 @@ int main(int argc, char **argv) {
 
    // Check autoconnect, run if set
    if (auto_connect()) {
-      wprintw(chatWin, "| Auto connecting to most recently connected host . . .\n");
+      wprintw(chatWin, " Auto connecting to most recently connected host . . .\n");
       wrefresh(chatWin);
-      box(chatWin, 0, 0);
+      //box(chatWin, 0, 0);
       reconnect(tx_pkt.buf);
    }
   
@@ -107,7 +111,7 @@ int main(int argc, char **argv) {
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                timestamp = localtime(&(tx_pkt.timestamp));
-               wprintw(chatWin, "|  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        tx_pkt.realname, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
@@ -119,11 +123,11 @@ int main(int argc, char **argv) {
          }
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
-            wprintw(chatWin, "| --- Error: Not connected to any server. See /help for command usage.\n");
+            wprintw(chatWin, " --- Error: Not connected to any server. See /help for command usage.\n");
          } 
       }
       wrefresh(chatWin);
-      box(chatWin, 0, 0);
+      //box(chatWin, 0, 0);
       // If an exit packet was just transmitted, break from primary execution loop
       if (tx_pkt.options == EXIT) {
          break;
@@ -131,16 +135,16 @@ int main(int argc, char **argv) {
    }
    
    // Safely close connection
-   wprintw(chatWin, "| Preparing to exit . . .\n");
+   wprintw(chatWin, " Preparing to exit . . .\n");
    wrefresh(chatWin);
-   box(chatWin, 0, 0);
+   //box(chatWin, 0, 0);
    close(serverfd);
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         wprintw(chatWin, "| --- Error: chatRX thread not joining.\n");
+         wprintw(chatWin, " --- Error: chatRX thread not joining.\n");
          wrefresh(chatWin);
-         box(chatWin, 0, 0);
+        // box(chatWin, 0, 0);
       }
    }
    // Destroy mutexes
@@ -149,9 +153,9 @@ int main(int argc, char **argv) {
    pthread_mutex_destroy(&configFileMutex);
    pthread_mutex_destroy(&roomMutex);
    // Close curses
-   wprintw(chatWin, "| Exiting client.\n");
+   wprintw(chatWin, " Exiting client.\n");
    wrefresh(chatWin);
-   box(chatWin, 0, 0);
+   //box(chatWin, 0, 0);
    endwin();
    exit(0);
 }
@@ -204,7 +208,7 @@ int auto_connect() {
 int userInput(packet *tx_pkt) {
    int i = 0;
    int ch;
-   wmove(inputWin, 1, 1);
+   wmove(inputWin, 0, 0);
    // Read 1 char at a time
    while ((ch = getch()) != '\n') {
       // Process command keys
@@ -226,7 +230,7 @@ int userInput(packet *tx_pkt) {
    // NOTE: no backspace support yet
    tx_pkt->buf[i+1] = '\0';
    wclear(inputWin);
-   box(inputWin, 0, 0);
+   //box(inputWin, 0, 0);
    wrefresh(inputWin);
    return i;
 }
@@ -254,12 +258,12 @@ void *chatRX(void *ptr) {
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
-               wprintw(chatWin, "|  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        rx_pkt.realname, rx_pkt.buf);
             }
             else {
                //int i = hash(rx_pkt.username);
-               wprintw(chatWin, "|  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        rx_pkt.realname, rx_pkt.buf);
             }
          }
@@ -269,16 +273,16 @@ void *chatRX(void *ptr) {
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
-            wprintw(chatWin, "| Communication with server has terminated.\n");
+            wprintw(chatWin, " Communication with server has terminated.\n");
             wrefresh(chatWin);
-            box(chatWin, 0, 0);
+            //box(chatWin, 0, 0);
             break;
          }
       }
       //wrefresh(chatWin);
       // Wipe packet space
       wrefresh(chatWin);
-      box(chatWin, 0, 0);
+      //box(chatWin, 0, 0);
       memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
@@ -288,13 +292,13 @@ void *chatRX(void *ptr) {
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == SERV_ERR) {
-      wprintw(chatWin, "| --- Error: %s\n", rx_pkt->buf);
+      wprintw(chatWin, " --- Error: %s\n", rx_pkt->buf);
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      wprintw(chatWin, "| --- Success: Registration successful!\n");
+      wprintw(chatWin, " --- Success: Registration successful!\n");
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -304,47 +308,47 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      wprintw(chatWin, "| --- Success: Login successful!\n");
+      wprintw(chatWin, " --- Success: Login successful!\n");
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      wprintw(chatWin, "| --- User: %s\n", rx_pkt->buf);
+      wprintw(chatWin, " --- User: %s\n", rx_pkt->buf);
    }
    else if (rx_pkt->options == PASSSUC) {
-      wprintw(chatWin, "| --- Success: Password change successful!\n");
+      wprintw(chatWin, " --- Success: Password change successful!\n");
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintw(chatWin, "| --- Success: Name change successful!\n");
+      wprintw(chatWin, " --- Success: Name change successful!\n");
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITE) {
-      wprintw(chatWin, "| --- Invite: %s\n", rx_pkt->buf);
+      wprintw(chatWin, " --- Invite: %s\n", rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITESUC) {
-      wprintw(chatWin, "| --- Success: Invite sent!\n");
+      wprintw(chatWin, " --- Success: Invite sent!\n");
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintw(chatWin, "| --- Room: %s\n", rx_pkt->buf);
+      wprintw(chatWin, " --- Room: %s\n", rx_pkt->buf);
    }
    else if (rx_pkt->options == MOTD) {
-      wprintw(chatWin, "| ------------------------------------------------------------------- \n");
-      wprintw(chatWin, "| %s\n", rx_pkt->buf);
-      wprintw(chatWin, "| ------------------------------------------------------------------- \n");
+      wprintw(chatWin, " ------------------------------------------------------------------- \n");
+      wprintw(chatWin, " %s\n", rx_pkt->buf);
+      wprintw(chatWin, " ------------------------------------------------------------------- \n");
    }
    else if(rx_pkt->options == EXIT) {
-      wprintw(chatWin, "| Server has closed its connection with you.\n");
-      wprintw(chatWin, "| Closing socket connection with server.\n");
+      wprintw(chatWin, " Server has closed its connection with you.\n");
+      wprintw(chatWin, " Closing socket connection with server.\n");
       close(serverfd);
    }
    else {
-      wprintw(chatWin, "| --- Error: Unknown message received from server.\n");
+      wprintw(chatWin, " --- Error: Unknown message received from server.\n");
    }
 }
 
@@ -366,13 +370,13 @@ void newRoom(char *buf) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintw(chatWin, "| --- Success: Joined room %s.\n", \
+         wprintw(chatWin, " --- Success: Joined room %s.\n", \
                 args[0]);
       }
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-      wprintw(chatWin, "| --- Error: Problem reading JOINSUC from server.\n");
+      wprintw(chatWin, " --- Error: Problem reading JOINSUC from server.\n");
 
    }
 }
@@ -389,20 +393,20 @@ int get_server_connection(char *hostname, char *port) {
    hints.ai_socktype = SOCK_STREAM;
    
    if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
-      wprintw(chatWin, "| getaddrinfo: %s\n", gai_strerror(status));
+      wprintw(chatWin, " getaddrinfo: %s\n", gai_strerror(status));
       return -1;
    }
    
    print_ip(servinfo);
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         wprintw(chatWin, "| --- Error: socket socket \n");
+         wprintw(chatWin, " --- Error: socket socket \n");
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         wprintw(chatWin, "| --- Error: socket connect \n");
+         wprintw(chatWin, " --- Error: socket connect \n");
          return -1;
       }
       break;
@@ -438,14 +442,14 @@ void print_ip( struct addrinfo *ai) {
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
-      wprintw(chatWin, "| Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
+      wprintw(chatWin, " Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
    }
 }
 
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   wprintw(chatWin, "\b\b| --- Error: Forced Exit.\n");
+   wprintw(chatWin, "\b\b --- Error: Forced Exit.\n");
    // If the client is connected, safely close the connection
    if (serverfd) { 
       packet tx_pkt;
@@ -460,12 +464,12 @@ void sigintHandler(int sig_num) {
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
-            wprintw(chatWin, "| --- Error: chatRX thread not joining.\n");
+            wprintw(chatWin, " --- Error: chatRX thread not joining.\n");
          }
       }
    }
    wrefresh(chatWin);
-   box(chatWin, 0, 0);
+   //box(chatWin, 0, 0);
    pthread_mutex_destroy(&nameMutex);
    pthread_mutex_destroy(&debugModeMutex);
    pthread_mutex_destroy(&configFileMutex);
@@ -489,16 +493,16 @@ void resizeHandler(int sig) {
 /* Print message on startup */
 void asciiSplash() {
    wprintw(chatWin, "\n");
-   wprintw(chatWin, "|          __\n");
-   wprintw(chatWin, "|         /_/\\        _____ ____  ____     ____ _           _   \n");
-   wprintw(chatWin, "|        / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
-   wprintw(chatWin, "|       / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
-   wprintw(chatWin, "|      / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ \n");
-   wprintw(chatWin, "|     / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
-   wprintw(chatWin, "|    /_/______\\_\\/\\\n");
-   wprintw(chatWin, "|    \\_\\_________\\/\n\n");
-   wprintw(chatWin, "| Enter /help to view a list of available commands.\n\n");
-   box(chatWin, 0, 0);
+   wprintw(chatWin, "         __\n");
+   wprintw(chatWin, "        /_/\\        _____ ____  ____     ____ _           _   \n");
+   wprintw(chatWin, "       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
+   wprintw(chatWin, "      / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
+   wprintw(chatWin, "     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ \n");
+   wprintw(chatWin, "    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
+   wprintw(chatWin, "   /_/______\\_\\/\\\n");
+   wprintw(chatWin, "   \\_\\_________\\/\n\n");
+   wprintw(chatWin, " Enter /help to view a list of available commands.\n\n");
+   //box(chatWin, 0, 0);
    wrefresh(chatWin);
 }
 

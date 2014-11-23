@@ -43,11 +43,11 @@ int userCommand(packet *tx_pkt) {
        pthread_mutex_lock(&debugModeMutex);
        if (debugMode) {
          debugMode = 0;
-         wprintw(chatWin, "| --- Client: Debug disabled.\n");
+         wprintw(chatWin, " --- Client: Debug disabled.\n");
        }
        else {
           debugMode = 1;
-         wprintw(chatWin, "| --- Client: Debug enabled.\n");
+         wprintw(chatWin, " --- Client: Debug enabled.\n");
        }
        pthread_mutex_unlock(&debugModeMutex);
        return 0;
@@ -55,24 +55,24 @@ int userCommand(packet *tx_pkt) {
    // Handle connect command
    else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
-          wprintw(chatWin, "| --- Error: Server connect failed.\n");
+          wprintw(chatWin, " --- Error: Server connect failed.\n");
       }
       return 0;
    }
    // Handle reconnect command
    else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
       if (!reconnect((void *)tx_pkt->buf)) {
-          wprintw(chatWin, "| --- Error: Server connect failed.\n");
+          wprintw(chatWin, " --- Error: Server connect failed.\n");
       }
       return 0;
    }
    // Handle autoconnect command
    else if (strncmp((void *)tx_pkt->buf, "/autoconnect", strlen("/autoconnect")) == 0) {
        if (toggleAutoConnect()) {
-          wprintw(chatWin, "| --- Client: Autoconnect enabled.\n");
+          wprintw(chatWin, " --- Client: Autoconnect enabled.\n");
        }
        else {
-          wprintw(chatWin, "| --- Client: Autoconnect disabled.\n");
+          wprintw(chatWin, " --- Client: Autoconnect disabled.\n");
        }
        return 0;
    }
@@ -91,7 +91,7 @@ int userCommand(packet *tx_pkt) {
    // Handle setpass command
    else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
       if (!setPassword(tx_pkt)) {
-         wprintw(chatWin, "| --- Error: Password mismatch.\n");
+         wprintw(chatWin, " --- Error: Password mismatch.\n");
          return 0;
       }
       else {
@@ -143,7 +143,7 @@ int userCommand(packet *tx_pkt) {
    }
    // If it wasn't any of that, invalid command
    else {
-      wprintw(chatWin, "| --- Error: Invalid command.\n");
+      wprintw(chatWin, " --- Error: Invalid command.\n");
       return 0;
    }
 }
@@ -171,7 +171,7 @@ int validInvite(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintw(chatWin, "| --- Error: Usage: /invite username\n");
+      wprintw(chatWin, " --- Error: Usage: /invite username\n");
       return 0;
    }
 }
@@ -199,7 +199,7 @@ int validJoin(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintw(chatWin, "| --- Error: Usage: /join roomname\n");
+      wprintw(chatWin, " --- Error: Usage: /join roomname\n");
       return 0;
    }
 }
@@ -221,14 +221,14 @@ int newServerConnection(char *buf) {
    }
    if (i > 2) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         wprintw(chatWin, "| --- Error: Could not connect to server.\n");
+         wprintw(chatWin, " --- Error: Could not connect to server.\n");
          return 0;
       }
       if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         wprintw(chatWin, "| --- Error:  chatRX thread not created.\n");
+         wprintw(chatWin, " --- Error:  chatRX thread not created.\n");
          return 0;
       }
-      wprintw(chatWin, "| Connected.\n");
+      wprintw(chatWin, " Connected.\n");
       i = 0;
       pthread_mutex_lock(&configFileMutex);
       configfp = fopen(config_file, "r+");
@@ -252,7 +252,7 @@ int newServerConnection(char *buf) {
       return 1;
    }
    else {
-       wprintw(chatWin, "| --- Error: Usage: /connect address port\n");
+       wprintw(chatWin, " --- Error: Usage: /connect address port\n");
        return 0;
    }
 }
@@ -279,7 +279,7 @@ int reconnect(char *buf) {
                else {
                   fclose(configfp);
                   pthread_mutex_unlock(&configFileMutex);
-                  wprintw(chatWin, "| --- Error: No previous connection to reconnect to.\n");
+                  wprintw(chatWin, " --- Error: No previous connection to reconnect to.\n");
                   box(chatWin, 0, 0);
                   wrefresh(chatWin);
                   return 0;
@@ -343,7 +343,7 @@ int serverLogin(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintw(chatWin, "| --- Error: Usage: /login username password\n");
+      wprintw(chatWin, " --- Error: Usage: /login username password\n");
       return 0;
    }
 }
@@ -371,12 +371,12 @@ int serverRegistration(packet *tx_pkt) {
          return 1;
       }
       else {
-         wprintw(chatWin, "| --- Error: Password mismatch\n");
+         wprintw(chatWin, " --- Error: Password mismatch\n");
          return 0;
       }
    }
    else {
-      wprintw(chatWin, "| --- Error: Usage: /register username password password\n");
+      wprintw(chatWin, " --- Error: Usage: /register username password password\n");
       return 0;
    }
 }
@@ -401,12 +401,12 @@ int setPassword(packet *tx_pkt) {
          return 1;
       }
       else {
-      wprintw(chatWin, "| --- Error: New password mismatch\n");
+      wprintw(chatWin, " --- Error: New password mismatch\n");
       return 0;
       }
    }
    else {
-      wprintw(chatWin, "| --- Error: Usage: /setpass oldpassword newpassword newpassword\n");
+      wprintw(chatWin, " --- Error: Usage: /setpass oldpassword newpassword newpassword\n");
       return 0;
    }
 }
@@ -420,7 +420,7 @@ int setName(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintw(chatWin, "| --- Error: Usage: /setname newname\n");
+      wprintw(chatWin, " --- Error: Usage: /setname newname\n");
       return 0;
    }
 }
@@ -428,34 +428,34 @@ int setName(packet *tx_pkt) {
 
 /* Dump contents of received packet from server */
 void debugPacket(packet *rx_pkt) {
-   wprintw(chatWin, "| --------------------- PACKET REPORT --------------------- \n");
-   wprintw(chatWin, "| Timestamp: %lu\n", rx_pkt->timestamp);
-   wprintw(chatWin, "| User Name: %s\n", rx_pkt->username);
-   wprintw(chatWin, "| Real Name: %s\n", rx_pkt->realname);
-   wprintw(chatWin, "| Option: %d\n", rx_pkt->options);
-   wprintw(chatWin, "| Buffer: %s\n", rx_pkt->buf);
-   wprintw(chatWin, "| --------------------------------------------------------- \n");
+   wprintw(chatWin, " --------------------- PACKET REPORT --------------------- \n");
+   wprintw(chatWin, " Timestamp: %lu\n", rx_pkt->timestamp);
+   wprintw(chatWin, " User Name: %s\n", rx_pkt->username);
+   wprintw(chatWin, " Real Name: %s\n", rx_pkt->realname);
+   wprintw(chatWin, " Option: %d\n", rx_pkt->options);
+   wprintw(chatWin, " Buffer: %s\n", rx_pkt->buf);
+   wprintw(chatWin, " --------------------------------------------------------- \n");
 }
 
 
 /* Print helpful and unhelpful things */
 void showHelp() {
-   wprintw(chatWin, "|--------------------------------[ Command List ]--------------------------------------\n");
-   wprintw(chatWin, "|\t/connect\t | Usage: /connect address port\n");
-   wprintw(chatWin, "|\t/reconnect\t | Connect to last known host\n");
-   wprintw(chatWin, "|\t/autoconnect\t | Toggle automatic connection to last known host on startup\n");
-   wprintw(chatWin, "|\t/help\t\t | Display a list of commands\n");
-   wprintw(chatWin, "|\t/debug\t\t | Toggle debug mode\n");
-   wprintw(chatWin, "|\t/exit\t\t | Exit the client\n");
-   wprintw(chatWin, "|\t/register\t | Usage: /register username password password\n");
-   wprintw(chatWin, "|\t/login\t\t | Usage: /login username password\n");
-   wprintw(chatWin, "|\t/setpass\t | Usage: /setpass oldpassword newpassword newpassword\n");
-   wprintw(chatWin, "|\t/setname\t | Usage: /setname fname lname\n");
-   wprintw(chatWin, "|\t/who\t\t | Return a list of users in your current room or a specific user real name\n");
-   wprintw(chatWin, "|\t/who all\t | Return a list of all connected users\n");
-   wprintw(chatWin, "|\t/list\t\t | Return a list of all public rooms with active users in them\n");
-   wprintw(chatWin, "|\t/invite\t\t | Usage: /invite username\n");
-   wprintw(chatWin, "|\t/join\t\t | Usage: /join roomname\n");
-   wprintw(chatWin, "|\t/leave\t\t | Leave the room you are in and return to the lobby\n");
-   wprintw(chatWin, "|------------------------------------------------------------------------------------------\n");
+   wprintw(chatWin, "--------------------------------[ Command List ]--------------------------------------\n");
+   wprintw(chatWin, "\t/connect\t | Usage: /connect address port\n");
+   wprintw(chatWin, "\t/reconnect\t | Connect to last known host\n");
+   wprintw(chatWin, "\t/autoconnect\t | Toggle automatic connection to last known host on startup\n");
+   wprintw(chatWin, "\t/help\t\t | Display a list of commands\n");
+   wprintw(chatWin, "\t/debug\t\t | Toggle debug mode\n");
+   wprintw(chatWin, "\t/exit\t\t | Exit the client\n");
+   wprintw(chatWin, "\t/register\t | Usage: /register username password password\n");
+   wprintw(chatWin, "\t/login\t\t | Usage: /login username password\n");
+   wprintw(chatWin, "\t/setpass\t | Usage: /setpass oldpassword newpassword newpassword\n");
+   wprintw(chatWin, "\t/setname\t | Usage: /setname fname lname\n");
+   wprintw(chatWin, "\t/who\t\t | Return a list of users in your current room or a specific user real name\n");
+   wprintw(chatWin, "\t/who all\t | Return a list of all connected users\n");
+   wprintw(chatWin, "\t/list\t\t | Return a list of all public rooms with active users in them\n");
+   wprintw(chatWin, "\t/invite\t\t | Usage: /invite username\n");
+   wprintw(chatWin, "\t/join\t\t | Usage: /join roomname\n");
+   wprintw(chatWin, "\t/leave\t\t | Leave the room you are in and return to the lobby\n");
+   wprintw(chatWin, "------------------------------------------------------------------------------------------\n");
 }
