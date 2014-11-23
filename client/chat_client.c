@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
    }
    
    // Safely close connection
-   wprintw(chatWin, "| Preparing to exit . . .%s\n");
+   wprintw(chatWin, "| Preparing to exit . . .\n");
    wrefresh(chatWin);
    box(chatWin, 0, 0);
    close(serverfd);
@@ -489,10 +489,12 @@ void sigintHandler(int sig_num) {
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
-            wprintw(chatWin, "%s| --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
+            wprintw(chatWin, "| --- Error: chatRX thread not joining.\n");
          }
       }
    }
+   wrefresh(chatWin);
+   box(chatWin, 0, 0);
    pthread_mutex_destroy(&nameMutex);
    pthread_mutex_destroy(&debugModeMutex);
    pthread_mutex_destroy(&configFileMutex);
