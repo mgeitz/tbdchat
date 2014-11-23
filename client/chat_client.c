@@ -155,6 +155,7 @@ int main(int argc, char **argv) {
    wprintw(chatWin, " Exiting client.\n");
    wrefresh(chatWin);
    endwin();
+   printf("\33[2J\33[H");
    exit(0);
 }
 
@@ -496,6 +497,7 @@ void sigintHandler(int sig_num) {
    pthread_mutex_destroy(&configFileMutex);
    pthread_mutex_destroy(&roomMutex);
    endwin();
+   printf("\33[2J\33[H");
    exit(0);
 }
 
