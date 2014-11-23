@@ -207,12 +207,12 @@ int userInput(packet *tx_pkt) {
       // Backspace
       if (ch == 8 || ch == 127 || ch == KEY_LEFT) {
          if (i > 0) {
-            wprintw(inputWin, "\b \b");
+            wprintw(inputWin, "\b \b\0");
+            tx_pkt->buf[--i] = '\0';
             wrefresh(inputWin);
-            i--;
          }
          else {
-            wprintw(inputWin, "\b ");
+            wprintw(inputWin, "\b \0");
          }
       }
       // Otherwise put in buffer
@@ -223,16 +223,15 @@ int userInput(packet *tx_pkt) {
             wprintw(inputWin, (char *)&ch);
             wrefresh(inputWin);
          }
+         // Unless buffer is full
          else {
-            break;
-            //wprintw(inputWin, "\b\b%s", (char *)&ch);
-            //wrefresh(inputWin);
+            wprintw(inputWin, "\b%s", (char *)&ch);
+            tx_pkt->buf[(i - 1)] = (char *)&ch;
+            wrefresh(inputWin);
          }
       }
    }
-   // Null terminate buffer, clear input
-   // NOTE: missing length checks, should we autosend at length, buffer a larger length to simulate tty driver, or just not allow new input after a certain length except a newline?
-   // NOTE: no backspace support yet
+   // Null terminate, clear input window
    tx_pkt->buf[i] = '\0';
    wclear(inputWin);
    wrefresh(inputWin);
