@@ -429,13 +429,17 @@ void leave(packet *pkt, int fd) {
                // Send join success to client
                ret.options = JOINSUC;
                strcpy(ret.realname, SERVER_NAME);
+               strcpy(ret.username, SERVER_NAME);
                sprintf(ret.buf, "%s %d", defaultRoom->name, defaultRoom->ID);
+               strcat(ret.buf, " has joined the room.");
+               ret.timestamp = time(NULL);
                send(fd, (void *)&ret, sizeof(packet), MSG_NOSIGNAL);
                memset(&ret, 0, sizeof(ret));
 
                // Send join notification to lobby room
                ret.options = defaultRoom->ID;
                strcpy(ret.realname, SERVER_NAME);
+               strcpy(ret.username, SERVER_NAME);
                strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
                strcat(ret.buf, " has joined the room.");
                ret.timestamp = time(NULL);
