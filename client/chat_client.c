@@ -226,7 +226,8 @@ int userInput(packet *tx_pkt) {
          // Unless buffer is full
          else {
             wprintw(inputWin, "\b%s", (char *)&ch);
-            tx_pkt->buf[(i - 1)] = (char *)&ch;
+            tx_pkt->buf[(i - 1)] = '\0';
+            strcat(tx_pkt->buf, (char *)&ch);
             wrefresh(inputWin);
          }
       }
