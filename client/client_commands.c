@@ -159,14 +159,15 @@ int validInvite(packet *tx_pkt) {
 
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       //wprintw(chatWin, "%d: %s\n", i, args[i]);
        args[++i] = strsep(&tmp, " \t");
    }
 
-   if (i > 1) {
+   if (i > 8) {
       tx_pkt->options = INVITE;
       memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
       pthread_mutex_lock(&roomMutex);
-      sprintf(tx_pkt->buf, "%s %d", args[1], currentRoom);
+      sprintf(tx_pkt->buf, "%s %d", args[9], currentRoom);
       pthread_mutex_unlock(&roomMutex);
       return 1;
    }
@@ -190,11 +191,11 @@ int validJoin(packet *tx_pkt) {
        args[++i] = strsep(&tmp, " \t");
    }
 
-   if (i > 1) {
+   if (i > 8) {
       tx_pkt->options = JOIN;
       memset(&tx_pkt->buf, 0, sizeof(tx_pkt->buf));
       pthread_mutex_lock(&roomMutex);
-      sprintf( tx_pkt->buf, "%s %d", args[1], currentRoom);
+      sprintf( tx_pkt->buf, "%s %d", (char *)args[9], currentRoom);
       pthread_mutex_unlock(&roomMutex);
       return 1;
    }
@@ -336,10 +337,10 @@ int serverLogin(packet *tx_pkt) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
       args[++i] = strsep(&tmp, " \t");
    }
-   if (i == 3) {
+   if (i > 9) {
       tx_pkt->options = LOGIN;
-      strcpy(tx_pkt->username, args[1]);
-      strcpy(tx_pkt->realname, args[1]);
+      strcpy(tx_pkt->username, args[9]);
+      strcpy(tx_pkt->realname, args[9]);
       return 1;
    }
    else {

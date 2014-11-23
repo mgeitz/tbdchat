@@ -82,7 +82,7 @@ int userInput(packet *tx_pkt);
 void asciiSplash();
 void buildDefaultConfig();
 int auto_connect();
-void newRoom(char *buf);
+void newRoom(packet *rx_pkt);
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);

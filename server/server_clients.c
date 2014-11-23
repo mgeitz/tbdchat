@@ -307,6 +307,8 @@ void invite(packet *in_pkt, int fd) {
             memset(&ret, 0, sizeof(packet));
             ret.options = INVITESUC;
             strcpy(ret.username, SERVER_NAME);
+            strcpy(ret.realname, SERVER_NAME);
+            ret.timestamp = time(NULL);
             send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
             return;
          }
@@ -372,12 +374,15 @@ void join(packet *pkt, int fd) {
 
          ret.options = JOINSUC;
          strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.username, SERVER_NAME);
+         ret.timestamp = time(NULL);
          sprintf(ret.buf, "%s %d", args[0], newRoom->ID);
          send(fd, (void *)&ret, sizeof(packet), MSG_NOSIGNAL);
          memset(&ret, 0, sizeof(ret));
 
          ret.options = newRoom->ID;
          strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.username, SERVER_NAME);
          strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
          strcat(ret.buf, " has joined the room.");
          ret.timestamp = time(NULL);
@@ -480,6 +485,8 @@ void set_name(packet *pkt, int fd) {
       ret.options = SERV_ERR;
    }
 
+   strcpy(ret.realname, SERVER_NAME);
+   strcpy(ret.username, SERVER_NAME);
    ret.timestamp = time(NULL);
    send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
@@ -525,6 +532,9 @@ void set_pass(packet *pkt, int fd) {
       pkt->options = SERV_ERR;
       strcpy(pkt->buf, "Password change failed, malformed request.");
    }
+   strcpy(pkt->username, SERVER_NAME);
+   strcpy(pkt->realname, SERVER_NAME);
+   pkt->timestamp = time(NULL);
    send(fd, (void *)pkt, sizeof(packet), MSG_NOSIGNAL);
 }
 

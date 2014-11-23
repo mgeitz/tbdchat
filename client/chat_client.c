@@ -339,7 +339,7 @@ void serverResponse(packet *rx_pkt) {
              rx_pkt->realname, "Name change successful!");
    }
    else if (rx_pkt->options == JOINSUC) {
-      newRoom((void *)rx_pkt->buf);
+      newRoom(rx_pkt);
    }
    else if (rx_pkt->options == INVITE) {
       wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
@@ -376,12 +376,13 @@ void serverResponse(packet *rx_pkt) {
 
 
 /* Change the clients current room (for sending) */
-void newRoom(char *buf) {
+void newRoom(packet *rx_pkt) {
+   struct tm *timestamp = localtime(&(rx_pkt->timestamp));
    int i = 0, roomNumber;
    char *args[16];
    char cpy[BUFFERSIZE];
    char *tmp = cpy;
-   strcpy(tmp, buf);
+   strcpy(tmp, rx_pkt->buf);
 
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -392,7 +393,8 @@ void newRoom(char *buf) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintw(chatWin, " --- Success: Joined room!");
+         wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+                rx_pkt->realname, "Joined new room.");
       }
       pthread_mutex_unlock(&roomMutex);
    }
