@@ -44,6 +44,7 @@ KNOWN BUGS:
 
       - No colors
       - Problem with sprintf statements (see packet dump for /join /login)
+      - Problem with backspace when used on no input
 
 
 CLIENT FEATURES:

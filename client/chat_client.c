@@ -76,13 +76,12 @@ int main(int argc, char **argv) {
    // Check autoconnect, run if set
    if (auto_connect()) {
       wprintw(chatWin, " Auto connecting to most recently connected host . . .\n");
-      wrefresh(chatWin);
-      //box(chatWin, 0, 0);
       reconnect(tx_pkt.buf);
    }
   
    // Primary execution loop 
    while (1) {
+      wrefresh(chatWin);
       // Wipe packet space
       memset(&tx_pkt, 0, sizeof(packet));
       // Set packet options as untouched
@@ -126,8 +125,6 @@ int main(int argc, char **argv) {
             wprintw(chatWin, " --- Error: Not connected to any server. See /help for command usage.\n");
          } 
       }
-      wrefresh(chatWin);
-      //box(chatWin, 0, 0);
       // If an exit packet was just transmitted, break from primary execution loop
       if (tx_pkt.options == EXIT) {
          break;
@@ -137,14 +134,11 @@ int main(int argc, char **argv) {
    // Safely close connection
    wprintw(chatWin, " Preparing to exit . . .\n");
    wrefresh(chatWin);
-   //box(chatWin, 0, 0);
    close(serverfd);
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
          wprintw(chatWin, " --- Error: chatRX thread not joining.\n");
-         wrefresh(chatWin);
-        // box(chatWin, 0, 0);
       }
    }
    // Destroy mutexes
@@ -155,7 +149,6 @@ int main(int argc, char **argv) {
    // Close curses
    wprintw(chatWin, " Exiting client.\n");
    wrefresh(chatWin);
-   //box(chatWin, 0, 0);
    endwin();
    exit(0);
 }
@@ -211,7 +204,7 @@ int userInput(packet *tx_pkt) {
    wmove(inputWin, 0, 0);
    // Read 1 char at a time
    while ((ch = getch()) != '\n') {
-      // Process command keys
+      // Backspace
       if (ch == 8 || ch == 127 || ch == KEY_LEFT) {
          if (i > 0) {
             wprintw(inputWin, "\b \b");
@@ -219,7 +212,7 @@ int userInput(packet *tx_pkt) {
             i--;
          }
          else {
-            wprintw(inputWin, "\b");
+            wprintw(inputWin, "\b ");
          }
       }
       // Otherwise put in buffer
@@ -242,7 +235,6 @@ int userInput(packet *tx_pkt) {
    // NOTE: no backspace support yet
    tx_pkt->buf[i] = '\0';
    wclear(inputWin);
-   //box(inputWin, 0, 0);
    wrefresh(inputWin);
    return i;
 }
@@ -287,14 +279,11 @@ void *chatRX(void *ptr) {
          else {
             wprintw(chatWin, " Communication with server has terminated.\n");
             wrefresh(chatWin);
-            //box(chatWin, 0, 0);
             break;
          }
       }
-      //wrefresh(chatWin);
       // Wipe packet space
       wrefresh(chatWin);
-      //box(chatWin, 0, 0);
       memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
@@ -481,7 +470,6 @@ void sigintHandler(int sig_num) {
       }
    }
    wrefresh(chatWin);
-   //box(chatWin, 0, 0);
    pthread_mutex_destroy(&nameMutex);
    pthread_mutex_destroy(&debugModeMutex);
    pthread_mutex_destroy(&configFileMutex);
@@ -497,8 +485,6 @@ void resizeHandler(int sig) {
 
    //int nh, nw;
    //getmaxyx(stdscr, nh, nw);
-   //create_text_window(); 
-   //create_input_window(); 
 }
 
 
@@ -514,7 +500,6 @@ void asciiSplash() {
    wprintw(chatWin, "   /_/______\\_\\/\\\n");
    wprintw(chatWin, "   \\_\\_________\\/\n\n");
    wprintw(chatWin, " Enter /help to view a list of available commands.\n\n");
-   //box(chatWin, 0, 0);
    wrefresh(chatWin);
 }
 
