@@ -46,7 +46,8 @@ KNOWN BUGS:
       - box printing around new input for chat window doesn't show
       - All text wrap overwrites the border
       - No colors
-      - Backspace not working
+      - Backspace not removing input from buffer
+      - On occasion /who all seems to make the screen draw giberish
 
 
 

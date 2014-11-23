@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
    signal(SIGINT, sigintHandler);
    signal(SIGWINCH, resizeHandler);
 
+   // Initialize curses
    if ((mainWin = initscr()) == NULL) { exit(1); }
    chatWin = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWin, 0, 0);
@@ -46,12 +47,10 @@ int main(int argc, char **argv) {
    box(inputWin, 0, 0);
    scrollok(chatWin, TRUE);
 
-   //use_default_colors();
    cbreak();
    noecho();
    keypad(mainWin, TRUE);
 
-   // Initialize curses
    //setup_screens();
    //text_win = create_text_window();
    //wrefresh(text_win);
@@ -110,8 +109,6 @@ int main(int argc, char **argv) {
                timestamp = localtime(&(tx_pkt.timestamp));
                wprintw(chatWin, "|  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        tx_pkt.realname, tx_pkt.buf);
-               wrefresh(chatWin);
-               box(chatWin, 0, 0);
                tx_pkt.options = currentRoom;
             }
             pthread_mutex_unlock(&roomMutex);
@@ -123,10 +120,10 @@ int main(int argc, char **argv) {
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
             wprintw(chatWin, "| --- Error: Not connected to any server. See /help for command usage.\n");
-            wrefresh(chatWin);
-            box(chatWin, 0, 0);
          } 
       }
+      wrefresh(chatWin);
+      box(chatWin, 0, 0);
       // If an exit packet was just transmitted, break from primary execution loop
       if (tx_pkt.options == EXIT) {
          break;
@@ -214,7 +211,7 @@ int userInput(packet *tx_pkt) {
       if (ch == 8 || ch == 127 || ch == KEY_LEFT) {
          wprintw(inputWin, "\b");
          i--;
-         wrefresh(chatWin);
+         // Remove from tx_pkt->buf
       }
       // Otherwise put in buffer
       else {
@@ -259,15 +256,11 @@ void *chatRX(void *ptr) {
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
                wprintw(chatWin, "|  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        rx_pkt.realname, rx_pkt.buf);
-               wrefresh(chatWin);
-               box(chatWin, 0, 0);
             }
             else {
                //int i = hash(rx_pkt.username);
                wprintw(chatWin, "|  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        rx_pkt.realname, rx_pkt.buf);
-               wrefresh(chatWin);
-               box(chatWin, 0, 0);
             }
          }
          // If the received packet is a nonmessage option, handle option response
@@ -284,6 +277,8 @@ void *chatRX(void *ptr) {
       }
       //wrefresh(chatWin);
       // Wipe packet space
+      wrefresh(chatWin);
+      box(chatWin, 0, 0);
       memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
@@ -294,16 +289,12 @@ void *chatRX(void *ptr) {
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == SERV_ERR) {
       wprintw(chatWin, "| --- Error: %s\n", rx_pkt->buf);
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       wprintw(chatWin, "| --- Success: Registration successful!\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -314,20 +305,14 @@ void serverResponse(packet *rx_pkt) {
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
       wprintw(chatWin, "| --- Success: Login successful!\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
       wprintw(chatWin, "| --- User: %s\n", rx_pkt->buf);
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == PASSSUC) {
       wprintw(chatWin, "| --- Success: Password change successful!\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
@@ -335,45 +320,31 @@ void serverResponse(packet *rx_pkt) {
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
       wprintw(chatWin, "| --- Success: Name change successful!\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITE) {
       wprintw(chatWin, "| --- Invite: %s\n", rx_pkt->buf);
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == INVITESUC) {
       wprintw(chatWin, "| --- Success: Invite sent!\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == GETROOMS) {
       wprintw(chatWin, "| --- Room: %s\n", rx_pkt->buf);
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if (rx_pkt->options == MOTD) {
       wprintw(chatWin, "| ------------------------------------------------------------------- \n");
       wprintw(chatWin, "| %s\n", rx_pkt->buf);
       wprintw(chatWin, "| ------------------------------------------------------------------- \n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
    else if(rx_pkt->options == EXIT) {
       wprintw(chatWin, "| Server has closed its connection with you.\n");
       wprintw(chatWin, "| Closing socket connection with server.\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
       close(serverfd);
    }
    else {
       wprintw(chatWin, "| --- Error: Unknown message received from server.\n");
-      wrefresh(chatWin);
-      box(chatWin, 0, 0);
    }
 }
 
@@ -526,7 +497,7 @@ void asciiSplash() {
    wprintw(chatWin, "|     / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
    wprintw(chatWin, "|    /_/______\\_\\/\\\n");
    wprintw(chatWin, "|    \\_\\_________\\/\n\n");
-   wprintw(chatWin, "|  Enter /help to view a list of available commands.\n\n");
+   wprintw(chatWin, "| Enter /help to view a list of available commands.\n\n");
    box(chatWin, 0, 0);
    wrefresh(chatWin);
 }
