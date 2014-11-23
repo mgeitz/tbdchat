@@ -24,7 +24,7 @@ char *config_file;
 char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 // Curses Windows
-WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox;
+WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -45,11 +45,13 @@ int main(int argc, char **argv) {
    box(chatWinBox, 0, 0);
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
-   //box(chatWin, 0, 0);
+
+   infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
    
-   inputWinBox = subwin(mainWin, (LINES * 0.2), COLS, (LINES * 0.8), 0);
+   inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
    box(inputWinBox, 0, 0);
-   inputWin = subwin(inputWinBox, (LINES * 0.2) - 2, COLS - 2, (LINES * 0.8) + 1, 1);
+   inputWin = subwin(inputWinBox, (LINES * 0.2) - 2, COLS - 2, (LINES * 0.8) + 2, 1);
+
 
    cbreak();
    noecho();
@@ -78,6 +80,8 @@ int main(int argc, char **argv) {
       wprintw(chatWin, " Auto connecting to most recently connected host . . .\n");
       reconnect(tx_pkt.buf);
    }
+   wprintw(infoLine, " --- Info Line: !!!");
+   wrefresh(infoLine);
   
    // Primary execution loop 
    while (1) {
