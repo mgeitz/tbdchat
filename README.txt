@@ -44,6 +44,7 @@ KNOWN BUGS:
 
       - No colors
       - Problem with sprintf statements (see packet dump for /join /login)
+      - Window rezises are not properly handled
 
 
 CLIENT FEATURES:

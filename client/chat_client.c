@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
    struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
+   int LINES, COLS;
    packet *tx_pkt_ptr = &tx_pkt;
 
 
@@ -41,27 +42,28 @@ int main(int argc, char **argv) {
 
    // Initialize curses
    if ((mainWin = initscr()) == NULL) { exit(1); }
+
+   // Do not echo key presses
+   noecho();
+   // Read input one char at a time
+   cbreak();
+   // Capture special keys
+   keypad(mainWin, TRUE);
+
+   getmaxyx(mainWin, LINES, COLS);
+
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
+   wrefresh(chatWinBox);
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
 
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
-   
+
    inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
    box(inputWinBox, 0, 0);
-   inputWin = subwin(inputWinBox, (LINES * 0.2) - 2, COLS - 2, (LINES * 0.8) + 2, 1);
-
-
-   cbreak();
-   noecho();
-   keypad(mainWin, TRUE);
-
-   //setup_screens();
-   //text_win = create_text_window();
-   //wrefresh(text_win);
-   //in_win = create_input_window();
-   //wrefresh(in_win);
+   inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
 
    // Get home dir, check config
    strcpy(full_config_path, getenv("HOME"));
@@ -98,7 +100,6 @@ int main(int argc, char **argv) {
       if(bufSize > 0 && tx_pkt.buf[bufSize] != EOF) {
          // Check if the input should be read as a command, if so process the command
          if(strncmp("/", (void *)tx_pkt.buf, 1) == 0) {
-             
              send_flag = userCommand(tx_pkt_ptr);
          }
          // If connected and handling a packet flagged to be sent
@@ -499,10 +500,22 @@ void sigintHandler(int sig_num) {
 
 /* Handle window resizing */
 void resizeHandler(int sig) {
-   // This currently is not working, although has stopped segfault on resize
+   // None of this seems to work
+   int LINES, COLS;
+   getmaxyx(mainWin, LINES, COLS);
 
-   //int nh, nw;
-   //getmaxyx(stdscr, nh, nw);
+   chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
+   box(chatWinBox, 0, 0);
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
+   wrefresh(chatWinBox);
+   chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
+   scrollok(chatWin, TRUE);
+
+   infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
+   
+   inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
+   box(inputWinBox, 0, 0);
+   inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
 }
 
 
