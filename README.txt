@@ -3,14 +3,12 @@ TO-DO LIST:
 
    Smaller adjustments:
 
-      - [Server] Remove a user from active_users_list and their room list when they send a /exit
+      - [Server] Redo several lists structures to be lists of pointers to registers users nodes and solve all of our problems.
       
       - [Server] Send notification to all users in a room when another user leaves it
  
       - [Server] Hash stored passwords, hash input on compare
 
-      - [Server] Send a notification to all users in a room when another user disconnects entirely
-   
       - [Client/Server] /logout command (remove from rooms/active users, set logged out, keep connection)
 
       - [Client/Server] /disconnect command (same as /exit but allows the client to /connect again)
@@ -21,9 +19,6 @@ TO-DO LIST:
    Requires considerable time:
 
       - [client] Curses
-         o (probably first move as much in the main method to dedicated methods) create main draw calls, key catches,
- and sig handlers in main. Very much not sure how this will coincide with input to the buffer, all key catches may just need to be in userInput method and we won't have to touch main much.
-         o Draw basic primary screen; input window, output window
          o Modify all error/alerts/notifications to use unified format with timestamp, etc for output window.
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
          o If multiple rooms, catch ALT+(LEFT&&RIGHT||RIGHT)(or something similar) to change rooms (not limiting client to a maximum room number as F# ultimately would)
