@@ -213,14 +213,19 @@ int userInput(packet *tx_pkt) {
    while ((ch = getch()) != '\n') {
       // Process command keys
       if (ch == 8 || ch == 127 || ch == KEY_LEFT) {
-         wprintw(inputWin, "\b");
-         i--;
-         // Remove from tx_pkt->buf
+         if (i > 0) {
+            wprintw(inputWin, "\b \b");
+            wrefresh(inputWin);
+            i--;
+         }
+         else {
+            wprintw(inputWin, "\b");
+         }
       }
       // Otherwise put in buffer
       else {
          strcat(tx_pkt->buf, (char *)&ch);
-         ++i;
+         i++;
          wprintw(inputWin, (char *)&ch);
          wrefresh(inputWin);
       }
