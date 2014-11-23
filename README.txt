@@ -45,7 +45,7 @@ KNOWN BUGS:
       - !!! segfaults server when too much input is entered
       - No colors
       - Backspace not removing input from buffer
-
+      - Problem with sprintf statements (see packet dump for /join /login)
 
 
 CLIENT FEATURES:

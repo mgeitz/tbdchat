@@ -228,7 +228,7 @@ int userInput(packet *tx_pkt) {
    // Null terminate buffer, clear input
    // NOTE: missing length checks, should we autosend at length, buffer a larger length to simulate tty driver, or just not allow new input after a certain length except a newline?
    // NOTE: no backspace support yet
-   tx_pkt->buf[i+1] = '\0';
+   tx_pkt->buf[i] = '\0';
    wclear(inputWin);
    //box(inputWin, 0, 0);
    wrefresh(inputWin);
