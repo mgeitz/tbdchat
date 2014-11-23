@@ -647,6 +647,7 @@ void get_active_users(int fd) {
    packet ret;
    ret.options = GETALLUSERS;
    strcpy(ret.username, SERVER_NAME);
+   strcpy(ret.realname, SERVER_NAME);
    pthread_mutex_lock(&active_users_mutex);
    User *temp = active_users_list;
    while(temp != NULL ) {
@@ -676,6 +677,7 @@ void user_lookup(packet *in_pkt, int fd) {
       packet ret;
       ret.options = GETUSER;
       strcpy(ret.username, SERVER_NAME);
+      strcpy(ret.realname, SERVER_NAME);
       char *realname = get_real_name(&active_users_list, args[1], active_users_mutex);
       if (strcmp(realname, "ERROR") == 0) {
          ret.options = SERV_ERR;
@@ -715,6 +717,7 @@ void get_room_users(packet *in_pkt, int fd) {
          packet ret;
          ret.options = GETUSERS;
          strcpy(ret.username, SERVER_NAME);
+         strcpy(ret.realname, SERVER_NAME);
          while(temp != NULL ) {
             ret.timestamp = time(NULL);
             strcpy(ret.buf, temp->username);
@@ -743,6 +746,7 @@ void get_room_list(int fd) {
    packet pkt;
    pkt.options = GETROOMS;
    strcpy(pkt.username, SERVER_NAME);
+   strcpy(pkt.realname, SERVER_NAME);
    while(temp != NULL ) {
       pkt.timestamp = time(NULL);
       strcpy(pkt.buf, temp->name);

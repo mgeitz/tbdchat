@@ -19,8 +19,7 @@ User *registered_users_list;
 User *active_users_list;
 Room *room_list;
 char *server_MOTD = "Welcome to The Best Damn Chat Server!"
-                    " This is a temporary MOTD without version numbers"
-                    " or anything particularly useful.";
+                    "What should we use the motd for?";
 
 
 int main(int argc, char **argv) {

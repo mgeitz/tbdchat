@@ -292,15 +292,18 @@ void *chatRX(void *ptr) {
 
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
+   struct tm *timestamp = localtime(&(rx_pkt->timestamp));
+   //timestamp = localtime(&(rx_pkt->timestamp));
    if (rx_pkt->options == SERV_ERR) {
-      wprintw(chatWin, " --- Error: %s\n", rx_pkt->buf);
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, rx_pkt->buf);
    }
-   else if (rx_pkt->options == REGSUC) {
-      pthread_mutex_lock(&roomMutex);
-      currentRoom = DEFAULT_ROOM;
-      pthread_mutex_unlock(&roomMutex);
-      wprintw(chatWin, " --- Success: Registration successful!\n");
-   }
+   //else if (rx_pkt->options == REGSUC) {
+   //   pthread_mutex_lock(&roomMutex);
+   //   currentRoom = DEFAULT_ROOM;
+   //   pthread_mutex_unlock(&roomMutex);
+   //   wprintw(chatWin, " --- Success: Registration successful!\n");
+   //}
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
       strcpy(username, rx_pkt->username);
@@ -309,47 +312,60 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      wprintw(chatWin, " --- Success: Login successful!\n");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Login Sucessful!");
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      wprintw(chatWin, " --- User: %s\n", rx_pkt->buf);
+      wprintw(chatWin, "  %d:%d:%d  | [%s] User: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, rx_pkt->buf);
    }
    else if (rx_pkt->options == PASSSUC) {
-      wprintw(chatWin, " --- Success: Password change successful!\n");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Password change successful!");
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintw(chatWin, " --- Success: Name change successful!\n");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Name change successful!");
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITE) {
-      wprintw(chatWin, " --- Invite: %s\n", rx_pkt->buf);
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITESUC) {
-      wprintw(chatWin, " --- Success: Invite sent!\n");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Invite sent!");
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintw(chatWin, " --- Room: %s\n", rx_pkt->buf);
+      wprintw(chatWin, "  %d:%d:%d  | [%s] Room: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, rx_pkt->buf);
    }
    else if (rx_pkt->options == MOTD) {
-      wprintw(chatWin, " ------------------------------------------------------------------- \n");
-      wprintw(chatWin, " %s\n", rx_pkt->buf);
-      wprintw(chatWin, " ------------------------------------------------------------------- \n");
+      wprintw(chatWin, "  %d:%d:%d  | -----------------------------------------------------------\n", \
+              timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, rx_pkt->buf);
+      wprintw(chatWin, "  %d:%d:%d  | -----------------------------------------------------------\n", \
+              timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
    }
    else if(rx_pkt->options == EXIT) {
-      wprintw(chatWin, " Server has closed its connection with you.\n");
-      wprintw(chatWin, " Closing socket connection with server.\n");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Server has closed its connection with you.");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Closing socket connection with server.");
       close(serverfd);
    }
    else {
-      wprintw(chatWin, " --- Error: Unknown message received from server.\n");
+      wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+             rx_pkt->realname, "Unknown message received from server.");
    }
 }
 
@@ -371,14 +387,12 @@ void newRoom(char *buf) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintw(chatWin, " --- Success: Joined room %s.\n", \
-                args[0]);
+         wprintw(chatWin, " --- Success: Joined room!");
       }
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-      wprintw(chatWin, " --- Error: Problem reading JOINSUC from server.\n");
-
+         wprintw(chatWin, " --- Error: Problem reading JOINSUC.");
    }
 }
 
