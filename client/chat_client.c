@@ -224,10 +224,17 @@ int userInput(packet *tx_pkt) {
       }
       // Otherwise put in buffer
       else {
-         strcat(tx_pkt->buf, (char *)&ch);
-         i++;
-         wprintw(inputWin, (char *)&ch);
-         wrefresh(inputWin);
+         if (i < BUFFERSIZE - 1) {
+            strcat(tx_pkt->buf, (char *)&ch);
+            i++;
+            wprintw(inputWin, (char *)&ch);
+            wrefresh(inputWin);
+         }
+         else {
+            break;
+            //wprintw(inputWin, "\b\b%s", (char *)&ch);
+            //wrefresh(inputWin);
+         }
       }
    }
    // Null terminate buffer, clear input

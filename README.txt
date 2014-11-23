@@ -42,7 +42,6 @@ KNOWN BUGS:
             
    Client:
 
-      - !!! segfaults server when too much input is entered
       - No colors
       - Problem with sprintf statements (see packet dump for /join /login)
 
