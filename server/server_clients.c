@@ -563,10 +563,10 @@ int validPassword (char *pass1, char *pass2, int client) {
       sendError("Password requested does not match.", client);
       return 0;
    }
-   if (sanitizeInput(pass1)) {
-      sendError("Invalid characters in password.", client);
-      return 0;
-   }
+//   if (sanitizeInput(pass1)) {
+//      sendError("Invalid characters in password.", client);
+//      return 0;
+//   }
    if (strlen(pass1) < 3) {
       sendError("Password is too short.", client);
       return 0;

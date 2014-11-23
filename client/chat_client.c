@@ -66,12 +66,12 @@ int main(int argc, char **argv) {
       buildDefaultConfig();
    }
 
-   //printf("\33[2J\33[H"); // Removed anticipating curses
+   //wprintw(chatWin, "\33[2J\33[H"); // Removed anticipating curses
    asciiSplash();
 
    // Check autoconnect, run if set
    if (auto_connect()) {
-      printf("%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
+      wprintw(chatWin, "%sAuto connecting to most recently connected host . . .%s\n", WHITE, NORMAL);
       reconnect(tx_pkt.buf);
    }
   
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                timestamp = localtime(&(tx_pkt.timestamp));
-               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                      WHITE, RED, tx_pkt.realname, WHITE, NORMAL, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
          }
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
-            printf("%s --- %sError:%s Not connected to any server. See /help for command usage.\n", WHITE, RED, NORMAL);
+            wprintw(chatWin, "%s --- %sError:%s Not connected to any server. See /help for command usage.\n", WHITE, RED, NORMAL);
          } 
       }
       // If an exit packet was just transmitted, break from primary execution loop
@@ -127,12 +127,12 @@ int main(int argc, char **argv) {
    }
    
    // Safely close connection
-   printf("%sPreparing to exit . . .%s\n", WHITE, NORMAL);
+   wprintw(chatWin, "%sPreparing to exit . . .%s\n", WHITE, NORMAL);
    close(serverfd);
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
+         wprintw(chatWin, "%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
       }
    }
    // Destroy mutexes
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
    pthread_mutex_destroy(&roomMutex);
    // Close curses
    endwin();
-   printf("%sExiting client.%s\n", WHITE, NORMAL);
+   wprintw(chatWin, "%sExiting client.%s\n", WHITE, NORMAL);
    exit(0);
 }
 
@@ -246,7 +246,7 @@ void *chatRX(void *ptr) {
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
-               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
+               wprintw(chatWin, "%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
                       timestamp->tm_sec, WHITE, YELLOW, rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
                // For curses testing  
@@ -254,7 +254,7 @@ void *chatRX(void *ptr) {
             }
             else {
                int i = hash(rx_pkt.username);
-               printf("%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
+               wprintw(chatWin, "%s%d:%d:%d %s| [%s%s%s]%s %s\n", NORMAL,timestamp->tm_hour, timestamp->tm_min, \
                       timestamp->tm_sec, WHITE, USERCOLORS[i], rx_pkt.realname,
                    WHITE, NORMAL, rx_pkt.buf);
                // For curses testing  
@@ -267,7 +267,7 @@ void *chatRX(void *ptr) {
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
-            printf("%sCommunication with server has terminated.%s\n", WHITE, NORMAL);
+            wprintw(chatWin, "%sCommunication with server has terminated.%s\n", WHITE, NORMAL);
             break;
          }
       }
@@ -281,13 +281,13 @@ void *chatRX(void *ptr) {
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == SERV_ERR) {
-      printf("%s --- %sError:%s %s\n", WHITE, RED, NORMAL, rx_pkt->buf);
+      wprintw(chatWin, "%s --- %sError:%s %s\n", WHITE, RED, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == REGSUC) {
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      printf("%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
+      wprintw(chatWin, "%s --- %sSuccess:%s Registration successful!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -297,47 +297,47 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
       pthread_mutex_unlock(&roomMutex);
-      printf("%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
+      wprintw(chatWin, "%s --- %sSuccess:%s Login successful!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      printf("%s --- %sUser:%s %s\n", WHITE, WHITE, NORMAL, rx_pkt->buf);
+      wprintw(chatWin, "%s --- %sUser:%s %s\n", WHITE, WHITE, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == PASSSUC) {
-      printf("%s --- %sSuccess:%s Password change successful!\n", WHITE, GREEN, NORMAL);
+      wprintw(chatWin, "%s --- %sSuccess:%s Password change successful!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      printf("%s --- %sSuccess:%s Name change successful!\n", WHITE, GREEN, NORMAL);
+      wprintw(chatWin, "%s --- %sSuccess:%s Name change successful!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom((void *)rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITE) {
-      printf("%s --- %sInvite: %s%s\n", WHITE, MAGENTA, NORMAL, rx_pkt->buf);
+      wprintw(chatWin, "%s --- %sInvite: %s%s\n", WHITE, MAGENTA, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITESUC) {
-      printf("%s --- %sSuccess:%s Invite sent!\n", WHITE, GREEN, NORMAL);
+      wprintw(chatWin, "%s --- %sSuccess:%s Invite sent!\n", WHITE, GREEN, NORMAL);
    }
    else if (rx_pkt->options == GETROOMS) {
-      printf("%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
+      wprintw(chatWin, "%s --- %sRoom:%s %s\n", WHITE, YELLOW, NORMAL, rx_pkt->buf);
    }
    else if (rx_pkt->options == MOTD) {
-      printf("%s ------------------------------------------------------------------- %s\n", BLACK, NORMAL);
-      printf("%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);
-      printf("%s ------------------------------------------------------------------- %s\n", BLACK, NORMAL);
+      wprintw(chatWin, "%s ------------------------------------------------------------------- %s\n", BLACK, NORMAL);
+      wprintw(chatWin, "%s%s%s\n", CYAN, rx_pkt->buf, NORMAL);
+      wprintw(chatWin, "%s ------------------------------------------------------------------- %s\n", BLACK, NORMAL);
    }
    else if(rx_pkt->options == EXIT) {
-      printf("%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
-      printf("%sClosing socket connection with server.%s\n", WHITE, NORMAL);
+      wprintw(chatWin, "%sServer has closed its connection with you.%s\n", WHITE, NORMAL);
+      wprintw(chatWin, "%sClosing socket connection with server.%s\n", WHITE, NORMAL);
       close(serverfd);
    }
    else {
-      printf("%s --- %sError:%s Unknown message received from server.\n", WHITE, RED, NORMAL);
+      wprintw(chatWin, "%s --- %sError:%s Unknown message received from server.\n", WHITE, RED, NORMAL);
    }
 }
 
@@ -359,13 +359,13 @@ void newRoom(char *buf) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         printf("%s --- %sSuccess:%s Joined room %s%s%s.\n", \
+         wprintw(chatWin, "%s --- %sSuccess:%s Joined room %s%s%s.\n", \
                 WHITE, GREEN, NORMAL, WHITE, args[0], NORMAL);
       }
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-      printf("%s --- %sError:%s Problem reading JOINSUC from server.\n", WHITE, RED, NORMAL);
+      wprintw(chatWin, "%s --- %sError:%s Problem reading JOINSUC from server.\n", WHITE, RED, NORMAL);
 
    }
 }
@@ -382,20 +382,20 @@ int get_server_connection(char *hostname, char *port) {
    hints.ai_socktype = SOCK_STREAM;
    
    if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
-      printf("getaddrinfo: %s\n", gai_strerror(status));
+      wprintw(chatWin, "getaddrinfo: %s\n", gai_strerror(status));
       return -1;
    }
    
    print_ip(servinfo);
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         printf("%s --- %sError:%s socket socket \n", WHITE, RED, NORMAL);
+         wprintw(chatWin, "%s --- %sError:%s socket socket \n", WHITE, RED, NORMAL);
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         printf("%s --- %sError:%s socket connect \n", WHITE, RED, NORMAL);
+         wprintw(chatWin, "%s --- %sError:%s socket connect \n", WHITE, RED, NORMAL);
          return -1;
       }
       break;
@@ -431,14 +431,14 @@ void print_ip( struct addrinfo *ai) {
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
-      printf("%sConnecting to %s: %s:%d . . .%s\n", WHITE, ipver, ipstr, ntohs(port), NORMAL);
+      wprintw(chatWin, "%sConnecting to %s: %s:%d . . .%s\n", WHITE, ipver, ipstr, ntohs(port), NORMAL);
    }
 }
 
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   printf("\b\b%s --- %sError:%s Forced Exit.\n", WHITE, RED, NORMAL);
+   wprintw(chatWin, "\b\b%s --- %sError:%s Forced Exit.\n", WHITE, RED, NORMAL);
    // If the client is connected, safely close the connection
    if (serverfd) { 
       packet tx_pkt;
@@ -453,7 +453,7 @@ void sigintHandler(int sig_num) {
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
-            printf("%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
+            wprintw(chatWin, "%s --- %sError:%s chatRX thread not joining.\n", WHITE, RED, NORMAL);
          }
       }
    }
