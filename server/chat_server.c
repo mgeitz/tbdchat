@@ -15,9 +15,9 @@ int numRooms = DEFAULT_ROOM;
 pthread_mutex_t registered_users_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t active_users_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rooms_mutex = PTHREAD_MUTEX_INITIALIZER;
-User *registered_users_list;
-User *active_users_list;
-Room *room_list;
+Node *registered_users_list;
+Node *active_users_list;
+Node *room_list;
 char const *server_MOTD = "Welcome to The Best Damn Chat Server!"
                     " What should we use the motd for?";
 
@@ -147,8 +147,9 @@ void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
   
    //Closing client sockets and freeing memory from user lists
-   User *temp = active_users_list;
-   User *next;
+   Node *temp = active_users_list;
+   Node *next;
+   User *current;
    packet ret;
    strcpy(ret.username, SERVER_NAME);
    strcpy(ret.realname, SERVER_NAME);
@@ -156,9 +157,11 @@ void sigintHandler(int sig_num) {
 
    printf("--------CLOSING ACTIVE USERS--------\n");
    while(temp != NULL) {
-      printf("Closing %s's socket\n", temp->username);
+      current = (User *) temp->data;
+      printf("Closing %s's socket\n", current->username);
       next = temp->next;
-      exit_client(&ret, temp->sock);
+      exit_client(&ret, current->sock);
+      free(current);
       free(temp);
       temp = next;
    }
@@ -166,7 +169,6 @@ void sigintHandler(int sig_num) {
    temp = registered_users_list;
    printf("--------EMPTYING REGISTERED USERS LIST--------\n");
    while(temp != NULL) {
-      printf("Freeing %s\n", temp->username);
       next = temp->next;
       free(temp);
       temp = next;

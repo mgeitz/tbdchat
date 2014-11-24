@@ -9,9 +9,9 @@ extern int numRooms;
 extern pthread_mutex_t registered_users_mutex;
 extern pthread_mutex_t active_users_mutex;
 extern pthread_mutex_t rooms_mutex;
-extern User *registered_users_list;
-extern User *active_users_list;
-extern Room *room_list;
+extern Node *registered_users_list;
+extern Node *active_users_list;
+extern Node *room_list;
 extern char *server_MOTD;
 
 
@@ -180,8 +180,12 @@ int register_user(packet *in_pkt, int fd) {
       strcpy(user->password, args[2]);
       user->sock = fd;
       user->next = NULL;
+      
+      Node *new_node = (Node *)malloc(sizeof(Node));
+      new_node->data = (void *) user;
+
       // Insert user as registered user, write new user data to file
-      insertUser(&registered_users_list, user, registered_users_mutex);
+      insertNode(&registered_users_list, new_node, registered_users_mutex);
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
 
       // Reform packet as valid login, pass new user data to login
@@ -232,14 +236,20 @@ int login(packet *pkt, int fd) {
       // Login input is valid, read user data from registered users
       User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
       user->sock = fd;
-      user = clone_user(user, registered_users_mutex);
+
+      //Create node for active users list
+      Node *new_usr_act = (Node *)malloc(sizeof(Node));
+      new_usr_act->data = (void *)user;
+
+      //Create node for room list
+      Node *new_usr_rm = (Node *)malloc(sizeof(Node));
+      new_usr_rm = (void *)user;
 
       // Check if the user is already logged in
-      if(insertUser(&active_users_list, user, active_users_mutex) == 1) {
+      if(insertNode(&active_users_list, new_usr_act, active_users_mutex) == 1) {
          // Login successful, add user to default room
          Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
-         insertUser(&(defaultRoom->user_list), user, defaultRoom->user_list_mutex);
-         // RprintList(&room_list, rooms_mutex);
+         insertNode(&(defaultRoom->user_list), new_usr_rm, defaultRoom->user_list_mutex);
 
          // Inform client of successful login
          strcpy(ret.realname, get_real_name(&registered_users_list, args[1], registered_users_mutex));
@@ -368,10 +378,12 @@ void join(packet *pkt, int fd) {
          User *currUser = get_user(&(currentRoom->user_list), pkt->username, currentRoom->user_list_mutex);
          printf("Removing user from his current rooms user list\n");
          removeUser(&(currentRoom->user_list), currUser, currentRoom->user_list_mutex);
-         currUser = clone_user(currUser, currentRoom->user_list_mutex);
 
+         //Create node to add user to other room list.
+         Node *new_node = (Node *)malloc(sizeof(Node));
+         new_node->data = currUser;
          printf("Inserting user into new rooms user list\n");
-         insertUser(&(newRoom->user_list), currUser, newRoom->user_list_mutex);
+         insertNode(&(newRoom->user_list), new_node, newRoom->user_list_mutex);
 
          RprintList(&room_list, rooms_mutex);
 
@@ -423,11 +435,14 @@ void leave(packet *pkt, int fd) {
             if (currUser != NULL) {
                // Remove user from their current room
                removeUser(&(currRoom->user_list), currUser, currRoom->user_list_mutex);
-               currUser = clone_user(currUser, currRoom->user_list_mutex);
+
+               //Create node to add user back to lobby
+               Node *new_node = (Node *)malloc(sizeof(Node));
+               new_node->data = currUser;
 
                // Place user in lobby room
                Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
-               insertUser(&(defaultRoom->user_list), currUser, defaultRoom->user_list_mutex);
+               insertNode(&(defaultRoom->user_list), new_node, defaultRoom->user_list_mutex);
 
                // Send join success to client
                ret.options = JOINSUC;
@@ -477,17 +492,6 @@ void set_name(packet *pkt, int fd) {
    }
    else {
       printf("%s --- Error:%s Trying to modify null user in user_list.\n", RED, NORMAL);
-      strcpy(ret.buf, "Name change failed, for some reason we couldn't find you.");
-      ret.options = SERV_ERR;
-   }
-   // Submit name change to active users
-   user = get_user(&active_users_list, pkt->username, active_users_mutex);
-   if(user != NULL) {
-      memset(user->real_name, 0, sizeof(user->real_name));
-      strncpy(user->real_name, name, sizeof(name));
-   }
-   else {
-      printf("%s --- Error:%s Trying to modify null user in active_users.\n", RED, NORMAL);
       strcpy(ret.buf, "Name change failed, for some reason we couldn't find you.");
       ret.options = SERV_ERR;
    }
@@ -634,11 +638,12 @@ void exit_client(packet *pkt, int fd) {
 void send_message(packet *pkt, int clientfd) {
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options, rooms_mutex);
    printList(&(currentRoom->user_list), currentRoom->user_list_mutex);
-   User *tmp = currentRoom->user_list;
-
+   Node *tmp = currentRoom->user_list;
+   User *current;
    while(tmp != NULL) {
-      if (clientfd != tmp->sock) {
-         send(tmp->sock, (void *)pkt, sizeof(packet), MSG_NOSIGNAL);
+      current = (User *)tmp->data;
+      if (clientfd != current->sock) {
+         send(current->sock, (void *)pkt, sizeof(packet), MSG_NOSIGNAL);
       }
       tmp = tmp->next;
    }
@@ -666,10 +671,13 @@ void get_active_users(int fd) {
    strcpy(ret.username, SERVER_NAME);
    strcpy(ret.realname, SERVER_NAME);
    pthread_mutex_lock(&active_users_mutex);
-   User *temp = active_users_list;
+   Node *temp = active_users_list;
+   User *current;
+
    while(temp != NULL ) {
+      current = (User *) temp->data;
       ret.timestamp = time(NULL);
-      strcpy(ret.buf, temp->username);
+      strcpy(ret.buf, current->username);
       send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
       memset(&ret.buf, 0, sizeof(ret.buf));
       temp = temp->next;
@@ -730,14 +738,17 @@ void get_room_users(packet *in_pkt, int fd) {
       Room *currRoom = Rget_roomFID(&room_list, roomNum, rooms_mutex);
       if (currRoom != NULL) {
          pthread_mutex_lock(&currRoom->user_list_mutex);
-         User *temp = currRoom->user_list;
+         Node *temp = currRoom->user_list;
+         User *current;
          packet ret;
+
          ret.options = GETUSERS;
          strcpy(ret.username, SERVER_NAME);
          strcpy(ret.realname, SERVER_NAME);
          while(temp != NULL ) {
+            current = (User *)temp->data;
             ret.timestamp = time(NULL);
-            strcpy(ret.buf, temp->username);
+            strcpy(ret.buf, current->username);
             send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
             memset(&ret.buf, 0, sizeof(ret.buf));
             temp = temp->next;
@@ -759,14 +770,17 @@ void get_room_users(packet *in_pkt, int fd) {
  */
 void get_room_list(int fd) {
    pthread_mutex_lock(&rooms_mutex);
-   Room *temp = room_list;
+   Node  *temp = room_list;
+   Room *current;
    packet pkt;
    pkt.options = GETROOMS;
    strcpy(pkt.username, SERVER_NAME);
    strcpy(pkt.realname, SERVER_NAME);
+
    while(temp != NULL ) {
+      current = (Room *)temp->data;
       pkt.timestamp = time(NULL);
-      strcpy(pkt.buf, temp->name);
+      strcpy(pkt.buf, current->name);
       send(fd, &pkt, sizeof(pkt), MSG_NOSIGNAL);
       temp = temp->next;
    }
