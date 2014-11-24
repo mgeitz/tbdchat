@@ -132,7 +132,7 @@ void sendError(char *error, int clientfd) {
 /* Replace any char in buffer not in safe_chars, return number of unsafe chars changed */
 int sanitizeInput(char *buf) {
    int i = 0;
-   char safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
+   char const safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        " _,.-/@()*~`&^%$#!?<>'\";:+=[]{}|"
                        "1234567890";

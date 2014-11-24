@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
       wprintw(chatWin, " Auto connecting to most recently connected host . . .\n");
       reconnect(tx_pkt.buf);
    }
-   wprintw(infoLine, " --- Info Line: !!!");
+   wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
   
    // Primary execution loop 
@@ -317,6 +317,9 @@ void serverResponse(packet *rx_pkt) {
       pthread_mutex_unlock(&nameMutex);
       pthread_mutex_lock(&roomMutex);
       currentRoom = DEFAULT_ROOM;
+      werase(infoLine);
+      wprintw(infoLine, " Current room: Lobby"); 
+      wrefresh(infoLine);
       pthread_mutex_unlock(&roomMutex);
       wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Login Sucessful!");
@@ -394,13 +397,16 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintw(chatWin, "  %d:%d:%d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-                rx_pkt->realname, "Joined new room.");
+         wprintw(chatWin, "  %d:%d:%d  | [%s] Joined room %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+                rx_pkt->realname, args[0]);
+        werase(infoLine);
+        wprintw(infoLine, " Current room: %s", args[0]); 
+        wrefresh(infoLine);
       }
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-         wprintw(chatWin, " --- Error: Problem reading JOINSUC.");
+         wprintw(chatWin, " --- Error: Problem reading JOINSUC.\n");
    }
 }
 

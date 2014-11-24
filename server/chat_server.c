@@ -18,7 +18,7 @@ pthread_mutex_t rooms_mutex = PTHREAD_MUTEX_INITIALIZER;
 User *registered_users_list;
 User *active_users_list;
 Room *room_list;
-char *server_MOTD = "Welcome to The Best Damn Chat Server!"
+char const *server_MOTD = "Welcome to The Best Damn Chat Server!"
                     "What should we use the motd for?";
 
 
