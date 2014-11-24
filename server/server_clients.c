@@ -299,7 +299,9 @@ void invite(packet *in_pkt, int fd) {
          User *inviteUser = get_user(&active_users_list, args[0], active_users_mutex);
          if (inviteUser != NULL) {
             ret.options = INVITE;
+            ret.timestamp = time(NULL);
             strcpy(ret.username, SERVER_NAME);
+            strcpy(ret.realname, in_pkt->realname);
             memset(&ret.buf, 0, sizeof(ret.buf));
             sprintf(ret.buf, "%s has invited you to join %s", \
                     in_pkt->realname, Rget_name(&room_list, roomNum, rooms_mutex));
@@ -323,6 +325,7 @@ void invite(packet *in_pkt, int fd) {
    ret.options = SERV_ERR;
    strcpy(ret.username, SERVER_NAME);
    strcpy(ret.realname, SERVER_NAME);
+   ret.timestamp = time(NULL);
    sprintf(ret.buf, "An invitation could not be sent to %s.", args[0]);
    send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
