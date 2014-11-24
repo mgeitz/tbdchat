@@ -3,7 +3,7 @@
 //   File Name:           chat_client.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
 //   Date Started:        10/23/2014
-//   Compile:             gcc -Wall -l pthread client_commands.c chat_client.c -o chat_client
+//   Compile:             gcc -Wformat -Wall -lpthread -lncurses visual.c client_commands.c chat_client.c -o chat_client
 //   Run:                 ./chat_client
 //
 //   The client for a simple chat utility
@@ -24,7 +24,7 @@ char *config_file;
 char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 // Curses Windows
-WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine;
+WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *infoLineBottom;
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
    struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
+   char const *version = "??";
    int LINES, COLS;
    packet *tx_pkt_ptr = &tx_pkt;
 
@@ -50,8 +51,10 @@ int main(int argc, char **argv) {
    // Capture special keys
    keypad(mainWin, TRUE);
 
+   // Get current terminal size
    getmaxyx(mainWin, LINES, COLS);
 
+   // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
    mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
@@ -59,8 +62,15 @@ int main(int argc, char **argv) {
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
 
+   // Create info lines
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
+   wprintw(infoLine, " Type /help to view a list of available commands");
+   wrefresh(infoLine);
+   infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
+   wprintw(infoLineBottom, " TBD Chat version %s", version);
+   wrefresh(infoLineBottom);
 
+   // Create input box and window
    inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
    box(inputWinBox, 0, 0);
    inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
@@ -82,8 +92,6 @@ int main(int argc, char **argv) {
       wprintw(chatWin, " Auto connecting to most recently connected host . . .\n");
       reconnect(tx_pkt.buf);
    }
-   wprintw(infoLine, " Type /help to view a list of available commands");
-   wrefresh(infoLine);
   
    // Primary execution loop 
    while (1) {
