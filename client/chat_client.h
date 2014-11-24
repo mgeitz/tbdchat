@@ -26,6 +26,7 @@
 #define BUFFERSIZE 128
 #define DEFAULT_ROOM 1000
 #define SERVER_NAME "SERVER"
+#define VERSION "0.3.2" // Completely made up version control, change at will
 #define CONFIG_FILENAME "/.tbdchat"
 // Client options
 #define INVALID -1

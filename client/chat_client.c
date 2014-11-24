@@ -32,7 +32,6 @@ int main(int argc, char **argv) {
    struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
-   char const *version = "??";
    int LINES, COLS;
    packet *tx_pkt_ptr = &tx_pkt;
 
@@ -67,7 +66,7 @@ int main(int argc, char **argv) {
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
    infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
-   wprintw(infoLineBottom, " TBD Chat version %s", version);
+   wprintw(infoLineBottom, " TBD Chat version %s", VERSION);
    wrefresh(infoLineBottom);
 
    // Create input box and window
@@ -123,7 +122,7 @@ int main(int argc, char **argv) {
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                timestamp = localtime(&(tx_pkt.timestamp));
-               wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        tx_pkt.realname, tx_pkt.buf);
                tx_pkt.options = currentRoom;
             }
@@ -276,12 +275,12 @@ void *chatRX(void *ptr) {
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
-               wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        rx_pkt.realname, rx_pkt.buf);
             }
             else {
                //int i = hash(rx_pkt.username);
-               wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+               wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                        rx_pkt.realname, rx_pkt.buf);
             }
          }
@@ -309,7 +308,7 @@ void serverResponse(packet *rx_pkt) {
    struct tm *timestamp = localtime(&(rx_pkt->timestamp));
    //timestamp = localtime(&(rx_pkt->timestamp));
    if (rx_pkt->options == SERV_ERR) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, rx_pkt->buf);
    }
    //else if (rx_pkt->options == REGSUC) {
@@ -329,17 +328,17 @@ void serverResponse(packet *rx_pkt) {
       wprintw(infoLine, " Current room: Lobby"); 
       wrefresh(infoLine);
       pthread_mutex_unlock(&roomMutex);
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Login Sucessful!");
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] User: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] User: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, rx_pkt->buf);
    }
    else if (rx_pkt->options == PASSSUC) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Password change successful!");
    }
    else if (rx_pkt->options == NAMESUC) {
@@ -347,41 +346,41 @@ void serverResponse(packet *rx_pkt) {
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Name change successful!");
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);
    }
    else if (rx_pkt->options == INVITE) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, rx_pkt->buf);
    }
    else if (rx_pkt->options == INVITESUC) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Invite sent!");
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] Room: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] Room: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, rx_pkt->buf);
    }
    else if (rx_pkt->options == MOTD) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | -----------------------------------------------------------\n", \
+      wprintw(chatWin, "  %02d:%02d:%02d  | -----------------------------------------------------------\n", \
               timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, rx_pkt->buf);
-      wprintw(chatWin, "  %2d:%2d:%2d  | -----------------------------------------------------------\n", \
+      wprintw(chatWin, "  %02d:%02d:%02d  | -----------------------------------------------------------\n", \
               timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
    }
    else if(rx_pkt->options == EXIT) {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Server has closed its connection with you.");
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Closing socket connection with server.");
       close(serverfd);
    }
    else {
-      wprintw(chatWin, "  %2d:%2d:%2d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
              rx_pkt->realname, "Unknown message received from server.");
    }
 }
@@ -390,7 +389,7 @@ void serverResponse(packet *rx_pkt) {
 /* Print with a timestamp */
 //void printFormat(WINDOW *win, struct tm *timestamp, char *from, char *buf) {
 
-  // wprintw(win, " %2d:%2d:%2d | [%s] %s\n",  );
+  // wprintw(win, " %02d:%02d:%02d | [%s] %s\n",  );
 
 //}
 
@@ -413,7 +412,7 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintw(chatWin, "  %2d:%2d:%2d  | [%s] Joined room %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+         wprintw(chatWin, "  %02d:%02d:%02d  | [%s] Joined room %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
                 rx_pkt->realname, args[0]);
         werase(infoLine);
         wprintw(infoLine, " Current room: %s", args[0]); 
