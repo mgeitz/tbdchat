@@ -84,6 +84,7 @@ void asciiSplash();
 void buildDefaultConfig();
 int auto_connect();
 void newRoom(packet *rx_pkt);
+void wprintFormat(WINDOW *win, struct tm *timestamp, char *from, char *buf);
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);

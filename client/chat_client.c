@@ -66,8 +66,6 @@ int main(int argc, char **argv) {
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
    infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
-   wprintw(infoLineBottom, " TBD Chat version %s", VERSION);
-   wrefresh(infoLineBottom);
 
    // Create input box and window
    inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
@@ -387,11 +385,11 @@ void serverResponse(packet *rx_pkt) {
 
 
 /* Print with a timestamp */
-//void printFormat(WINDOW *win, struct tm *timestamp, char *from, char *buf) {
-
-  // wprintw(win, " %02d:%02d:%02d | [%s] %s\n",  );
-
-//}
+void wprintFormat(WINDOW *win, struct tm *timestamp, char *from, char *buf) {
+   wprintw(win, " %02d:%02d:%02d | [%s] %s\n", \
+           timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
+           from, buf);
+}
 
 
 /* Change the clients current room (for sending) */
@@ -441,7 +439,6 @@ int get_server_connection(char *hostname, char *port) {
       return -1;
    }
    
-   print_ip(servinfo);
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
          wprintw(chatWin, " --- Error: socket socket \n");
@@ -455,6 +452,7 @@ int get_server_connection(char *hostname, char *port) {
       }
       break;
    }
+   print_ip(servinfo);
    freeaddrinfo(servinfo);
    return serverfd;
 }
@@ -475,18 +473,19 @@ void print_ip( struct addrinfo *ai) {
          ipv4 = (struct sockaddr_in *)p->ai_addr;
          addr = &(ipv4->sin_addr);
          port = ipv4->sin_port;
-         ipver = "IPV4";
+         ipver = "IPv4";
       }
       else {
          ipv6= (struct sockaddr_in6 *)p->ai_addr;
          addr = &(ipv6->sin6_addr);
          port = ipv4->sin_port;
-         ipver = "IPV6";
+         ipver = "IPv6";
       }
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
-      wprintw(chatWin, " Connecting to %s: %s:%d . . .\n", ipver, ipstr, ntohs(port));
+      wprintw(infoLineBottom, " Connected to [%s] %s:%d", ipver, ipstr, ntohs(port));
+      wrefresh(infoLineBottom);
    }
 }
 
@@ -554,7 +553,7 @@ void asciiSplash() {
    wprintw(chatWin, "     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ \n");
    wprintw(chatWin, "    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
    wprintw(chatWin, "   /_/______\\_\\/\\\n");
-   wprintw(chatWin, "   \\_\\_________\\/\n\n");
+   wprintw(chatWin, "   \\_\\_________\\/\tversion %s\n\n", VERSION);
    wprintw(chatWin, " Type /help to view a list of available commands.\n\n");
    wrefresh(chatWin);
 }
