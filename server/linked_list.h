@@ -31,7 +31,16 @@ struct room {
 };
 typedef struct room Room;
 
+struct node {
+   void *data;
+   struct node *next;
+};
+typedef struct node Node;
+
 /* Function Prototypes */
+int insertNode(Node **head, Node *new_node, pthread_mutex_t mutex);
+int removeNode(Node **head, Node *new_node, pthread_mutex_t mutex);
+
 // user nodes
 int insertUser(User **head, User *new_user, pthread_mutex_t mutex);
 int removeUser(User **head, User *new_user, pthread_mutex_t mutex);

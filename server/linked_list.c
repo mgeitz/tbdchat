@@ -8,6 +8,57 @@
 
 extern int numRooms;
 
+int insertNode(Node **head, Node *new_node, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
+   Node *temp = *head;
+   if(*head == NULL) {
+      new_node->next = NULL;
+      *head = new_node;
+      pthread_mutex_unlock(&mutex);
+      return 1;
+   }
+
+   while(temp->next != NULL) { temp = temp->next; }
+
+   temp->next = new_node;
+   new_node->next = NULL;
+   pthread_mutex_unlock(&mutex);
+   return 1;
+}
+
+int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
+   pthread_mutex_lock(&mutex);
+   if(*head == NULL) {
+      printf("Cannot remove from an empty list\n");
+      pthread_mutex_unlock(&mutex);
+      return 0;
+   
+   }
+
+   Node *temp = *head;
+
+   if(temp->data == to_remove->data) {
+      *head = temp->next;
+      pthread_mutex_unlock(&mutex);
+      return 1;
+   }
+
+   while(temp->next != NULL) {
+      if(temp->next->data ==  to_remove->data) {
+         temp->next = temp->next->next;
+         pthread_mutex_unlock(&mutex);
+         return 1;
+      }
+   }
+
+   printf("Specified node not found\n");
+   pthread_mutex_unlock(&mutex);
+   return 0;
+
+   
+}
+
+
 /* Insert a new user node into the list over user nodes passed in */
 int insertUser(User **head, User *new_user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
