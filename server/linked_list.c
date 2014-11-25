@@ -138,14 +138,17 @@ int removeUser(Node **head, User *user, pthread_mutex_t mutex) {
 char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
    char *error = "ERROR";
    pthread_mutex_lock(&mutex);
-   User *temp = *head;
-   
+   Node *temp = *head;
+
    if (*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return error;
    }
 
-   while (strcmp(user, temp->username) != 0) {
+   User *current = (User *)temp->data;
+
+   while (strcmp(user, current->username) != 0) {
+      current = (User *)temp->data;
       if (temp->next == NULL) { 
          pthread_mutex_unlock(&mutex);
          return error;
@@ -154,7 +157,7 @@ char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
    }
    
    pthread_mutex_unlock(&mutex);
-   return temp->real_name;
+   return current->real_name;
 }
 
 
@@ -162,13 +165,16 @@ char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
 char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
    char *error = "ERROR";
    pthread_mutex_lock(&mutex);
-   User *temp = *head;
-   
+   Node *temp = *head;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return error;
    }
-   while(strcmp(user, temp->username) != 0) {
+   User *current = (User *)temp->data;
+
+   while(strcmp(user, current->username) != 0) {
+      current = (User *)temp->data;
       if(temp->next == NULL) {
          pthread_mutex_unlock(&mutex);
          return error;
@@ -176,20 +182,24 @@ char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
       temp=temp->next;
    }
    pthread_mutex_unlock(&mutex);
-   return temp->password;
+   return current->password;
 }
 
 
 User *get_user(Node **head, char *user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   User *temp = *head;
-   
+   Node *temp = *head;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return NULL;
    }
 
-   while(strcmp(user, temp->username) != 0) {
+   User *current = (User *)temp->data;
+
+   while(strcmp(user, current->username) != 0) {
+      current = (User *)temp->data;
+
       if(temp->next == NULL) {
          pthread_mutex_unlock(&mutex);
          return NULL;
@@ -198,7 +208,7 @@ User *get_user(Node **head, char *user, pthread_mutex_t mutex) {
    }
    
    pthread_mutex_unlock(&mutex);
-   return temp;
+   return current;
 }
 
 User *clone_user(User *user, pthread_mutex_t mutex) {
@@ -225,8 +235,8 @@ void readUserFile(Node **head, char *filename, pthread_mutex_t mutex) {
    int n;
    int i;
    struct stat st;
-   User *temp;
-   
+   Node *temp;
+   User *current;
    *head = NULL;
    if(fd == -1) {
       close(fd);
@@ -237,11 +247,13 @@ void readUserFile(Node **head, char *filename, pthread_mutex_t mutex) {
       n = (st.st_size / sizeof(User));
       //printf("n: %d\n", n);
       for(i = 0; i < n; i++) {
-         temp = (User *)malloc(sizeof(User));
-         read(fd, temp, sizeof(User));
+         temp = (Node *)malloc(sizeof(Node));
+         current = (User *)malloc(sizeof(User));
+         read(fd, current, sizeof(User));
+         temp->data = current;
          temp->next = NULL;
          //printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
-         insertUser(head, temp, mutex);
+         insertNode(head, temp, mutex);
       }
    }
    close(fd);
@@ -252,20 +264,22 @@ void readUserFile(Node **head, char *filename, pthread_mutex_t mutex) {
 void writeUserFile(Node  **head, char *filename, pthread_mutex_t mutex) {
    int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
    pthread_mutex_lock(&mutex);
-   User *temp = *head;
-   
+   Node *temp = *head;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       close(fd);
       return;
    }
    
+   User *current = (User *)temp->data;
    //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
    write(fd, temp, sizeof(User));
    while(temp->next != NULL) {
       temp = temp->next;
+      current = (User *)temp->data;
       //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
-      write(fd, temp, sizeof(User));
+      write(fd, current, sizeof(User));
    }
    pthread_mutex_unlock(&mutex);
 }
@@ -274,20 +288,22 @@ void writeUserFile(Node  **head, char *filename, pthread_mutex_t mutex) {
 /* Print contents of list */
 void printList(Node **head, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   User *temp = *head;
+   Node *temp = *head;
    printf("Printing User List\n");
    if(*head == NULL) {
       printf("NULL\n");
       pthread_mutex_unlock(&mutex);
       return;
    }
+   User *current = (User *)temp->data;
    
-   printf("%s, %s, %s, %d\n", temp->username, temp->real_name, temp->password,
-          temp->sock);
+   printf("%s, %s, %s, %d\n", current->username, current->real_name, current->password,
+          current->sock);
    while(temp->next != NULL) {
       temp = temp->next;
-      printf("%s, %s, %s, %d\n", temp->username, temp->real_name, temp->password,
-             temp->sock);
+      current = temp->data;
+      printf("%s, %s, %s, %d\n", current->username, current->real_name, current->password,
+             current->sock);
    }
    pthread_mutex_unlock(&mutex);
    printf("End User List\n");
