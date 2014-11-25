@@ -60,7 +60,7 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
 
 
 /* Insert a new user node into the list over user nodes passed in */
-int insertUser(User **head, User *new_user, pthread_mutex_t mutex) {
+int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    printf("Inserting %s\n", new_user->username);
    User *temp = *head;
@@ -95,7 +95,7 @@ int insertUser(User **head, User *new_user, pthread_mutex_t mutex) {
 
 
 /* Remove a user node from the list of user nodes passed in */
-int removeUser(User **head, User *user, pthread_mutex_t mutex) {
+int removeUser(Node **head, User *user, pthread_mutex_t mutex) {
    printf("Removing user: %s\n", user->username);
    pthread_mutex_lock(&mutex);
    printList(head, NULL);
@@ -135,7 +135,7 @@ int removeUser(User **head, User *user, pthread_mutex_t mutex) {
 
 
 /* Return the display name for given user name in the list */
-char *get_real_name(User **head, char *user, pthread_mutex_t mutex) {
+char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
    char *error = "ERROR";
    pthread_mutex_lock(&mutex);
    User *temp = *head;
@@ -159,7 +159,7 @@ char *get_real_name(User **head, char *user, pthread_mutex_t mutex) {
 
 
 /* Return stored password for user */
-char *get_password(User **head, char *user, pthread_mutex_t mutex) {
+char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
    char *error = "ERROR";
    pthread_mutex_lock(&mutex);
    User *temp = *head;
@@ -180,7 +180,7 @@ char *get_password(User **head, char *user, pthread_mutex_t mutex) {
 }
 
 
-User *get_user(User **head, char *user, pthread_mutex_t mutex) {
+User *get_user(Node **head, char *user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    User *temp = *head;
    
@@ -220,7 +220,7 @@ User *clone_user(User *user, pthread_mutex_t mutex) {
 
 
 /* Populate user list from Users.bin */
-void readUserFile(User **head, char *filename, pthread_mutex_t mutex) {
+void readUserFile(Node **head, char *filename, pthread_mutex_t mutex) {
    int fd = open(filename, O_RDONLY);
    int n;
    int i;
@@ -249,7 +249,7 @@ void readUserFile(User **head, char *filename, pthread_mutex_t mutex) {
 
 
 /* Write user list to Users.bin */
-void writeUserFile(User **head, char *filename, pthread_mutex_t mutex) {
+void writeUserFile(Node  **head, char *filename, pthread_mutex_t mutex) {
    int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
    pthread_mutex_lock(&mutex);
    User *temp = *head;
@@ -272,7 +272,7 @@ void writeUserFile(User **head, char *filename, pthread_mutex_t mutex) {
 
 
 /* Print contents of list */
-void printList(User **head, pthread_mutex_t mutex) {
+void printList(Node **head, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    User *temp = *head;
    printf("Printing User List\n");
@@ -298,7 +298,7 @@ void printList(User **head, pthread_mutex_t mutex) {
 
 
 /* Insert new room node to room list */
-int insertRoom(Room **head, Room *new_room, pthread_mutex_t mutex) {
+int insertRoom(Node **head, Room *new_room, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    Room *temp = *head;
    if(*head == NULL) {
@@ -327,7 +327,7 @@ int insertRoom(Room **head, Room *new_room, pthread_mutex_t mutex) {
 }
 
 
-int createRoom(Room **head, int ID, char *name, pthread_mutex_t mutex) {
+int createRoom(Node **head, int ID, char *name, pthread_mutex_t mutex) {
    printf("Creating room %d %s\n", ID, name);
    Room *newRoom = (Room *) malloc(sizeof(Room));
    newRoom->ID = ID;
@@ -339,7 +339,7 @@ int createRoom(Room **head, int ID, char *name, pthread_mutex_t mutex) {
 }
 
 /* Return ID of room node from its name*/
-int Rget_ID(Room **head, char *name, pthread_mutex_t mutex) {
+int Rget_ID(Node **head, char *name, pthread_mutex_t mutex) {
    int error = -1;
    pthread_mutex_lock(&mutex);
    Room *temp = *head;
@@ -361,7 +361,7 @@ int Rget_ID(Room **head, char *name, pthread_mutex_t mutex) {
 
 
 /* Return name of room node from ID */
-char *Rget_name(Room **head, int ID, pthread_mutex_t mutex) {
+char *Rget_name(Node **head, int ID, pthread_mutex_t mutex) {
    char *error = "ERROR";
    pthread_mutex_lock(&mutex);
    Room *temp = *head;
@@ -383,7 +383,7 @@ char *Rget_name(Room **head, int ID, pthread_mutex_t mutex) {
 
 
 /* Print contents of room list */
-void RprintList(Room **head, pthread_mutex_t mutex) {
+void RprintList(Node **head, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    Room *temp = *head;
    printf("Printing Room List\n");
@@ -408,7 +408,7 @@ void RprintList(Room **head, pthread_mutex_t mutex) {
 
 
 /*  */
-Room *Rget_roomFID(Room **head, int ID, pthread_mutex_t mutex) {
+Room *Rget_roomFID(Node **head, int ID, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    Room *temp = *head;
    
@@ -429,7 +429,7 @@ Room *Rget_roomFID(Room **head, int ID, pthread_mutex_t mutex) {
 
 
 /*  */
-Room *Rget_roomFNAME(Room **head, char *name, pthread_mutex_t mutex) {
+Room *Rget_roomFNAME(Node **head, char *name, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    Room *temp = *head;
    

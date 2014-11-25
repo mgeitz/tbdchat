@@ -26,7 +26,7 @@ struct room {
    int ID;
    char name[32];
    pthread_mutex_t user_list_mutex;
-   struct user *user_list;
+   struct node *user_list;
    struct room *next;
 };
 typedef struct room Room;
@@ -42,22 +42,22 @@ int insertNode(Node **head, Node *new_node, pthread_mutex_t mutex);
 int removeNode(Node **head, Node *new_node, pthread_mutex_t mutex);
 
 // user nodes
-int insertUser(User **head, User *new_user, pthread_mutex_t mutex);
-int removeUser(User **head, User *new_user, pthread_mutex_t mutex);
-char *get_real_name(User **head, char *user, pthread_mutex_t mutex);
-char *get_password(User **head, char *user, pthread_mutex_t mutex);
+int insertUser(Node  **head, User *new_user, pthread_mutex_t mutex);
+int removeUser(Node  **head, User *new_user, pthread_mutex_t mutex);
+char *get_real_name(Node  **head, char *user, pthread_mutex_t mutex);
+char *get_password(Node  **head, char *user, pthread_mutex_t mutex);
 User *clone_user(User *user, pthread_mutex_t mutex);
-void readUserFile(User **head, char *filename, pthread_mutex_t mutex);
-void writeUserFile(User **head, char *filename, pthread_mutex_t mutex);
-void printList(User **head, pthread_mutex_t mutex);
-User *get_user(User **head, char *user, pthread_mutex_t mutex);
+void readUserFile(Node  **head, char *filename, pthread_mutex_t mutex);
+void writeUserFile(Node **head, char *filename, pthread_mutex_t mutex);
+void printList(Node **head, pthread_mutex_t mutex);
+User *get_user(Node **head, char *user, pthread_mutex_t mutex);
 // room nodes
-int insertRoom(Room **head, Room *new_room, pthread_mutex_t mutex);
-int Rget_ID(Room **head, char *name, pthread_mutex_t mutex);
-char *Rget_name(Room **head, int ID, pthread_mutex_t mutex);
-void RprintList(Room **head, pthread_mutex_t mutex);
-Room *Rget_roomFID(Room **head, int ID, pthread_mutex_t mutex);
-Room *Rget_roomFNAME(Room **head, char *name, pthread_mutex_t mutex);
-int createRoom(Room **head, int ID, char *name, pthread_mutex_t mutex);
+int insertRoom(Node **head, Room *new_room, pthread_mutex_t mutex);
+int Rget_ID(Node **head, char *name, pthread_mutex_t mutex);
+char *Rget_name(Node **head, int ID, pthread_mutex_t mutex);
+void RprintList(Node  **head, pthread_mutex_t mutex);
+Room *Rget_roomFID(Node **head, int ID, pthread_mutex_t mutex);
+Room *Rget_roomFNAME(Node **head, char *name, pthread_mutex_t mutex);
+int createRoom(Node **head, int ID, char *name, pthread_mutex_t mutex);
 
 #endif
