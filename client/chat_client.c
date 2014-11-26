@@ -524,10 +524,11 @@ void sigintHandler(int sig_num) {
 
 /* Handle window resizing */
 void resizeHandler(int sig) {
-   // None of this seems to work
-   int LINES, COLS;
-   getmaxyx(mainWin, LINES, COLS);
+   endwin();
+   refresh();
+   clear();
 
+   // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
    mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
@@ -535,13 +536,17 @@ void resizeHandler(int sig) {
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
 
+   // Create info lines
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
-   
+   wprintw(infoLine, " Type /help to view a list of available commands");
+   wrefresh(infoLine);
+   infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
+
+   // Create input box and window
    inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
    box(inputWinBox, 0, 0);
    inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
 }
-
 
 /* Print message on startup */
 void asciiSplash() {
