@@ -316,28 +316,36 @@ void printList(Node **head, pthread_mutex_t mutex) {
 /* Insert new room node to room list */
 int insertRoom(Node **head, Room *new_room, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   Room *temp = *head;
+   Node *temp = *head;
+   Room *current;
    if(*head == NULL) {
-      new_room->next = NULL;
-      *head = new_room;
+      Node *new = (Node *)malloc(sizeof(Node));
+      new->data = (void *)new_room;
+      new->next = NULL;
+      *head = new;
       pthread_mutex_unlock(&mutex);
       return 1;
    }
+   current = (Room *)temp->data;
    
-   if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID) {
+   if(strcmp(current->name, new_room->name) == 0 || current->ID == new_room->ID) {
       pthread_mutex_unlock(&mutex);
       return 0;
    }
    
    while(temp->next != NULL) {
       temp = temp->next;
-      if(strcmp(temp->name, new_room->name) == 0 || temp->ID == new_room->ID) {
+      current = (Room *)temp->data;
+
+      if(strcmp(current->name, new_room->name) == 0 || current->ID == new_room->ID) {
          pthread_mutex_unlock(&mutex);
          return 0;
       }
    }
-   temp->next = new_room;
-   new_room->next = NULL;
+   Node *new_node = (Node *)malloc(sizeof(Node));
+   new_node->data = (void *)new_room;
+   new_node->next = NULL;
+   temp->next = new_node;
    pthread_mutex_unlock(&mutex);
    return 1;
 }
@@ -358,21 +366,25 @@ int createRoom(Node **head, int ID, char *name, pthread_mutex_t mutex) {
 int Rget_ID(Node **head, char *name, pthread_mutex_t mutex) {
    int error = -1;
    pthread_mutex_lock(&mutex);
-   Room *temp = *head;
-   
+   Node *temp = *head;
+   Room *current;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return error;
    }
-   while(strcmp(name, temp->name) != 0) {
+   current = (Room *)temp->data;
+
+   while(strcmp(name, current->name) != 0) {
       if(temp->next == NULL) {
          pthread_mutex_unlock(&mutex);
          return error;
       }
       temp=temp->next;
+      current = (Room *)temp->data;
    }
    pthread_mutex_unlock(&mutex);
-   return temp->ID;
+   return current->ID;
 }
 
 
@@ -380,43 +392,50 @@ int Rget_ID(Node **head, char *name, pthread_mutex_t mutex) {
 char *Rget_name(Node **head, int ID, pthread_mutex_t mutex) {
    char *error = "ERROR";
    pthread_mutex_lock(&mutex);
-   Room *temp = *head;
-   
+   Node *temp = *head;
+   Room *current;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return error;
    }
-   while(ID != temp->ID) {
+   current = (Room *)temp->data;
+
+   while(ID != current->ID) {
       if(temp->next == NULL) {
          pthread_mutex_unlock(&mutex);
          return error;
       }
       temp=temp->next;
+      current = (Room *)temp->data;
    }
    pthread_mutex_unlock(&mutex);
-   return temp->name;
+   return current->name;
 }
 
 
 /* Print contents of room list */
 void RprintList(Node **head, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   Room *temp = *head;
+   Node *temp = *head;
+   Room *current;
+
    printf("Printing Room List\n");
    if(*head == NULL) {
       printf("NULL\n");
       pthread_mutex_unlock(&mutex);
       return;
    }
-   
-   printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
+   current = (Room *)temp->data; 
+   printf("Room ID: %d, Room Name: %s,\n", current->ID, current->name);
    printf("Contains Users...\n");
    //printList(&(temp->user_list));
    while(temp->next != NULL) {
       temp = temp->next;
-      printf("Room ID: %d, Room Name: %s,\n", temp->ID, temp->name);
+      current = (Room *)temp->data;
+      printf("Room ID: %d, Room Name: %s,\n", current->ID, current->name);
       printf("Contains Users...\n");
-      printList(&(temp->user_list), temp->user_list_mutex);
+      printList(&(current->user_list), current->user_list_mutex);
    }
    printf("End Room List\n");
    pthread_mutex_unlock(&mutex);
@@ -426,41 +445,47 @@ void RprintList(Node **head, pthread_mutex_t mutex) {
 /*  */
 Room *Rget_roomFID(Node **head, int ID, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   Room *temp = *head;
-   
+   Node *temp = *head;
+   Room *current;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return NULL;
    }
-   while(ID != temp->ID) {
+   current = (Room *)temp->data;
+   while(ID != current->ID) {
       if(temp->next == NULL) {
          pthread_mutex_unlock(&mutex);
          return NULL;
       }
       temp = temp->next;
+      current = (Room *)temp->data;
    }
    pthread_mutex_unlock(&mutex);
-   return temp;
+   return current;
 }
 
 
 /*  */
 Room *Rget_roomFNAME(Node **head, char *name, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   Room *temp = *head;
-   
+   Node *temp = *head;
+   Room *current;
+
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
       return NULL;
    }
-   while(strcmp(name, temp->name) != 0) {
+   current = (Room *)temp->data;
+   while(strcmp(name, current->name) != 0) {
       if(temp->next == NULL) {
          pthread_mutex_unlock(&mutex);
          return NULL;
       }
       temp = temp->next;
+      current = (Room *)temp->data;
    }
    
    pthread_mutex_unlock(&mutex);
-   return temp;
+   return current;
 }
