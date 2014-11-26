@@ -39,12 +39,11 @@ KNOWN BUGS:
    Server:
 
       - Users persist in active users and as users in rooms after exiting.
-
             
    Client:
 
-      - No colors
-      - Window rezises are not properly handled
+      - Many things still need colors
+      - Window contents are lost after rezises - this is especially troublesome if someone has been typing in and then they resize.
       - For some reason /login and /join, when parsed by strsep, return the base commands as args[8] instead of args[0]
 
 CLIENT FEATURES:

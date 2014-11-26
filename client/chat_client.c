@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
    struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
-   int LINES, COLS;
+   //int LINES, COLS;
    packet *tx_pkt_ptr = &tx_pkt;
 
 
@@ -42,16 +42,23 @@ int main(int argc, char **argv) {
 
    // Initialize curses
    if ((mainWin = initscr()) == NULL) { exit(1); }
-
+   // Start colors
+   start_color();
+   use_default_colors();
    // Do not echo key presses
    noecho();
    // Read input one char at a time
    cbreak();
    // Capture special keys
    keypad(mainWin, TRUE);
-
-   // Get current terminal size
-   getmaxyx(mainWin, LINES, COLS);
+   // Initialize color types
+   init_pair(1, COLOR_BLUE, -1);
+   init_pair(2, COLOR_RED, -1);
+   init_pair(3, COLOR_YELLOW, -1);
+   init_pair(4, COLOR_CYAN, -1);
+   init_pair(5, COLOR_MAGENTA, -1);
+   init_pair(6, COLOR_GREEN, -1);
+   init_pair(7, COLOR_WHITE, COLOR_RED);
 
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
@@ -63,6 +70,7 @@ int main(int argc, char **argv) {
 
    // Create info lines
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
+   wbkgd(infoLine, COLOR_PAIR(3));
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
    infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
