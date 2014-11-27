@@ -19,8 +19,6 @@ TO-DO LIST:
    Requires considerable time:
 
       - [client] Curses
-         o Custom print method for everything printed to chatWin.
-         o Color
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
          o Add client window to primary screen to display clients currently in room
 

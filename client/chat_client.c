@@ -313,7 +313,7 @@ void *chatRX(void *ptr) {
 
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
-   struct tm *timestamp = localtime(&(rx_pkt->timestamp));
+   //struct tm *timestamp = localtime(&(rx_pkt->timestamp));
    //timestamp = localtime(&(rx_pkt->timestamp));
    if (rx_pkt->options == SERV_ERR) {
       wprintFormat(chatWin, time(NULL), rx_pkt->realname, rx_pkt->buf, 3);
@@ -365,12 +365,11 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
    }
    else if (rx_pkt->options == MOTD) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | -----------------------------------------------------------\n", \
-              timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, rx_pkt->buf);
-      wprintw(chatWin, "  %02d:%02d:%02d  | -----------------------------------------------------------\n", \
-              timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
+      wprintFormatTime(chatWin, rx_pkt->timestamp);
+      wprintw(chatWin, "-----------------------------------------------------------\n");
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
+      wprintFormatTime(chatWin, rx_pkt->timestamp);
+      wprintw(chatWin, "-----------------------------------------------------------\n");
    }
    else if(rx_pkt->options == EXIT) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
@@ -385,10 +384,29 @@ void serverResponse(packet *rx_pkt) {
 
 /* Print with a timestamp */
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color) {
+
+   // Print formatted time
+   wprintFormatTime(win, ts);
+
+   // Print from and buffer
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "[");
+   wattroff(win, COLOR_PAIR(1));
+   wattron(win, COLOR_PAIR(from_color));
+   wprintw(win, "%s", from);
+   wattroff(win, COLOR_PAIR(from_color));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "] %s\n", buf);
+   wattroff(win, COLOR_PAIR(1));
+
+}
+
+
+/* Print properly formatted and colored timestamp */
+void wprintFormatTime(WINDOW *win, time_t ts) {
    struct tm *timestamp;
    timestamp = localtime(&ts); 
 
-   // Print timestamp
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "%02d", timestamp->tm_hour);
    wattroff(win, COLOR_PAIR(1));
@@ -405,20 +423,9 @@ void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color)
    wprintw(win, "%02d", timestamp->tm_sec);
    wattroff(win, COLOR_PAIR(1));
 
-   // Print from and buffer
    wattron(win, COLOR_PAIR(7));
    wprintw(win, " | ");
    wattroff(win, COLOR_PAIR(7));
-   wattron(win, COLOR_PAIR(1));
-   wprintw(win, "[");
-   wattroff(win, COLOR_PAIR(1));
-   wattron(win, COLOR_PAIR(from_color));
-   wprintw(win, "%s", from);
-   wattroff(win, COLOR_PAIR(from_color));
-   wattron(win, COLOR_PAIR(1));
-   wprintw(win, "] %s\n", buf);
-   wattroff(win, COLOR_PAIR(1));
-
 }
 
 
@@ -464,13 +471,13 @@ int get_server_connection(char *hostname, char *port) {
    hints.ai_socktype = SOCK_STREAM;
    
    if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
-      wprintw(chatWin, " getaddrinfo: %s\n", gai_strerror(status));
+      wprintFormatTime(chatWin, time(NULL));
+      wprintw(chatWin, "getaddrinfo: %s\n", gai_strerror(status));
       return -1;
    }
    
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         //wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket socket \n");
          wprintFormat(chatWin, time(NULL), "Error", "socket socket", 8);
          continue;
       }
@@ -478,7 +485,6 @@ int get_server_connection(char *hostname, char *port) {
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
          wprintFormat(chatWin, time(NULL), "Error", "socket connect", 8);
-         //wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket connect \n");
          return -1;
       }
       break;
@@ -523,7 +529,7 @@ void print_ip( struct addrinfo *ai) {
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   wprintFormat(chatWin, time(NULL), "Client", "\b\b --- Error: Forced Exit.", 1);
+   wprintFormat(chatWin, time(NULL), "Error", "\b\bForced Exit.", 8);
    // If the client is connected, safely close the connection
    if (serverfd) { 
       packet tx_pkt;
@@ -538,7 +544,7 @@ void sigintHandler(int sig_num) {
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
-            wprintFormat(chatWin, time(NULL), "Client", " --- Error: chatRX thread not joining.", 1);
+            wprintFormat(chatWin, time(NULL), "Error", "chatRX thread not joining.", 8);
          }
       }
    }
@@ -584,17 +590,82 @@ void resizeHandler(int sig) {
 
 /* Print message on startup */
 void asciiSplash() {
-   wprintFormat(chatWin, time(NULL), "Client", "         __", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "        /_/\\        _____ ____  ____     ____ _           _   ", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ ", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "      / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ ", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "   /_/______\\_\\/\\", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "   \\_\\_________\\/\tversion ", 1);
-   wprintFormat(chatWin, time(NULL), "Client", " ", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "Type /help to view a list of available commands.", 1);
-   wprintFormat(chatWin, time(NULL), "Client", " ", 1);
+   int icon = 2;
+   int word = 1;
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "         __\n");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "        /_/\\       ");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, COLOR_PAIR(word));
+   wprintw(chatWin, " _____ ____  ____     ____ _           _   \n");
+   wattroff(chatWin, COLOR_PAIR(word));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "       / /\\ \\      ");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, COLOR_PAIR(word));
+   wprintw(chatWin, "|_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
+   wattroff(chatWin, COLOR_PAIR(word));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "      / / /\\ \\      ");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, COLOR_PAIR(word));
+   wprintw(chatWin, " | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
+   wattroff(chatWin, COLOR_PAIR(word));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "     / / /\\ \\ \\     ");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, COLOR_PAIR(word));
+   wprintw(chatWin, " | | | |_) | |_| | | |___| | | | (_| | |_ \n");
+   wattroff(chatWin, COLOR_PAIR(word));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "    / /_/__\\ \\ \\    ");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, COLOR_PAIR(word));
+   wprintw(chatWin, " |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
+   wattroff(chatWin, COLOR_PAIR(word));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "   /_/______\\_\\/\\\n");
+   wattroff(chatWin, COLOR_PAIR(icon));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(icon));
+   wprintw(chatWin, "   \\_\\_________\\/\t");
+   wattroff(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "version ");
+   wattroff(chatWin, COLOR_PAIR(1));
+   wattron(chatWin, COLOR_PAIR(3));
+   wprintw(chatWin, "%s\n", VERSION);
+   wattroff(chatWin, COLOR_PAIR(3));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wprintw(chatWin, "\n");
+   
+
+   //wprintFormat(chatWin, time(NULL), "Client", "       / /\\ \\      ""|_   _| __ )|  _ \\   / ___| |__   __ _| |_ ", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "      / / /\\ \\      "" | | |  _ \\| | | | | |   | '_ \\ / _` | __|", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "     / / /\\ \\ \\     "" | | | |_) | |_| | | |___| | | | (_| | |_ ", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "    / /_/__\\ \\ \\    "" |_| |____/|____/   \\____|_| |_|\\__,_|\\__|", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "   /_/______\\_\\/\\", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "   \\_\\_________\\/\t", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", " ", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "Type /help to view a list of available commands.", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", " ", 1);
    wrefresh(chatWin);
 }
 
