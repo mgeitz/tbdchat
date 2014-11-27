@@ -21,7 +21,7 @@ char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 char *config_file;
-char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
+//char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 // Curses Windows
 WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *infoLineBottom;
@@ -53,13 +53,16 @@ int main(int argc, char **argv) {
    keypad(mainWin, TRUE);
    // Initialize color types
    init_pair(1, -1, -1);
-   init_pair(2, COLOR_BLUE, -1);
+   init_pair(2, COLOR_CYAN, -1);
    init_pair(3, COLOR_YELLOW, -1);
    init_pair(4, COLOR_RED, -1);
-   init_pair(5, COLOR_CYAN, -1);
+   init_pair(5, COLOR_BLUE, -1);
    init_pair(6, COLOR_MAGENTA, -1);
    init_pair(7, COLOR_GREEN, -1);
    init_pair(8, COLOR_WHITE, COLOR_RED);
+   init_pair(9, COLOR_WHITE, COLOR_BLUE);
+   init_pair(10, COLOR_WHITE, COLOR_GREEN);
+   init_pair(11, COLOR_BLACK, COLOR_MAGENTA);
 
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
@@ -96,7 +99,7 @@ int main(int argc, char **argv) {
 
    // Check autoconnect, run if set
    if (auto_connect()) {
-      wprintFormat(chatWin, time(NULL), "Client", " Auto connecting to most recently connected host . . .", 1);
+      wprintFormat(chatWin, time(NULL), "Client", "Auto connecting to most recently connected host . . .", 1);
       reconnect(tx_pkt.buf);
    }
   
@@ -141,7 +144,7 @@ int main(int argc, char **argv) {
          }
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
-            wprintFormat(chatWin, time(NULL), "Client", " --- Error: Not connected to any server. See /help for command usage.", 8);
+            wprintFormat(chatWin, time(NULL), "Error", "Not connected to any server. See /help for command usage.", 8);
          } 
       }
       // If an exit packet was just transmitted, break from primary execution loop
@@ -157,7 +160,7 @@ int main(int argc, char **argv) {
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         wprintFormat(chatWin, time(NULL), "Client", " --- Error: chatRX thread not joining.", 1);
+         wprintFormat(chatWin, time(NULL), "Error", "chatRX thread not joining.", 8);
       }
    }
    // Destroy mutexes
@@ -297,7 +300,6 @@ void *chatRX(void *ptr) {
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
             wprintFormat(chatWin, time(NULL), "Client", " Communication with server has terminated.", 1);
-            wrefresh(chatWin);
             break;
          }
       }
@@ -333,7 +335,7 @@ void serverResponse(packet *rx_pkt) {
       wprintw(infoLine, " Current room: Lobby"); 
       wrefresh(infoLine);
       pthread_mutex_unlock(&roomMutex);
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 3);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 2);
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
@@ -341,14 +343,14 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
    }
    else if (rx_pkt->options == PASSSUC) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful!", 3);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful", 3);
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful!", 3);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful", 3);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);
@@ -357,7 +359,7 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 3);
    }
    else if (rx_pkt->options == INVITESUC) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent!", 3);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent", 3);
    }
    else if (rx_pkt->options == GETROOMS) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
@@ -371,12 +373,12 @@ void serverResponse(packet *rx_pkt) {
               timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
    }
    else if(rx_pkt->options == EXIT) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you.", 3);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
       wprintFormat(chatWin, rx_pkt->timestamp, "Client", "Closing socket connection with server", 1);
       close(serverfd);
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Client", "Unknown message received from server.", 8);
+      wprintFormat(chatWin, time(NULL), "Error", "Unknown message received from server", 8);
    }
 }
 
@@ -438,7 +440,7 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintFormat(chatWin, time(NULL), "Client",  args[0], 1);
+         wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname,  "Joined new room", 1);
         werase(infoLine);
         wprintw(infoLine, " Current room: %s", args[0]); 
         wrefresh(infoLine);
@@ -446,7 +448,7 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-         wprintFormat(chatWin, time(NULL), "Client", " --- Error: Problem reading JOINSUC.", 1);
+         wprintFormat(chatWin, time(NULL), "Error", "Problem reading JOINSUC.", 8);
    }
 }
 
@@ -469,13 +471,13 @@ int get_server_connection(char *hostname, char *port) {
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
          //wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket socket \n");
-         wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket socket", 8);
+         wprintFormat(chatWin, time(NULL), "Error", "socket socket", 8);
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket connect", 8);
+         wprintFormat(chatWin, time(NULL), "Error", "socket connect", 8);
          //wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket connect \n");
          return -1;
       }
@@ -582,8 +584,6 @@ void resizeHandler(int sig) {
 
 /* Print message on startup */
 void asciiSplash() {
-   //wattron(chatWin, COLOR_PAIR(4));
-   wprintFormat(chatWin, time(NULL), "Client", " ", 1);
    wprintFormat(chatWin, time(NULL), "Client", "         __", 1);
    wprintFormat(chatWin, time(NULL), "Client", "        /_/\\        _____ ____  ____     ____ _           _   ", 1);
    wprintFormat(chatWin, time(NULL), "Client", "       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ ", 1);
@@ -595,17 +595,16 @@ void asciiSplash() {
    wprintFormat(chatWin, time(NULL), "Client", " ", 1);
    wprintFormat(chatWin, time(NULL), "Client", "Type /help to view a list of available commands.", 1);
    wprintFormat(chatWin, time(NULL), "Client", " ", 1);
-   //wattroff(chatWin, COLOR_PAIR(4));
    wrefresh(chatWin);
 }
 
 
 /* Return number between 0-4 determined from string passed in */
-int hash(char *str) {
-   unsigned long hash = 5381;
-   int c;
-   while ((c = *str++)) {
-      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-   }
-   return hash % 4;
-}
+//int hash(char *str) {
+//   unsigned long hash = 5381;
+//   int c;
+//   while ((c = *str++)) {
+//      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+//   }
+//   return hash % 4;
+//}
