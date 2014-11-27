@@ -55,14 +55,14 @@ int userCommand(packet *tx_pkt) {
    // Handle connect command
    else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
-          wprintw(chatWin, " --- Error: Server connect failed.\n");
+          wprintFormat(chatWin, time(NULL), "Client", " --- Error: Server connect failed.", 1);
       }
       return 0;
    }
    // Handle reconnect command
    else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
       if (!reconnect((void *)tx_pkt->buf)) {
-          wprintw(chatWin, " --- Error: Server connect failed.\n");
+          wprintFormat(chatWin, time(NULL), "Client", " --- Error: Server connect failed.", 1);
       }
       return 0;
    }
@@ -222,14 +222,14 @@ int newServerConnection(char *buf) {
    }
    if (i > 2) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         wprintw(chatWin, " --- Error: Could not connect to server.\n");
+         wprintFormat(chatWin, time(NULL), "Client", " --- Error: Could not connect to server.", 1);
          return 0;
       }
       if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         wprintw(chatWin, " --- Error:  chatRX thread not created.\n");
+         wprintFormat(chatWin, time(NULL), "Client", " --- Error: chatRX thread not created.", 1);
          return 0;
       }
-      wprintw(chatWin, " Connected.\n");
+      wprintFormat(chatWin, time(NULL), "Client", "Connected.", 1);
       i = 0;
       pthread_mutex_lock(&configFileMutex);
       configfp = fopen(config_file, "r+");

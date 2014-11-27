@@ -29,7 +29,7 @@ WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *inf
 int main(int argc, char **argv) {
    int bufSize, send_flag;
    packet tx_pkt;
-   struct tm *timestamp;
+   //struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
    //int LINES, COLS;
@@ -52,13 +52,14 @@ int main(int argc, char **argv) {
    // Capture special keys
    keypad(mainWin, TRUE);
    // Initialize color types
-   init_pair(1, COLOR_BLUE, -1);
-   init_pair(2, COLOR_RED, -1);
+   init_pair(1, -1, -1);
+   init_pair(2, COLOR_BLUE, -1);
    init_pair(3, COLOR_YELLOW, -1);
-   init_pair(4, COLOR_CYAN, -1);
-   init_pair(5, COLOR_MAGENTA, -1);
-   init_pair(6, COLOR_GREEN, -1);
-   init_pair(7, COLOR_WHITE, COLOR_RED);
+   init_pair(4, COLOR_RED, -1);
+   init_pair(5, COLOR_CYAN, -1);
+   init_pair(6, COLOR_MAGENTA, -1);
+   init_pair(7, COLOR_GREEN, -1);
+   init_pair(8, COLOR_WHITE, COLOR_RED);
 
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
@@ -71,8 +72,10 @@ int main(int argc, char **argv) {
    // Create info lines
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
    wbkgd(infoLine, COLOR_PAIR(3));
+   wbkgd(infoLineBottom, COLOR_PAIR(3));
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
+   wrefresh(infoLineBottom);
    infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
 
    // Create input box and window
@@ -89,12 +92,11 @@ int main(int argc, char **argv) {
       buildDefaultConfig();
    }
 
-   //wprintw(chatWin, "\33[2J\33[H"); // Removed anticipating curses
    asciiSplash();
 
    // Check autoconnect, run if set
    if (auto_connect()) {
-      wprintw(chatWin, " Auto connecting to most recently connected host . . .\n");
+      wprintFormat(chatWin, time(NULL), "Client", " Auto connecting to most recently connected host . . .", 1);
       reconnect(tx_pkt.buf);
    }
   
@@ -127,9 +129,8 @@ int main(int argc, char **argv) {
             // If sending a message, print the message client side
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
-               timestamp = localtime(&(tx_pkt.timestamp));
-               wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-                       tx_pkt.realname, tx_pkt.buf);
+               //timestamp = localtime(&(tx_pkt.timestamp));
+               wprintFormat(chatWin, tx_pkt.timestamp, tx_pkt.realname, tx_pkt.buf, 2);
                tx_pkt.options = currentRoom;
             }
             pthread_mutex_unlock(&roomMutex);
@@ -140,7 +141,7 @@ int main(int argc, char **argv) {
          }
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
-            wprintw(chatWin, " --- Error: Not connected to any server. See /help for command usage.\n");
+            wprintFormat(chatWin, time(NULL), "Client", " --- Error: Not connected to any server. See /help for command usage.", 8);
          } 
       }
       // If an exit packet was just transmitted, break from primary execution loop
@@ -150,13 +151,13 @@ int main(int argc, char **argv) {
    }
    
    // Safely close connection
-   wprintw(chatWin, " Preparing to exit . . .\n");
+   wprintFormat(chatWin, time(NULL), "Client", " Preparing to exit . . .", 1);
    wrefresh(chatWin);
    close(serverfd);
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         wprintw(chatWin, " --- Error: chatRX thread not joining.\n");
+         wprintFormat(chatWin, time(NULL), "Client", " --- Error: chatRX thread not joining.", 1);
       }
    }
    // Destroy mutexes
@@ -165,10 +166,11 @@ int main(int argc, char **argv) {
    pthread_mutex_destroy(&configFileMutex);
    pthread_mutex_destroy(&roomMutex);
    // Close curses
-   wprintw(chatWin, " Exiting client.\n");
+   wprintFormat(chatWin, time(NULL), "Client", " Exiting client.", 1);
    wrefresh(chatWin);
    endwin();
    printf("\33[2J\33[H");
+   printf("Thanks for using TBD Chat.\n");
    exit(0);
 }
 
@@ -281,13 +283,11 @@ void *chatRX(void *ptr) {
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
-               wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-                       rx_pkt.realname, rx_pkt.buf);
+               wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, 3);
             }
             else {
                //int i = hash(rx_pkt.username);
-               wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-                       rx_pkt.realname, rx_pkt.buf);
+               wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, (atoi(rx_pkt.username) % 4) + 4);  
             }
          }
          // If the received packet is a nonmessage option, handle option response
@@ -296,7 +296,7 @@ void *chatRX(void *ptr) {
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
-            wprintw(chatWin, " Communication with server has terminated.\n");
+            wprintFormat(chatWin, time(NULL), "Client", " Communication with server has terminated.", 1);
             wrefresh(chatWin);
             break;
          }
@@ -314,14 +314,13 @@ void serverResponse(packet *rx_pkt) {
    struct tm *timestamp = localtime(&(rx_pkt->timestamp));
    //timestamp = localtime(&(rx_pkt->timestamp));
    if (rx_pkt->options == SERV_ERR) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, rx_pkt->buf);
+      wprintFormat(chatWin, time(NULL), rx_pkt->realname, rx_pkt->buf, 3);
    }
    //else if (rx_pkt->options == REGSUC) {
    //   pthread_mutex_lock(&roomMutex);
    //   currentRoom = DEFAULT_ROOM;
    //   pthread_mutex_unlock(&roomMutex);
-   //   wprintw(chatWin, " --- Success: Registration successful!\n");
+   //   wprintFormat(chatWin, time(NULL), "Client", " --- Success: Registration successful!\n");
    //}
    else if (rx_pkt->options == LOGSUC) {
       pthread_mutex_lock(&nameMutex);
@@ -334,41 +333,34 @@ void serverResponse(packet *rx_pkt) {
       wprintw(infoLine, " Current room: Lobby"); 
       wrefresh(infoLine);
       pthread_mutex_unlock(&roomMutex);
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Login Sucessful!");
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 3);
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] User: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, rx_pkt->buf);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
    }
    else if (rx_pkt->options == PASSSUC) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Password change successful!");
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful!", 3);
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Name change successful!");
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful!", 3);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);
    }
    else if (rx_pkt->options == INVITE) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, rx_pkt->buf);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 3);
    }
    else if (rx_pkt->options == INVITESUC) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Invite sent!");
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent!", 3);
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] Room: %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, rx_pkt->buf);
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
    }
    else if (rx_pkt->options == MOTD) {
       wprintw(chatWin, "  %02d:%02d:%02d  | -----------------------------------------------------------\n", \
@@ -379,30 +371,58 @@ void serverResponse(packet *rx_pkt) {
               timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
    }
    else if(rx_pkt->options == EXIT) {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Server has closed its connection with you.");
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Closing socket connection with server.");
+      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you.", 3);
+      wprintFormat(chatWin, rx_pkt->timestamp, "Client", "Closing socket connection with server", 1);
       close(serverfd);
    }
    else {
-      wprintw(chatWin, "  %02d:%02d:%02d  | [%s] %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-             rx_pkt->realname, "Unknown message received from server.");
+      wprintFormat(chatWin, time(NULL), "Client", "Unknown message received from server.", 8);
    }
 }
 
 
 /* Print with a timestamp */
-void wprintFormat(WINDOW *win, struct tm *timestamp, char *from, char *buf) {
-   wprintw(win, " %02d:%02d:%02d | [%s] %s\n", \
-           timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-           from, buf);
+void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color) {
+   struct tm *timestamp;
+   timestamp = localtime(&ts); 
+
+   // Print timestamp
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "%02d", timestamp->tm_hour);
+   wattroff(win, COLOR_PAIR(1));
+   wattron(win, COLOR_PAIR(3));
+   wprintw(win, ":");
+   wattroff(win, COLOR_PAIR(3));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "%02d", timestamp->tm_min);
+   wattroff(win, COLOR_PAIR(1));
+   wattron(win, COLOR_PAIR(3));
+   wprintw(win, ":");
+   wattroff(win, COLOR_PAIR(3));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "%02d", timestamp->tm_sec);
+   wattroff(win, COLOR_PAIR(1));
+
+   // Print from and buffer
+   wattron(win, COLOR_PAIR(7));
+   wprintw(win, " | ");
+   wattroff(win, COLOR_PAIR(7));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "[");
+   wattroff(win, COLOR_PAIR(1));
+   wattron(win, COLOR_PAIR(from_color));
+   wprintw(win, "%s", from);
+   wattroff(win, COLOR_PAIR(from_color));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "] %s\n", buf);
+   wattroff(win, COLOR_PAIR(1));
+
 }
 
 
 /* Change the clients current room (for sending) */
 void newRoom(packet *rx_pkt) {
-   struct tm *timestamp = localtime(&(rx_pkt->timestamp));
+   //struct tm *timestamp = localtime(&(rx_pkt->timestamp));
    int i = 0, roomNumber;
    char *args[16];
    char cpy[BUFFERSIZE];
@@ -418,8 +438,7 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintw(chatWin, "  %02d:%02d:%02d  | [%s] Joined room %s\n", timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec, \
-                rx_pkt->realname, args[0]);
+         wprintFormat(chatWin, time(NULL), "Client",  args[0], 1);
         werase(infoLine);
         wprintw(infoLine, " Current room: %s", args[0]); 
         wrefresh(infoLine);
@@ -427,7 +446,7 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-         wprintw(chatWin, " --- Error: Problem reading JOINSUC.\n");
+         wprintFormat(chatWin, time(NULL), "Client", " --- Error: Problem reading JOINSUC.", 1);
    }
 }
 
@@ -449,13 +468,15 @@ int get_server_connection(char *hostname, char *port) {
    
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         wprintw(chatWin, " --- Error: socket socket \n");
+         //wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket socket \n");
+         wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket socket", 8);
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         wprintw(chatWin, " --- Error: socket connect \n");
+         wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket connect", 8);
+         //wprintFormat(chatWin, time(NULL), "Client", " --- Error: socket connect \n");
          return -1;
       }
       break;
@@ -500,7 +521,7 @@ void print_ip( struct addrinfo *ai) {
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   wprintw(chatWin, "\b\b --- Error: Forced Exit.\n");
+   wprintFormat(chatWin, time(NULL), "Client", "\b\b --- Error: Forced Exit.", 1);
    // If the client is connected, safely close the connection
    if (serverfd) { 
       packet tx_pkt;
@@ -515,7 +536,7 @@ void sigintHandler(int sig_num) {
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
-            wprintw(chatWin, " --- Error: chatRX thread not joining.\n");
+            wprintFormat(chatWin, time(NULL), "Client", " --- Error: chatRX thread not joining.", 1);
          }
       }
    }
@@ -546,8 +567,11 @@ void resizeHandler(int sig) {
 
    // Create info lines
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
+   wbkgd(infoLine, COLOR_PAIR(3));
+   wbkgd(infoLineBottom, COLOR_PAIR(3));
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
+   wrefresh(infoLineBottom);
    infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
 
    // Create input box and window
@@ -558,16 +582,20 @@ void resizeHandler(int sig) {
 
 /* Print message on startup */
 void asciiSplash() {
-   wprintw(chatWin, "\n");
-   wprintw(chatWin, "         __\n");
-   wprintw(chatWin, "        /_/\\        _____ ____  ____     ____ _           _   \n");
-   wprintw(chatWin, "       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
-   wprintw(chatWin, "      / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
-   wprintw(chatWin, "     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ \n");
-   wprintw(chatWin, "    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
-   wprintw(chatWin, "   /_/______\\_\\/\\\n");
-   wprintw(chatWin, "   \\_\\_________\\/\tversion %s\n\n", VERSION);
-   wprintw(chatWin, " Type /help to view a list of available commands.\n\n");
+   //wattron(chatWin, COLOR_PAIR(4));
+   wprintFormat(chatWin, time(NULL), "Client", " ", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "         __", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "        /_/\\        _____ ____  ____     ____ _           _   ", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "       / /\\ \\      |_   _| __ )|  _ \\   / ___| |__   __ _| |_ ", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "      / / /\\ \\       | | |  _ \\| | | | | |   | '_ \\ / _` | __|", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "     / / /\\ \\ \\      | | | |_) | |_| | | |___| | | | (_| | |_ ", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "    / /_/__\\ \\ \\     |_| |____/|____/   \\____|_| |_|\\__,_|\\__|", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "   /_/______\\_\\/\\", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "   \\_\\_________\\/\tversion ", 1);
+   wprintFormat(chatWin, time(NULL), "Client", " ", 1);
+   wprintFormat(chatWin, time(NULL), "Client", "Type /help to view a list of available commands.", 1);
+   wprintFormat(chatWin, time(NULL), "Client", " ", 1);
+   //wattroff(chatWin, COLOR_PAIR(4));
    wrefresh(chatWin);
 }
 
