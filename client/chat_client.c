@@ -51,11 +51,12 @@ int main(int argc, char **argv) {
    cbreak();
    // Capture special keys
    keypad(mainWin, TRUE);
+ 
    // Initialize color types
-   init_pair(1, -1, -1);
-   init_pair(2, COLOR_CYAN, -1);
-   init_pair(3, COLOR_YELLOW, -1);
-   init_pair(4, COLOR_RED, -1);
+   init_pair(1, -1, -1); // Default                             
+   init_pair(2, COLOR_CYAN, -1);                      
+   init_pair(3, COLOR_YELLOW, -1);                    
+   init_pair(4, COLOR_RED, -1);                       
    init_pair(5, COLOR_BLUE, -1);
    init_pair(6, COLOR_MAGENTA, -1);
    init_pair(7, COLOR_GREEN, -1);
@@ -75,7 +76,6 @@ int main(int argc, char **argv) {
    // Create info lines
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
    wbkgd(infoLine, COLOR_PAIR(3));
-   wbkgd(infoLineBottom, COLOR_PAIR(3));
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
    wrefresh(infoLineBottom);
@@ -313,8 +313,6 @@ void *chatRX(void *ptr) {
 
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
-   //struct tm *timestamp = localtime(&(rx_pkt->timestamp));
-   //timestamp = localtime(&(rx_pkt->timestamp));
    if (rx_pkt->options == SERV_ERR) {
       wprintFormat(chatWin, time(NULL), rx_pkt->realname, rx_pkt->buf, 3);
    }
@@ -431,7 +429,6 @@ void wprintFormatTime(WINDOW *win, time_t ts) {
 
 /* Change the clients current room (for sending) */
 void newRoom(packet *rx_pkt) {
-   //struct tm *timestamp = localtime(&(rx_pkt->timestamp));
    int i = 0, roomNumber;
    char *args[16];
    char cpy[BUFFERSIZE];
@@ -447,10 +444,15 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
-         wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname,  "Joined new room", 1);
-        werase(infoLine);
-        wprintw(infoLine, " Current room: %s", args[0]); 
-        wrefresh(infoLine);
+         wprintFormatTime(chatWin, rx_pkt->timestamp);
+         wprintw(chatWin, "Joined Room ");
+         wattron(chatWin, COLOR_PAIR(3));
+         wprintw(chatWin, "%s\n", args[0]);
+         wattroff(chatWin, COLOR_PAIR(3));
+         werase(infoLine);
+         wbkgd(infoLine, COLOR_PAIR(3));
+         wprintw(infoLine, " Current room: %s", args[0]); 
+         wrefresh(infoLine);
       }
       pthread_mutex_unlock(&roomMutex);
    }
@@ -521,6 +523,7 @@ void print_ip( struct addrinfo *ai) {
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
+      wbkgd(infoLineBottom, COLOR_PAIR(3));
       wprintw(infoLineBottom, " Connected to [%s] %s:%d", ipver, ipstr, ntohs(port));
       wrefresh(infoLineBottom);
    }
@@ -587,6 +590,7 @@ void resizeHandler(int sig) {
    box(inputWinBox, 0, 0);
    inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
 }
+
 
 /* Print message on startup */
 void asciiSplash() {
@@ -656,16 +660,6 @@ void asciiSplash() {
    wprintFormatTime(chatWin, time(NULL));
    wprintw(chatWin, "\n");
    
-
-   //wprintFormat(chatWin, time(NULL), "Client", "       / /\\ \\      ""|_   _| __ )|  _ \\   / ___| |__   __ _| |_ ", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", "      / / /\\ \\      "" | | |  _ \\| | | | | |   | '_ \\ / _` | __|", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", "     / / /\\ \\ \\     "" | | | |_) | |_| | | |___| | | | (_| | |_ ", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", "    / /_/__\\ \\ \\    "" |_| |____/|____/   \\____|_| |_|\\__,_|\\__|", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", "   /_/______\\_\\/\\", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", "   \\_\\_________\\/\t", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", " ", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", "Type /help to view a list of available commands.", 1);
-   //wprintFormat(chatWin, time(NULL), "Client", " ", 1);
    wrefresh(chatWin);
 }
 

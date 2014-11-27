@@ -457,8 +457,37 @@ void debugPacket(packet *rx_pkt) {
 
 /* Print helpful and unhelpful things */
 void showHelp() {
-   wprintFormat(chatWin, time(NULL), "Client", "--------------------------------[ Command List ]--------------------------------------", 2);
-   wprintFormat(chatWin, time(NULL), "Client", "\t/connect\t | Usage: /connect address port", 1);
+   int command = 3;
+   int bar = 7;
+   int title = 2;
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "--------------------------------[ ");
+   wattroff(chatWin, COLOR_PAIR(1));
+   wattron(chatWin, COLOR_PAIR(3));
+   wprintw(chatWin, "Command List");
+   wattroff(chatWin, COLOR_PAIR(3));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, " ]--------------------------------------\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(command));
+   wprintw(chatWin, "\t/connect\t");
+   wattroff(chatWin, COLOR_PAIR(command));
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Usage: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "/connect address port\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   //wprintFormat(chatWin, time(NULL), "Client", "--------------------------------[ Command List ]--------------------------------------", 2);
+   //wprintFormat(chatWin, time(NULL), "Client", "\t/connect\t | Usage: /connect address port", 1);
    wprintFormat(chatWin, time(NULL), "Client", "\t/reconnect\t | Connect to last known host", 1);
    wprintFormat(chatWin, time(NULL), "Client", "\t/autoconnect\t | Toggle automatic connection to last known host on startup", 1);
    wprintFormat(chatWin, time(NULL), "Client", "\t/help\t\t | Display a list of commands", 1);
