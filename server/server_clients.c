@@ -220,19 +220,21 @@ int login(packet *pkt, int fd) {
    // Check there are enough arguements to safely inspect them
    if (i > 2) {
       packet ret;
-
+      printf("Going to check if user exists\n");
       // Check if user exists as registered user
       if (strcmp(get_real_name(&registered_users_list, args[1], registered_users_mutex), "ERROR") == 0) {
          sendError("Username not found.", fd);
          return 0;
       }
-
+      printf("going to check password\n");
       // Check for password patch against registered user data
       char *password = get_password(&registered_users_list, args[1], registered_users_mutex);
+      printf("returned from get password\n");
       if (strcmp(args[2], password) != 0) {
          sendError("Incorrect password.", fd);
          return 0;
       }
+      printf("Going to get user\n");
 
       // Login input is valid, read user data from registered users
       User *user = get_user(&registered_users_list, args[1], registered_users_mutex);

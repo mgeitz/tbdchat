@@ -146,18 +146,24 @@ char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
    }
 
    User *current = (User *)temp->data;
-
-   while (strcmp(user, current->username) != 0) {
-      current = (User *)temp->data;
-      if (temp->next == NULL) { 
-         pthread_mutex_unlock(&mutex);
-         return error;
-      }
-      temp=temp->next;
+   if(strcmp(user, current->username) == 0){ 
+      pthread_mutex_unlock(&mutex);
+      return current->real_name;
    }
-   
+
+   while(temp->next != NULL) {
+      temp = temp->next;
+      current = (User *)temp->data;
+
+      if(strcmp(user, current->username) == 0) {
+         pthread_mutex_unlock(&mutex);
+         return current->real_name;
+      }
+   }
+
    pthread_mutex_unlock(&mutex);
-   return current->real_name;
+   return error;
+
 }
 
 
@@ -172,17 +178,22 @@ char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
       return error;
    }
    User *current = (User *)temp->data;
-
-   while(strcmp(user, current->username) != 0) {
+   if(strcmp(user, current->username) == 0){
+      pthread_mutex_unlock(&mutex);
+      return current->password;
+   }
+      
+   while(temp->next != NULL) {
+      temp = temp->next;
       current = (User *)temp->data;
-      if(temp->next == NULL) {
+
+      if(strcmp(user, current->username) == 0) {
          pthread_mutex_unlock(&mutex);
-         return error;
+         return current->password;
       }
-      temp=temp->next;
    }
    pthread_mutex_unlock(&mutex);
-   return current->password;
+   return error;
 }
 
 
@@ -196,19 +207,23 @@ User *get_user(Node **head, char *user, pthread_mutex_t mutex) {
    }
 
    User *current = (User *)temp->data;
+   if(strcmp(user, current->username) == 0){
+      pthread_mutex_unlock(&mutex);
+      return current;
+   }
 
-   while(strcmp(user, current->username) != 0) {
+   while(temp->next != NULL) {
+      temp = temp->next;
       current = (User *)temp->data;
 
-      if(temp->next == NULL) {
+      if(strcmp(user, current->username) == 0) {
          pthread_mutex_unlock(&mutex);
-         return NULL;
+         return current;
       }
-      temp = temp->next;
    }
-   
    pthread_mutex_unlock(&mutex);
-   return current;
+   return NULL;
+
 }
 
 User *clone_user(User *user, pthread_mutex_t mutex) {
