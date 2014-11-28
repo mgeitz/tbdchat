@@ -239,6 +239,9 @@ int userInput(packet *tx_pkt) {
             wprintw(inputWin, "\b \0");
          }
       }
+      else if (ch == KEY_RESIZE) {
+         continue;
+      }
       // Otherwise put in buffer
       else {
          if (i < BUFFERSIZE - 1) {
