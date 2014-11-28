@@ -240,10 +240,12 @@ int login(packet *pkt, int fd) {
       //Create node for active users list
       Node *new_usr_act = (Node *)malloc(sizeof(Node));
       new_usr_act->data = (void *)user;
+      new_usr_act->next = NULL;
 
       //Create node for room list
       Node *new_usr_rm = (Node *)malloc(sizeof(Node));
-      new_usr_rm = (void *)user;
+      new_usr_rm->data = (void *)user;
+      new_usr_rm->next = NULL;
 
       // Check if the user is already logged in
       if(insertNode(&active_users_list, new_usr_act, active_users_mutex) == 1) {

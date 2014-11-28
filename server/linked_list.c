@@ -296,7 +296,6 @@ void printList(Node **head, pthread_mutex_t mutex) {
       return;
    }
    User *current = (User *)temp->data;
-   
    printf("%s, %s, %s, %d\n", current->username, current->real_name, current->password,
           current->sock);
    while(temp->next != NULL) {
