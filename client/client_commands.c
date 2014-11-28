@@ -461,6 +461,7 @@ void showHelp() {
    int bar = 7;
    int title = 2;
 
+   // Seperator
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(1));
    wprintw(chatWin, "--------------------------------[ ");
@@ -472,9 +473,10 @@ void showHelp() {
    wprintw(chatWin, " ]--------------------------------------\n");
    wattroff(chatWin, COLOR_PAIR(1));
 
+   // connect
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(command));
-   wprintw(chatWin, "\t/connect\t");
+   wprintw(chatWin, "   /connect     ");
    wattroff(chatWin, COLOR_PAIR(command));
    wattron(chatWin, COLOR_PAIR(bar));
    wprintw(chatWin, " | ");
@@ -485,14 +487,108 @@ void showHelp() {
    wattron(chatWin, COLOR_PAIR(1));
    wprintw(chatWin, "/connect address port\n");
    wattroff(chatWin, COLOR_PAIR(1));
+   wprintFormatTime(chatWin, time(NULL));
+   wprintw(chatWin, "        \\-------");
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Desc: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "Connect to a chat server\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   // reconnect
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(command));
+   wprintw(chatWin, "   /reconnect   ");
+   wattroff(chatWin, COLOR_PAIR(command));
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Usage: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "/reconnect\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+   wprintFormatTime(chatWin, time(NULL));
+   wprintw(chatWin, "       \\------- ");
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Desc: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "Connect using last connect arguments (surprisingly correct spelling)\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   // autoconnect
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(command));
+   wprintw(chatWin, "   /autoconnect ");
+   wattroff(chatWin, COLOR_PAIR(command));
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Usage: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "/autoconnect\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(command));
+   wprintw(chatWin, "   /help        ");
+   wattroff(chatWin, COLOR_PAIR(command));
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Usage: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "/help\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(command));
+   wprintw(chatWin, "   /exit        ");
+   wattroff(chatWin, COLOR_PAIR(command));
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Usage: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "/exit\n");
+   wattroff(chatWin, COLOR_PAIR(1));
+
+   wprintFormatTime(chatWin, time(NULL));
+   wattron(chatWin, COLOR_PAIR(command));
+   wprintw(chatWin, "   /debug       ");
+   wattroff(chatWin, COLOR_PAIR(command));
+   wattron(chatWin, COLOR_PAIR(bar));
+   wprintw(chatWin, " | ");
+   wattroff(chatWin, COLOR_PAIR(bar));
+   wattron(chatWin, COLOR_PAIR(title));
+   wprintw(chatWin, "Usage: ");
+   wattroff(chatWin, COLOR_PAIR(title));
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "/debug\n");
+   wattroff(chatWin, COLOR_PAIR(1));
 
    //wprintFormat(chatWin, time(NULL), "Client", "--------------------------------[ Command List ]--------------------------------------", 2);
    //wprintFormat(chatWin, time(NULL), "Client", "\t/connect\t | Usage: /connect address port", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "\t/reconnect\t | Connect to last known host", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "\t/autoconnect\t | Toggle automatic connection to last known host on startup", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "\t/help\t\t | Display a list of commands", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "\t/debug\t\t | Toggle debug mode", 1);
-   wprintFormat(chatWin, time(NULL), "Client", "\t/exit\t\t | Exit the client", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "\t/reconnect\t | Connect to last known host", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "\t/autoconnect\t | Toggle automatic connection to last known host on startup", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "\t/help\t\t | Display a list of commands", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "\t/debug\t\t | Toggle debug mode", 1);
+   //wprintFormat(chatWin, time(NULL), "Client", "\t/exit\t\t | Exit the client", 1);
    wprintFormat(chatWin, time(NULL), "Client", "\t/register\t | Usage: /register username password password", 1);
    wprintFormat(chatWin, time(NULL), "Client", "\t/login\t\t | Usage: /login username password", 1);
    wprintFormat(chatWin, time(NULL), "Client", "\t/setpass\t | Usage: /setpass oldpassword newpassword newpassword", 1);

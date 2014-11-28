@@ -400,6 +400,23 @@ void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color)
 }
 
 
+/* Print formatted and colored error */
+void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
+   // Print formatted time
+   wprintFormatTime(win, ts);
+
+   wattron(win, A_BOLD);
+   wprintw(chatWin, "--- ");
+   wattron(win, COLOR_PAIR(8));
+   wprintw(chatWin, "Error");
+   wattroff(win, COLOR_PAIR(8));
+   wattroff(win, A_BOLD);
+   wattron(win, COLOR_PAIR(1));
+   wprintw(chatWin, " %s\n", buf);
+   wattroff(win, COLOR_PAIR(1));
+}
+
+
 /* Print properly formatted and colored timestamp */
 void wprintFormatTime(WINDOW *win, time_t ts) {
    struct tm *timestamp;

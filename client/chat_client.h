@@ -86,6 +86,7 @@ int auto_connect();
 void newRoom(packet *rx_pkt);
 void wprintFormatTime(WINDOW *win, time_t ts);
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);
+void wprintFormatError(WINDOW *win, time_t ts, char *buf);
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);
