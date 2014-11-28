@@ -4,7 +4,8 @@ TO-DO LIST:
    Smaller adjustments:
 
       - [Server] Lists of pointers to registers users nodes and solve all of our problems.
-      
+         *** Mostly almost done     
+ 
       - [Server] Send notification to all users in a room when another user leaves it
  
       - [Server] Hash stored passwords, hash input on compare
@@ -21,8 +22,12 @@ TO-DO LIST:
       - [client] Curses
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
          o Add client window to primary screen to display clients currently in room
+         o Finish formatting /help, probably need fancy special bar chars to display relationships, ie /who all and /who usr under /who
+         o Format /debug
+         o Convert error messages to use error print method, consider generalizing error method to differentiate slient and server errors
+  
 
-      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc
+      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)
 
       - [Client] Client message archiving; by room name, readable format and easy to parse to read back on client
 
@@ -37,11 +42,13 @@ KNOWN BUGS:
    Server:
 
       - Users persist in active users and as users in rooms after exiting.
+      - List changes incomplete . . . 
             
    Client:
 
-      - Many things still need colors
-      - Window contents are lost after rezises - this is especially troublesome if someone has been typing in and then they resize.
+      - Window contents are lost after rezises (solved with logging)
+      - Gibberish is printed all over the terminal when the server segfaults
+      - After resize event, a key must be pressed before input is read into the buffer
       - For some reason /login and /join, when parsed by strsep, return the base commands as args[8] instead of args[0]
 
 CLIENT FEATURES:
