@@ -183,6 +183,7 @@ int register_user(packet *in_pkt, int fd) {
       
       Node *new_node = (Node *)malloc(sizeof(Node));
       new_node->data = (void *) user;
+      new_node->next = NULL;
 
       // Insert user as registered user, write new user data to file
       insertNode(&registered_users_list, new_node, registered_users_mutex);

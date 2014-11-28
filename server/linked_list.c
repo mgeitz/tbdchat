@@ -274,7 +274,7 @@ void writeUserFile(Node  **head, char *filename, pthread_mutex_t mutex) {
    
    User *current = (User *)temp->data;
    //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
-   write(fd, temp, sizeof(User));
+   write(fd, current, sizeof(User));
    while(temp->next != NULL) {
       temp = temp->next;
       current = (User *)temp->data;
