@@ -68,7 +68,11 @@ int main(int argc, char **argv) {
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| ");
+   wattron(chatWinBox, COLOR_PAIR(3));
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 4, "TBDChat" );
+   wattroff(chatWinBox, COLOR_PAIR(3));
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) + 3, " |" );
    wrefresh(chatWinBox);
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
@@ -580,6 +584,7 @@ void sigintHandler(int sig_num) {
    pthread_mutex_destroy(&roomMutex);
    endwin();
    printf("\33[2J\33[H");
+   printf("Thanks for using TBD Chat.\n");
    exit(0);
 }
 
@@ -593,7 +598,11 @@ void resizeHandler(int sig) {
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| ");
+   wattron(chatWinBox, COLOR_PAIR(3));
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 4, "TBDChat" );
+   wattroff(chatWinBox, COLOR_PAIR(3));
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) + 3, " |" );
    wrefresh(chatWinBox);
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
