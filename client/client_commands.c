@@ -20,6 +20,7 @@ extern pthread_mutex_t nameMutex;
 extern pthread_mutex_t debugModeMutex;
 extern pthread_mutex_t configFileMutex;
 
+
 /* Process user commands and mutate buffer accordingly */
 int userCommand(packet *tx_pkt) {
 
@@ -489,6 +490,7 @@ void showHelp(char *buf) {
 
    wprintSeperatorTitle(chatWin, "Command List", bar, command);
 
+   // Print if help has no args
    if (strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, A_BOLD);
@@ -579,6 +581,7 @@ void showHelp(char *buf) {
 
    }
 
+   // Print specific command arg or all
    // connect
    if (strcmp(cmd, "connect")  == 0 || strcmp(cmd, "all") == 0) {
       wprintFormatTime(chatWin, time(NULL));
@@ -875,8 +878,6 @@ void showHelp(char *buf) {
       wattron(chatWin, COLOR_PAIR(1));
       wprintw(chatWin, "Display usage and description for all commands\n");
       wattroff(chatWin, COLOR_PAIR(1));
-
-
    }
 
    // exit
@@ -1464,6 +1465,5 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Leave the room you are in and return to the lobby\n");
       wattroff(chatWin, COLOR_PAIR(1));
    }
-
    wprintSeperator(chatWin, bar);
 }

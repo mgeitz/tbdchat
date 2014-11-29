@@ -345,7 +345,7 @@ void serverResponse(packet *rx_pkt) {
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
+      wprintFormat(chatWin, rx_pkt->timestamp, "USER", rx_pkt->buf, 6);
    }
    else if (rx_pkt->options == PASSSUC) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful", 3);
@@ -406,7 +406,6 @@ void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color)
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "] %s\n", buf);
    wattroff(win, COLOR_PAIR(1));
-
 }
 
 
@@ -486,6 +485,7 @@ void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color) 
 }
 
 
+/* Print seperator bard 2/3 length of window */
 void wprintSeperator(WINDOW *win, int color) {
    int height, width, i;
    getmaxyx(win, height, width);

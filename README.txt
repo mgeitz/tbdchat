@@ -22,7 +22,6 @@ TO-DO LIST:
       - [client] Curses
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
          o Add client window to primary screen to display clients currently in room
-         o Convert error messages to use error print method, consider generalizing error method to differentiate slient and server errors
          o Add minimum terminal size requirement
          o Improved notification/alert formatting
          o Move as much curses stuff to visual.c
@@ -47,10 +46,12 @@ KNOWN BUGS:
             
    Client:
 
+      - Some special keys print more chars in the input window than backspace removes
       - Window contents are lost after rezises (solved with logging)
       - Gibberish is printed all over the terminal when the server segfaults
       - After resize event, a key must be pressed before input is read into the buffer
       - For some reason /login and /join, when parsed by strsep, return the base commands as args[8] instead of args[0]
+      - resizing very fast will cause the client to segfault
 
 CLIENT FEATURES:
 
