@@ -370,98 +370,14 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
    }
    else if (rx_pkt->options == MOTD) {
-      // Top line
-      wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wattron(chatWin, COLOR_PAIR(1));
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_RTEE);
-      wattroff(chatWin, COLOR_PAIR(1));
-      wattron(chatWin, COLOR_PAIR(2));
-      wprintw(chatWin, " MOTD ");
-      wattroff(chatWin, COLOR_PAIR(2));
-      wattron(chatWin, COLOR_PAIR(1));
-      waddch(chatWin, ACS_LTEE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      wprintw(chatWin, "\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      wprintSeperatorTitle(chatWin, "MOTD", 1, 2);
 
-      // MOTD
       wprintFormatTime(chatWin, rx_pkt->timestamp);
       wattron(chatWin, COLOR_PAIR(5));
       wprintw(chatWin, "%s\n", rx_pkt->buf);
-      wattroff(chatWin, COLOR_PAIR(5));
+      wattroff(chatWin, COLOR_PAIR(7));
 
-      // Lower line
-      wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wattron(chatWin, COLOR_PAIR(1));
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      wprintw(chatWin, "\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      wprintSeperator(chatWin, 1);
    }
    else if(rx_pkt->options == EXIT) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
@@ -541,6 +457,46 @@ void wprintFormatTime(WINDOW *win, time_t ts) {
    waddch(win, ACS_VLINE);
    wprintw(win, " ");
    wattroff(win, COLOR_PAIR(7));
+}
+
+
+/* Print seperator bar with title 2/3rd the length of the window passed in */
+void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color) {
+   int height, width, i;
+   getmaxyx(win, height, width);
+
+   // Print formatted time
+   wprintFormatTime(win, time(NULL));
+   wattron(win, COLOR_PAIR(color));
+   for (i = 0; i < ((width / 3) - ((strlen(title) + 2) / 2)); i++) {
+      waddch(win, ACS_HLINE);
+   }
+   waddch(win, ACS_RTEE);
+   wattroff(win, COLOR_PAIR(color));
+   wattron(win, COLOR_PAIR(title_color));
+   wprintw(win, " %s ", title);
+   wattroff(win, COLOR_PAIR(title_color));
+   wattron(win, COLOR_PAIR(color));
+   waddch(win, ACS_LTEE);
+   for (i = 0; i < ((width / 3) - ((strlen(title) + 2) / 2)); i++) {
+      waddch(win, ACS_HLINE);
+   }
+   wprintw(win, "\n");
+   wattroff(win, COLOR_PAIR(color));
+}
+
+
+void wprintSeperator(WINDOW *win, int color) {
+   int height, width, i;
+   getmaxyx(win, height, width);
+
+   wprintFormatTime(win, time(NULL));
+   wattron(win, COLOR_PAIR(color));
+   for (i = 0; i < (2 * (width / 3) + 2); i++) {
+      waddch(win, ACS_HLINE);
+   }
+   wprintw(win, "\n");
+   wattroff(win, COLOR_PAIR(color));
 }
 
 
