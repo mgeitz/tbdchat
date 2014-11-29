@@ -51,7 +51,6 @@ KNOWN BUGS:
       - Gibberish is printed all over the terminal when the server segfaults
       - After resize event, a key must be pressed before input is read into the buffer
       - For some reason /login and /join, when parsed by strsep, return the base commands as args[8] instead of args[0]
-      - resizing very fast will cause the client to segfault
 
 CLIENT FEATURES:
 

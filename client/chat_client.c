@@ -21,7 +21,6 @@ char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 char *config_file;
-//char *USERCOLORS[4] = {BLUE, CYAN, MAGENTA, GREEN};
 
 // Curses Windows
 WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *infoLineBottom;
@@ -29,10 +28,8 @@ WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *inf
 int main(int argc, char **argv) {
    int bufSize, send_flag;
    packet tx_pkt;
-   //struct tm *timestamp;
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
-   //int LINES, COLS;
    packet *tx_pkt_ptr = &tx_pkt;
 
 
@@ -244,7 +241,7 @@ int userInput(packet *tx_pkt) {
          }
       }
       else if (ch == KEY_RESIZE) {
-         continue;
+        continue;
       }
       // Otherwise put in buffer
       else {
@@ -638,9 +635,12 @@ void sigintHandler(int sig_num) {
 
 /* Handle window resizing */
 void resizeHandler(int sig) {
+   useconds_t sleep_time = 100;
    endwin();
    refresh();
    clear();
+
+   usleep(sleep_time);
 
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
