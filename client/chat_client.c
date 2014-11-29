@@ -442,7 +442,9 @@ void wprintFormatTime(WINDOW *win, time_t ts) {
    wattroff(win, COLOR_PAIR(1));
 
    wattron(win, COLOR_PAIR(7));
-   wprintw(win, " | ");
+   wprintw(win, " ");
+   waddch(win, ACS_VLINE);
+   wprintw(win, " ");
    wattroff(win, COLOR_PAIR(7));
 }
 
