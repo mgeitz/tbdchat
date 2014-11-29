@@ -494,7 +494,7 @@ void showHelp(char *buf) {
    if (strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, A_BOLD);
-      wprintw(chatWin, "Type '/help command_name' or '/help all' for command descriptions and usage examples\n");
+      wprintw(chatWin, "Type '/help [command]' or '/help all' for command descriptions and usage examples\n");
       wattroff(chatWin, A_BOLD);
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "\n");
@@ -833,7 +833,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/help command_name\n");
+      wprintw(chatWin, "/help [command]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1006,7 +1006,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/register username password password\n");
+      wprintw(chatWin, "/register [username] [password] [password]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1054,7 +1054,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/login username password\n");
+      wprintw(chatWin, "/login [username] [password]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1102,7 +1102,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/setpass oldpass newpass newpass\n");
+      wprintw(chatWin, "/setpass [oldpass] [newpass] [newpass]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1150,7 +1150,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/setname new display name\n");
+      wprintw(chatWin, "/setname [display name]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1256,7 +1256,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/who username\n");
+      wprintw(chatWin, "/who [username]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1352,7 +1352,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/invite username\n");
+      wprintw(chatWin, "/invite [username]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
@@ -1400,7 +1400,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Usage: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/join roomname\n");
+      wprintw(chatWin, "/join [roomname]\n");
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
