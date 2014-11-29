@@ -24,7 +24,6 @@ TO-DO LIST:
          o Add client window to primary screen to display clients currently in room
          o Convert error messages to use error print method, consider generalizing error method to differentiate slient and server errors
          o Add minimum terminal size requirement
-         o Unique error formatting
          o Improved notification/alert formatting
          o Move as much curses stuff to visual.c
          o Reduce repeated printing to methods

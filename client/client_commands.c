@@ -827,7 +827,7 @@ void showHelp(char *buf) {
       wprintw(chatWin, "Desc: ");
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Display a usage and description list of all commands\n");
+      wprintw(chatWin, "Display a list of all commands\n");
       wattroff(chatWin, COLOR_PAIR(1));
 
       wprintFormatTime(chatWin, time(NULL));
@@ -846,7 +846,7 @@ void showHelp(char *buf) {
       wattroff(chatWin, COLOR_PAIR(1));
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
+      waddch(chatWin, ACS_LTEE);
       wattron(chatWin, COLOR_PAIR(bar));
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
@@ -858,6 +858,36 @@ void showHelp(char *buf) {
       wattron(chatWin, COLOR_PAIR(1));
       wprintw(chatWin, "Display a usage and description for a single command\n");
       wattroff(chatWin, COLOR_PAIR(1));
+
+      wprintFormatTime(chatWin, time(NULL));
+      wprintw(chatWin, "               ");
+      waddch(chatWin, ACS_LTEE);
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " ");
+      wattroff(chatWin, COLOR_PAIR(bar));
+      wattron(chatWin, COLOR_PAIR(title));
+      wprintw(chatWin, "Usage: ");
+      wattroff(chatWin, COLOR_PAIR(title));
+      wattron(chatWin, COLOR_PAIR(1));
+      wprintw(chatWin, "/help all\n");
+      wattroff(chatWin, COLOR_PAIR(1));
+      wprintFormatTime(chatWin, time(NULL));
+      wprintw(chatWin, "               ");
+      waddch(chatWin, ACS_LLCORNER);
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " ");
+      wattroff(chatWin, COLOR_PAIR(bar));
+      wattron(chatWin, COLOR_PAIR(title));
+      wprintw(chatWin, "Desc: ");
+      wattroff(chatWin, COLOR_PAIR(title));
+      wattron(chatWin, COLOR_PAIR(1));
+      wprintw(chatWin, "Display usage and description for all commands\n");
+      wattroff(chatWin, COLOR_PAIR(1));
+
 
    }
 
