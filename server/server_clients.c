@@ -383,12 +383,12 @@ void join(packet *pkt, int fd) {
          User *currUser = get_user(&(currentRoom->user_list), pkt->username, currentRoom->user_list_mutex);
          printf("Removing user from his current rooms user list\n");
          removeUser(&(currentRoom->user_list), currUser, currentRoom->user_list_mutex);
-
+         printf("Returned from remove user\n");
          //Create node to add user to other room list.
          Node *new_node = (Node *)malloc(sizeof(Node));
          new_node->data = currUser;
          printf("Inserting user into new rooms user list\n");
-         insertNode(&(newRoom->user_list), new_node, newRoom->user_list_mutex);
+         insertUser(&(newRoom->user_list), currUser, newRoom->user_list_mutex);
 
          RprintList(&room_list, rooms_mutex);
 

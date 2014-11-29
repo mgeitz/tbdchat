@@ -63,16 +63,20 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
 int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    printf("Inserting %s\n", new_user->username);
-   User *temp = *head;
+   Node *temp = *head;
+   Node *new_node = (Node *)malloc(sizeof(Node));
+   new_node->data = (void *)new_user;
+   
    if (*head == NULL) {
-      new_user->next = NULL;
-      *head = new_user;
+      *head = new_node;
       printf("Insert Success\n");
       pthread_mutex_unlock(&mutex);
       return 1;
    } 
    
-   if (strcmp(temp->username, new_user->username) == 0) {
+   User *temp_user = (User *)temp->data;
+
+   if (strcmp(temp_user->username, new_user->username) == 0) {
       printf("Insert Failure\n");
       pthread_mutex_unlock(&mutex);
       return 0;
@@ -80,14 +84,15 @@ int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    
    while (temp->next != NULL) {
       temp = temp->next;
-      if (strcmp(temp->username, new_user->username) == 0) {
+      temp_user = (User *)temp->data;
+
+      if (strcmp(temp_user->username, new_user->username) == 0) {
          printf("Insert Failure\n");
          pthread_mutex_unlock(&mutex);
          return 0;
       }
    }
-   temp->next = new_user;
-   new_user->next = NULL;
+   temp->next = new_node;
    printf("Insert Success\n");
    pthread_mutex_unlock(&mutex);
    return 1;
