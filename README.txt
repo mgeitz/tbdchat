@@ -22,8 +22,6 @@ TO-DO LIST:
       - [client] Curses
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
          o Add client window to primary screen to display clients currently in room
-         o Finish formatting /help, probably need fancy special bar chars to display relationships, ie /who all and /who usr under /who
-         o Format /debug
          o Convert error messages to use error print method, consider generalizing error method to differentiate slient and server errors
   
 
