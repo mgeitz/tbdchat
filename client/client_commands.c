@@ -58,14 +58,14 @@ int userCommand(packet *tx_pkt) {
    // Handle connect command
    else if (strncmp((void *)tx_pkt->buf, "/connect", strlen("/connect")) == 0) {
       if (!newServerConnection((void *)tx_pkt->buf)) {
-          wprintFormat(chatWin, time(NULL), "Error", "Server connect failed.", 8);
+          wprintFormatError(chatWin, time(NULL), "Server connect failed");
       }
       return 0;
    }
    // Handle reconnect command
    else if (strncmp((void *)tx_pkt->buf, "/reconnect", strlen("/reconnect")) == 0) {
       if (!reconnect((void *)tx_pkt->buf)) {
-          wprintFormat(chatWin, time(NULL), "Error", "Server connect failed.", 8);
+          wprintFormatError(chatWin, time(NULL), "Server connect failed.");
       }
       return 0;
    }
@@ -73,11 +73,9 @@ int userCommand(packet *tx_pkt) {
    else if (strncmp((void *)tx_pkt->buf, "/autoconnect", strlen("/autoconnect")) == 0) {
        if (toggleAutoConnect()) {
           wprintFormat(chatWin, time(NULL), "Alert", "Autoconnect enabled", 10);
-          //wprintw(chatWin, " --- Client: Autoconnect enabled.\n");
        }
        else {
           wprintFormat(chatWin, time(NULL), "Alert", "Autoconnect disabled", 10);
-          //wprintw(chatWin, " --- Client: Autoconnect disabled.\n");
        }
        return 0;
    }
@@ -97,7 +95,7 @@ int userCommand(packet *tx_pkt) {
    else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
       if (!setPassword(tx_pkt)) {
          //wprintw(chatWin, " --- Error: Password mismatch.\n");
-          wprintFormat(chatWin, time(NULL), "Error", "Password mismath", 8);
+          wprintFormatError(chatWin, time(NULL), "Password mismath");
          return 0;
       }
       else {
@@ -149,8 +147,7 @@ int userCommand(packet *tx_pkt) {
    }
    // If it wasn't any of that, invalid command
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Invalid command", 8);
-      //wprintw(chatWin, " --- Error: Invalid command.\n");
+      wprintFormatError(chatWin, time(NULL), "Invalid command");
       return 0;
    }
 }
@@ -179,8 +176,7 @@ int validInvite(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Usage: /invite username", 8);
-      //wprintw(chatWin, " --- Error: Usage: /invite username\n");
+      wprintFormatError(chatWin, time(NULL), "Usage: /invite username");
       return 0;
    }
 }
@@ -208,8 +204,7 @@ int validJoin(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Usage: /join roomname", 8);
-      //wprintw(chatWin, " --- Error: Usage: /join roomname\n");
+      wprintFormatError(chatWin, time(NULL), "Usage: /join roomname");
       return 0;
    }
 }
@@ -231,11 +226,11 @@ int newServerConnection(char *buf) {
    }
    if (i > 2) {
       if((serverfd = get_server_connection(args[1], args[2])) == -1) {
-         wprintFormat(chatWin, time(NULL), "Error", "Could not connect to server", 8);
+         wprintFormatError(chatWin, time(NULL), "Could not connect to server");
          return 0;
       }
       if(pthread_create(&chat_rx_thread, NULL, chatRX, (void *)&serverfd)) {
-         wprintFormat(chatWin, time(NULL), "Error", "chatRX thread not created", 8);
+         wprintFormatError(chatWin, time(NULL), "chatRX thread not created");
          return 0;
       }
       wprintFormat(chatWin, time(NULL), "Client", "Connected.", 1);
@@ -262,8 +257,7 @@ int newServerConnection(char *buf) {
       return 1;
    }
    else {
-       wprintFormat(chatWin, time(NULL), "Error", "Usage: /connect address port", 8);
-       //wprintw(chatWin, " --- Error: Usage: /connect address port\n");
+       wprintFormatError(chatWin, time(NULL), "Usage: /connect address port");
        return 0;
    }
 }
@@ -291,7 +285,7 @@ int reconnect(char *buf) {
                   fclose(configfp);
                   pthread_mutex_unlock(&configFileMutex);
                   //wprintw(chatWin, " --- Error: No previous connection to reconnect to.\n");
-                  wprintFormat(chatWin, time(NULL), "Error", "No previous connect to reconnect to", 8);
+                  wprintFormatError(chatWin, time(NULL), "No previous connect to reconnect to");
                   box(chatWin, 0, 0);
                   wrefresh(chatWin);
                   return 0;
@@ -355,8 +349,7 @@ int serverLogin(packet *tx_pkt) {
       return 1;
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Usage: /login username password", 8);
-      //wprintw(chatWin, " --- Error: Usage: /login username password\n");
+      wprintFormatError(chatWin, time(NULL), "Usage: /login username password");
       return 0;
    }
 }
@@ -384,14 +377,12 @@ int serverRegistration(packet *tx_pkt) {
          return 1;
       }
       else {
-         wprintFormat(chatWin, time(NULL), "Error", "Password mismatch", 8);
-         //wprintw(chatWin, " --- Error: Password mismatch\n");
+         wprintFormatError(chatWin, time(NULL), "Password mismatch");
          return 0;
       }
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Usage: /register username password password", 8);
-      //wprintw(chatWin, " --- Error: Usage: /register username password password\n");
+      wprintFormatError(chatWin, time(NULL), "Usage: /register username password password");
       return 0;
    }
 }
@@ -416,14 +407,12 @@ int setPassword(packet *tx_pkt) {
          return 1;
       }
       else {
-      wprintFormat(chatWin, time(NULL), "Error", "New password mismatch", 8);
-      //wprintw(chatWin, " --- Error: New password mismatch\n");
+      wprintFormatError(chatWin, time(NULL), "New password mismatch");
       return 0;
       }
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Usage: /setpass oldpasswprd newpassword newpassword", 8);
-      //wprintw(chatWin, " --- Error: Usage: /setpass oldpassword newpassword newpassword\n");
+      wprintFormatError(chatWin, time(NULL), "Usage: /setpass oldpasswprd newpassword newpassword");
       return 0;
    }
 }
@@ -437,8 +426,7 @@ int setName(packet *tx_pkt) {
       return 1;
    }
    else {
-      //wprintw(chatWin, " --- Error: Usage: /setname newname\n");
-      wprintFormat(chatWin, time(NULL), "Error", "Usage: /setname newname", 8);
+      wprintFormatError(chatWin, time(NULL), "Usage: /setname newname");
       return 0;
    }
 }

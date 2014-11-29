@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
          }
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd)  {
-            wprintFormat(chatWin, time(NULL), "Error", "Not connected to any server. See /help for command usage.", 8);
+            wprintFormatError(chatWin, time(NULL), "Not connected to any server. See /help for command usage.");
          } 
       }
       // If an exit packet was just transmitted, break from primary execution loop
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         wprintFormat(chatWin, time(NULL), "Error", "chatRX thread not joining.", 8);
+         wprintFormatError(chatWin, time(NULL), "chatRX thread not joining.");
       }
    }
    // Destroy mutexes
@@ -306,7 +306,7 @@ void *chatRX(void *ptr) {
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
-            wprintFormat(chatWin, time(NULL), "Client", " Communication with server has terminated.", 1);
+            wprintFormat(chatWin, time(NULL), "Client", "Communication with server has terminated.", 1);
             break;
          }
       }
@@ -367,7 +367,7 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent", 3);
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
+      wprintFormat(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
    }
    else if (rx_pkt->options == MOTD) {
       wprintSeperatorTitle(chatWin, "MOTD", 1, 2);
@@ -385,7 +385,7 @@ void serverResponse(packet *rx_pkt) {
       close(serverfd);
    }
    else {
-      wprintFormat(chatWin, time(NULL), "Error", "Unknown message received from server", 8);
+      wprintFormatError(chatWin, time(NULL), "Unknown message received from server");
    }
 }
 
@@ -530,7 +530,7 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_unlock(&roomMutex);
    }
    else {
-         wprintFormat(chatWin, time(NULL), "Error", "Problem reading JOINSUC.", 8);
+         wprintFormatError(chatWin, time(NULL), "Problem reading JOINSUC.");
    }
 }
 
@@ -553,13 +553,13 @@ int get_server_connection(char *hostname, char *port) {
    
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-         wprintFormat(chatWin, time(NULL), "Error", "socket socket", 8);
+         wprintFormatError(chatWin, time(NULL), "socket socket");
          continue;
       }
       
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
-         wprintFormat(chatWin, time(NULL), "Error", "socket connect", 8);
+         wprintFormatError(chatWin, time(NULL), "socket connect");
          return -1;
       }
       break;
@@ -605,7 +605,7 @@ void print_ip( struct addrinfo *ai) {
 
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
-   wprintFormat(chatWin, time(NULL), "Error", "\b\bForced Exit.", 8);
+   wprintFormatError(chatWin, time(NULL), "Forced Exit.");
    // If the client is connected, safely close the connection
    if (serverfd) { 
       packet tx_pkt;
@@ -620,7 +620,7 @@ void sigintHandler(int sig_num) {
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
-            wprintFormat(chatWin, time(NULL), "Error", "chatRX thread not joining.", 8);
+            wprintFormatError(chatWin, time(NULL), "chatRX thread not joining.");
          }
       }
    }
