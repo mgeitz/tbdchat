@@ -489,7 +489,7 @@ void showHelp(char *buf) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, buf);
-   char *cmd = "all";
+   char *cmd = "none";
 
    // Split command args
    args[i] = strsep(&tmp, " \t");
@@ -500,6 +500,96 @@ void showHelp(char *buf) {
    if (args[1] != '\0') { cmd = args[1]; }
 
    wprintSeperatorTitle(chatWin, "Command List", bar, command);
+
+   if (strcmp(cmd, "none") == 0) {
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, A_BOLD);
+      wprintw(chatWin, "Type '/help command_name' or '/help all' for command descriptions and usage examples\n");
+      wattroff(chatWin, A_BOLD);
+      wprintFormatTime(chatWin, time(NULL));
+      wprintw(chatWin, "\n");
+      // connect
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /connect\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // reconnect
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /reconnect\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // autoconnect
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /autoconnect\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // clear 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /clear\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // help 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /help\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // exit 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /exit\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // debug 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /debug\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // register 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /register\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // login 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /login\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // setpass 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /setpass\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // setname 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /setname\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // who 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /who\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // list 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /list\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // invite 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /invite\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // join 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /join\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+      // leave 
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /leave\n");
+      wattroff(chatWin, COLOR_PAIR(command));
+
+   }
 
    // connect
    if (strcmp(cmd, "connect")  == 0 || strcmp(cmd, "all") == 0) {
