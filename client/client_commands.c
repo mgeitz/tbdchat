@@ -635,13 +635,15 @@ void showHelp() {
    waddch(chatWin, ACS_HLINE);
    waddch(chatWin, ACS_HLINE);
    waddch(chatWin, ACS_HLINE);
-   wprintw(chatWin, "[ ");
+   waddch(chatWin, ACS_RTEE);
+   wprintw(chatWin, " ");
    wattroff(chatWin, COLOR_PAIR(bar));
    wattron(chatWin, COLOR_PAIR(3));
    wprintw(chatWin, "Command List");
    wattroff(chatWin, COLOR_PAIR(3));
    wattron(chatWin, COLOR_PAIR(bar));
-   wprintw(chatWin, " ]");
+   wprintw(chatWin, " ");
+   waddch(chatWin, ACS_LTEE);
    waddch(chatWin, ACS_HLINE);
    waddch(chatWin, ACS_HLINE);
    waddch(chatWin, ACS_HLINE);

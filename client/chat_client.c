@@ -68,11 +68,11 @@ int main(int argc, char **argv) {
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| ");
+   mvwaddch(chatWinBox, 0, (COLS * 0.5) - 6, ACS_RTEE);
    wattron(chatWinBox, COLOR_PAIR(3));
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 4, "TBDChat" );
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 5, " TBDChat " );
    wattroff(chatWinBox, COLOR_PAIR(3));
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) + 3, " |" );
+   mvwaddch(chatWinBox, 0, (COLS * 0.5) + 4, ACS_LTEE );
    wrefresh(chatWinBox);
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
@@ -370,11 +370,98 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
    }
    else if (rx_pkt->options == MOTD) {
+      // Top line
       wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wprintw(chatWin, "-----------------------------------------------------------\n");
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 8);
+      wattron(chatWin, COLOR_PAIR(1));
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_RTEE);
+      wattroff(chatWin, COLOR_PAIR(1));
+      wattron(chatWin, COLOR_PAIR(2));
+      wprintw(chatWin, " MOTD ");
+      wattroff(chatWin, COLOR_PAIR(2));
+      wattron(chatWin, COLOR_PAIR(1));
+      waddch(chatWin, ACS_LTEE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      wprintw(chatWin, "\n");
+      wattroff(chatWin, COLOR_PAIR(1));
+
+      // MOTD
       wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wprintw(chatWin, "-----------------------------------------------------------\n");
+      wattron(chatWin, COLOR_PAIR(5));
+      wprintw(chatWin, "%s\n", rx_pkt->buf);
+      wattroff(chatWin, COLOR_PAIR(5));
+
+      // Lower line
+      wprintFormatTime(chatWin, rx_pkt->timestamp);
+      wattron(chatWin, COLOR_PAIR(1));
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      wprintw(chatWin, "\n");
+      wattroff(chatWin, COLOR_PAIR(1));
    }
    else if(rx_pkt->options == EXIT) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
@@ -413,7 +500,11 @@ void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
    wprintFormatTime(win, ts);
 
    wattron(win, A_BOLD);
-   wprintw(chatWin, "--- ");
+   wprintw(chatWin, " ");
+   waddch(chatWin, ACS_HLINE);
+   waddch(chatWin, ACS_HLINE);
+   waddch(chatWin, ACS_HLINE);
+   wprintw(chatWin, " ");
    wattron(win, COLOR_PAIR(8));
    wprintw(chatWin, "Error");
    wattroff(win, COLOR_PAIR(8));
@@ -598,11 +689,11 @@ void resizeHandler(int sig) {
    // Create chat box and window
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| ");
+   mvwaddch(chatWinBox, 0, (COLS * 0.5) - 6, ACS_RTEE);
    wattron(chatWinBox, COLOR_PAIR(3));
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 4, "TBDChat" );
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 5, " TBDChat " );
    wattroff(chatWinBox, COLOR_PAIR(3));
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) + 3, " |" );
+   mvwaddch(chatWinBox, 0, (COLS * 0.5) + 4, ACS_LTEE );
    wrefresh(chatWinBox);
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
    scrollok(chatWin, TRUE);
