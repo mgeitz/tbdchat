@@ -296,8 +296,8 @@ void *chatRX(void *ptr) {
                wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, 3);
             }
             else {
-               //int i = hash(rx_pkt.username);
-               wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, (atoi(rx_pkt.username) % 4) + 4);  
+               int i = hash(rx_pkt.username, 3);
+               wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i + 4);  
             }
          }
          // If the received packet is a nonmessage option, handle option response
@@ -786,12 +786,14 @@ void asciiSplash() {
 }
 
 
-/* Return number between 0-4 determined from string passed in */
-//int hash(char *str) {
-//   unsigned long hash = 5381;
-//   int c;
-//   while ((c = *str++)) {
-//      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-//   }
-//   return hash % 4;
-//}
+/* Return number between 0-(mod-1) determined from string passed in */
+int hash(char *str, int mod) {
+   unsigned long hash = 5381;
+   int c;
+   while ((c = *str++)) {
+      //Binary shift left by 5, add c
+      hash = ((hash << 5) + hash) + c; 
+   } 
+   // Return modded value
+   return hash % mod;
+}
