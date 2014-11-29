@@ -23,7 +23,11 @@ TO-DO LIST:
          o Catch function keys for all one-input commands (ie F1 to draw/print help, F2 to toggle debug/autoconnect, etd)
          o Add client window to primary screen to display clients currently in room
          o Convert error messages to use error print method, consider generalizing error method to differentiate slient and server errors
-  
+         o Add minimum terminal size requirement
+         o Unique error formatting
+         o Improved notification/alert formatting
+         o Move as much curses stuff to visual.c
+         o Reduce repeated printing to methods
 
       - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)
 
@@ -40,7 +44,7 @@ KNOWN BUGS:
    Server:
 
       - Users persist in active users and as users in rooms after exiting.
-      - List changes incomplete . . . 
+      - /leave command is somehow only adding the user to the lobby again 
             
    Client:
 
