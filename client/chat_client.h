@@ -100,7 +100,7 @@ int setName(packet *tx_pkt);
 void serverResponse(packet *rx_pkt);
 void debugPacket(packet *rx_pkt);
 int toggleAutoConnect();
-void showHelp();
+void showHelp(char *buf);
 int validJoin(packet *tx_pkt);
 int validInvite(packet *tx_pkt);
 int hash(char *str, int mod);
