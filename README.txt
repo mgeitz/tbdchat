@@ -125,6 +125,11 @@ CLIENT FEATURES:
          Description: Print out a list of public rooms with active users in them.
          Usage: /list
 
+      - /clear
+         Description: clear contents of chat window.
+         Usage: /clear
+
+
    Features:
 
       - Supports orderless interaction

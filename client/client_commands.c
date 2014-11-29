@@ -24,14 +24,15 @@ extern pthread_mutex_t configFileMutex;
 int userCommand(packet *tx_pkt) {
 
    // Handle exit command
-   if (strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) {
+   if ((strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) || \
+       (strncmp((void *)tx_pkt->buf, "/quit", strlen("/quit")) == 0)) {
        tx_pkt->options = EXIT;
        return 1;;
    }
-   // Handle quit command
-   else if (strncmp((void *)tx_pkt->buf, "/quit", strlen("/quit")) == 0) {
-       tx_pkt->options = EXIT;
-       return 1;;
+   // Handle clear command
+   else if (strncmp((void *)tx_pkt->buf, "/clear", strlen("/clear")) == 0) {
+       werase(chatWin);
+       return 0;
    }
    // Handle help command
    else if (strncmp((void *)tx_pkt->buf, "/help", strlen("/help")) == 0) {
@@ -641,6 +642,54 @@ void showHelp(char *buf) {
       wattroff(chatWin, COLOR_PAIR(title));
       wattron(chatWin, COLOR_PAIR(1));
       wprintw(chatWin, "Toggle autoconnect state on chat startup\n");
+      wattroff(chatWin, COLOR_PAIR(1));
+   }
+
+   // clear
+   if (strcmp(cmd, "clear")  == 0 || strcmp(cmd, "all") == 0) {
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /clear       ");
+      wattroff(chatWin, COLOR_PAIR(command));
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " \n");
+      wattroff(chatWin, COLOR_PAIR(bar));
+      wprintFormatTime(chatWin, time(NULL));
+      wprintw(chatWin, "        ");
+      waddch(chatWin, ACS_LLCORNER);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_HLINE);
+      waddch(chatWin, ACS_TTEE);
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " ");
+      wattroff(chatWin, COLOR_PAIR(bar));
+      wattron(chatWin, COLOR_PAIR(title));
+      wprintw(chatWin, "Usage: ");
+      wattroff(chatWin, COLOR_PAIR(title));
+      wattron(chatWin, COLOR_PAIR(1));
+      wprintw(chatWin, "/clear\n");
+      wattroff(chatWin, COLOR_PAIR(1));
+      wprintFormatTime(chatWin, time(NULL));
+      wprintw(chatWin, "               ");
+      waddch(chatWin, ACS_LLCORNER);
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " ");
+      wattroff(chatWin, COLOR_PAIR(bar));
+      wattron(chatWin, COLOR_PAIR(title));
+      wprintw(chatWin, "Desc: ");
+      wattroff(chatWin, COLOR_PAIR(title));
+      wattron(chatWin, COLOR_PAIR(1));
+      wprintw(chatWin, "Clear the chat window\n");
       wattroff(chatWin, COLOR_PAIR(1));
    }
 
