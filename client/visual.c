@@ -34,6 +34,49 @@ void initializeCurses() {
    init_pair(9, COLOR_WHITE, COLOR_BLUE);
    init_pair(10, COLOR_WHITE, COLOR_GREEN);
    init_pair(11, COLOR_BLACK, COLOR_MAGENTA);
+
+   drawChatWin();
+   drawInputWin();
+   drawInfoLines();
+
+   asciiSplash();
+}
+
+
+/* Draw chat box and window */
+void drawChatWin() {
+   // Create chat box and window
+   chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
+   box(chatWinBox, 0, 0);
+   mvwaddch(chatWinBox, 0, (COLS * 0.5) - 6, ACS_RTEE);
+   wattron(chatWinBox, COLOR_PAIR(3));
+   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 5, " TBDChat " );
+   wattroff(chatWinBox, COLOR_PAIR(3));
+   mvwaddch(chatWinBox, 0, (COLS * 0.5) + 4, ACS_LTEE );
+   wrefresh(chatWinBox);
+   chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
+   scrollok(chatWin, TRUE);
+}
+
+
+/* Draw input box and window */
+void drawInputWin() {
+   // Create input box and window
+   inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
+   box(inputWinBox, 0, 0);
+   inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
+}
+
+
+/* Draw info lines */
+void drawInfoLines() {
+   // Create info lines
+   infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
+   wbkgd(infoLine, COLOR_PAIR(3));
+   wprintw(infoLine, " Type /help to view a list of available commands");
+   wrefresh(infoLine);
+   wrefresh(infoLineBottom);
+   infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
 }
 
 
@@ -235,33 +278,19 @@ void asciiSplash() {
 }
 
 
-/*
-void drawChatWinBox(WINDOW *chatWinBox, int LINES, int COLS) {
-   chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
-   box(chatWinBox, 0, 0);
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 6, "| TBDChat |" );
-   wrefresh(chatWinBox);
+/* Handle window resizing */
+void resizeHandler(int sig) {
+   useconds_t sleep_time = 100;
+
+   // End current windows, wait briefly
+   endwin();
+   refresh();
+   clear();
+   usleep(sleep_time);
+
+   drawChatWin();
+   drawInputWin();
+   drawInfoLines();
+
+   asciiSplash();
 }
-
-
-void drawChatWin(WINDOW *chatWin, int LINES, int COLS) {
-   chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
-}
-
-
-void drawInfoLine(WINDOW *infoLine, int LINES, int COLS) {
-   infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
-}
-
-
-void drawInputWinBox(WINDOW *inputWinBox, int LINES, int COLS) {
-   inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
-   box(inputWinBox, 0, 0);
-}
-
-
-void drawInputWin(WINDOW *inputWin, int LINES, int COLS) {
-   inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
-}
-
-*/

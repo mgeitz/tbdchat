@@ -112,6 +112,9 @@ int hash(char *str, int mod);
 
 // visual.c
 void initializeCurses();
+void drawChatWin();
+void drawInputWin();
+void drawInfoLines();
 void wprintFormatTime(WINDOW *win, time_t ts);
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);
 void wprintFormatError(WINDOW *win, time_t ts, char *buf);

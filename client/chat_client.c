@@ -35,32 +35,8 @@ int main(int argc, char **argv) {
    signal(SIGINT, sigintHandler);
    signal(SIGWINCH, resizeHandler);
 
+   // Start everything curses
    initializeCurses();
-
-   // Create chat box and window
-   chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
-   box(chatWinBox, 0, 0);
-   mvwaddch(chatWinBox, 0, (COLS * 0.5) - 6, ACS_RTEE);
-   wattron(chatWinBox, COLOR_PAIR(3));
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 5, " TBDChat " );
-   wattroff(chatWinBox, COLOR_PAIR(3));
-   mvwaddch(chatWinBox, 0, (COLS * 0.5) + 4, ACS_LTEE );
-   wrefresh(chatWinBox);
-   chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
-   scrollok(chatWin, TRUE);
-
-   // Create info lines
-   infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
-   wbkgd(infoLine, COLOR_PAIR(3));
-   wprintw(infoLine, " Type /help to view a list of available commands");
-   wrefresh(infoLine);
-   wrefresh(infoLineBottom);
-   infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
-
-   // Create input box and window
-   inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
-   box(inputWinBox, 0, 0);
-   inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
 
    // Get home dir, check config
    strcpy(full_config_path, getenv("HOME"));
@@ -70,8 +46,6 @@ int main(int argc, char **argv) {
    if (access(config_file, F_OK) == -1) {
       buildDefaultConfig();
    }
-
-   asciiSplash();
 
    // Check autoconnect, run if set
    if (auto_connect()) {
@@ -501,44 +475,6 @@ void sigintHandler(int sig_num) {
    printf("\33[2J\33[H");
    printf("Thanks for using TBD Chat.\n");
    exit(0);
-}
-
-
-/* Handle window resizing */
-void resizeHandler(int sig) {
-   useconds_t sleep_time = 100;
-
-   // End current windows, wait briefly
-   endwin();
-   refresh();
-   clear();
-   usleep(sleep_time);
-
-   // Create chat box and window
-   chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
-   box(chatWinBox, 0, 0);
-   mvwaddch(chatWinBox, 0, (COLS * 0.5) - 6, ACS_RTEE);
-   wattron(chatWinBox, COLOR_PAIR(3));
-   mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 5, " TBDChat " );
-   wattroff(chatWinBox, COLOR_PAIR(3));
-   mvwaddch(chatWinBox, 0, (COLS * 0.5) + 4, ACS_LTEE );
-   wrefresh(chatWinBox);
-   chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
-   scrollok(chatWin, TRUE);
-
-   // Create info lines
-   infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
-   wbkgd(infoLine, COLOR_PAIR(3));
-   wbkgd(infoLineBottom, COLOR_PAIR(3));
-   wprintw(infoLine, " Type /help to view a list of available commands");
-   wrefresh(infoLine);
-   wrefresh(infoLineBottom);
-   infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
-
-   // Create input box and window
-   inputWinBox = subwin(mainWin, (LINES * 0.2) - 1, COLS, (LINES * 0.8) + 1, 0);
-   box(inputWinBox, 0, 0);
-   inputWin = subwin(inputWinBox, (LINES * 0.2) - 3, COLS - 2, (LINES * 0.8) + 2, 1);
 }
 
 
