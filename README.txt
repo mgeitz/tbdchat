@@ -1,6 +1,7 @@
 
 TO-DO LIST:
 
+
    Smaller adjustments:
 
       - [Server] Lists of pointers to registers users nodes and solve all of our problems.
@@ -14,23 +15,33 @@ TO-DO LIST:
 
       - [Client/Server] /disconnect command (same as /exit but allows the client to /connect again)
 
-      - [Server(mostly/Client(for possible room admin commands))]Private / Public room settings, room admins, other room variables
+      - [Server/Client] Private / Public room settings, room admins, other room attributes
 
-
-   Requires considerable time:
+      - [Server/Client] 2 person rooms, /msg username, /tell username, or /query username
 
       - [client] Curses
          o Add client window to primary screen to display clients currently in room
          o Add minimum terminal size requirement
          o Improved notification/alert formatting
 
-      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)
+
+   Requires considerable time:
 
       - [Client] Client message archiving; by room name, readable format and easy to parse to read back on client
+         o Used logged contents to redraw window after resize event
+
+      - [Client] Add more to config, read entire config on startup
+         o Color preferences
+
+      - [Client/Server] /friends and friends list
+
+      - [Client/Server] /away messages
+
+      - [Client/Server] Allow clients to be in n rooms at a time
 
       - [Client/Server] Full encryption using something like openssl or libsodium
 
-      - [Client/Server] Allow clients to be in n rooms at a time
+      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)
 
 
 
@@ -56,6 +67,10 @@ CLIENT FEATURES:
       - /help
          Description: Display a list of all available commands.
          Usage: /help
+         Description: Display usage and description for a command.
+         Usage: /help [command]
+         Description: Display usage and descriptions for all commands.
+         Usage: /help all
 
       - /exit
          Description: Safely disconnect from the server and end.
@@ -67,11 +82,11 @@ CLIENT FEATURES:
 
       - /register
          Description: Register as a new user.
-         Usage: /register username password password
+         Usage: /register [username] [password] [password]
 
       - /login
          Description: Login as a previously registered user.
-         Usage: /login username password
+         Usage: /login [username] [password]
 
       - /who
          Description: Print a list the list of users in the same room as you.
@@ -79,27 +94,27 @@ CLIENT FEATURES:
          Description: Print a list the list of all connected.
          Usage: /who all
          Description: Print a users real name.
-         Usage: /who username
+         Usage: /who [username]
 
       - /invite
          Description: Invite a user to your current room.
-         Usage: /invite username
+         Usage: /invite [username]
 
       - /join
          Description: Requests to join the room of the name given, if it exists join it, otherwise create it and join it.
-         Usage: /join roomname
+         Usage: /join [roomname]
 
       - /setpass
          Description: Change your current users password.
-         Usage: /setpass current_password new_password new_password
+         Usage: /setpass [current_password] [new_password] [new_password]
 
       - /setname
          Description: Change your displayed name.
-         Usage: /setname newusername
+         Usage: /setname [newusername]
 
       - /connect
          Description: Connects the client to a chat server.
-         Usage: /connect address port
+         Usage: /connect [address] [port]
 
       - /debug
          Description: Toggle debug mode [print out structured content of each packet received].
@@ -129,11 +144,9 @@ CLIENT FEATURES:
    Features:
 
       - Supports orderless interaction
-
       - Configuration file
-
       - auto-reconnect
-
+      - Pretty awesome curses interface
      
  
 SERVER FEATURES:
@@ -159,14 +172,14 @@ SERVER FEATURES:
 POTENTIAL RACE CONDITIONS:
 
       - Server:
-         o Rooms list [addresses]
-         o Registered users list [addresses]
+         o Rooms list [addressed]
+         o Registered users list [addressed]
          o Active users list [addressed]
-         o Room specific user lists [addresses]
+         o Room specific user lists [addressed]
 
       - Client: 
          o Current room variable access [addressed]
          o Display name buffer access [addressed]
          o Debug variable access [addressed]
          o Configuration file access [addressed]
-         o Printing anything while typing on the client (any cli or gui should solve this)
+         o Printing anything while typing on the client [addressed]

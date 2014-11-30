@@ -628,7 +628,7 @@ void showHelp(char *buf) {
          wprintw(chatWin, "Usage: ");
          wattroff(chatWin, COLOR_PAIR(title));
          wattron(chatWin, COLOR_PAIR(1));
-         wprintw(chatWin, "/connect address port\n");
+         wprintw(chatWin, "/connect [address] [port]\n");
          wattroff(chatWin, COLOR_PAIR(1));
          wprintFormatTime(chatWin, time(NULL));
          wprintw(chatWin, "               ");
