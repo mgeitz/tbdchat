@@ -322,12 +322,12 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
    }
    else if (rx_pkt->options == MOTD) {
-      wprintSeperatorTitle(chatWin, "MOTD", 1, 2);
+      wprintSeperatorTitle(chatWin, "MOTD", 1, 7);
 
       wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wattron(chatWin, COLOR_PAIR(5));
+      wattron(chatWin, COLOR_PAIR(2));
       wprintw(chatWin, "%s\n", rx_pkt->buf);
-      wattroff(chatWin, COLOR_PAIR(7));
+      wattroff(chatWin, COLOR_PAIR(2));
 
       wprintSeperator(chatWin, 1);
    }

@@ -163,7 +163,9 @@ void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color) 
    waddch(win, ACS_RTEE);
    wattroff(win, COLOR_PAIR(color));
    wattron(win, COLOR_PAIR(title_color));
+   //wattron(win, A_BOLD);
    wprintw(win, " %s ", title);
+   //wattroff(win, A_BOLD);
    wattroff(win, COLOR_PAIR(title_color));
    wattron(win, COLOR_PAIR(color));
    waddch(win, ACS_LTEE);
