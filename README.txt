@@ -24,7 +24,6 @@ TO-DO LIST:
          o Add client window to primary screen to display clients currently in room
          o Add minimum terminal size requirement
          o Improved notification/alert formatting
-         o Move as much curses stuff to visual.c
          o Reduce repeated printing to methods
 
       - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)

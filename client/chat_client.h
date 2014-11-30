@@ -1,6 +1,7 @@
 #ifndef CHAT_CLIENT_H
 #define CHAT_CLIENT_H
 
+
 /* System Header Files */
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,16 +19,18 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
-/* Local Header Files */
-#include "visual.h"
+#include <ncurses.h>
+
 
 /* Preprocessor Macros */
+
 // Client buffer size
 #define BUFFERSIZE 128
 #define DEFAULT_ROOM 1000
 #define SERVER_NAME "SERVER"
 #define VERSION "0.3.3" // Completely made up version progression, change at will
 #define CONFIG_FILENAME "/.tbdchat"
+
 // Client options
 #define INVALID -1
 #define REGISTER 1
@@ -43,6 +46,7 @@
 #define LEAVE 11
 #define GETMOTD 12
 #define GETROOMS 13
+
 // Server responses
 #define LOGSUC 100
 #define REGSUC 101
@@ -52,6 +56,7 @@
 #define MOTD 105
 #define INVITESUC 106
 #define SERV_ERR 107
+
 // Defined color constants
 #define NORMAL "\x1B[0m"
 #define BLACK "\x1B[30;1m"
@@ -63,6 +68,7 @@
 #define CYAN "\x1B[36;1m"
 #define WHITE "\x1B[37;1m"
 
+
 /* Structures */
 struct Packet {
    time_t timestamp;
@@ -73,9 +79,12 @@ struct Packet {
 };
 typedef struct Packet packet;
 
+
 /* Function Prototypes */
+
 // chat_client.c
 void sigintHandler(int sig_num);
+void resizeHandler(int sig);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
@@ -84,11 +93,7 @@ void asciiSplash();
 void buildDefaultConfig();
 int auto_connect();
 void newRoom(packet *rx_pkt);
-void wprintFormatTime(WINDOW *win, time_t ts);
-void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);
-void wprintFormatError(WINDOW *win, time_t ts, char *buf);
-void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color);
-void wprintSeperator(WINDOW *win, int color);
+
 // client_commands.c
 int userCommand(packet *tx_pkt);
 int newServerConnection(char *buf);
@@ -104,6 +109,14 @@ void showHelp(char *buf);
 int validJoin(packet *tx_pkt);
 int validInvite(packet *tx_pkt);
 int hash(char *str, int mod);
-// other
-void resizeHandler(int sig);
+
+// visual.c
+void initializeCurses();
+void wprintFormatTime(WINDOW *win, time_t ts);
+void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);
+void wprintFormatError(WINDOW *win, time_t ts, char *buf);
+void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color);
+void wprintSeperator(WINDOW *win, int color);
+
+
 #endif
