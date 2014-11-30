@@ -46,13 +46,11 @@ int userCommand(packet *tx_pkt) {
        pthread_mutex_lock(&debugModeMutex);
        if (debugMode) {
          debugMode = 0;
-          wprintFormat(chatWin, time(NULL), "Alert", "Debug disabled", 10);
-         //wprintw(chatWin, " --- Client: Debug disabled.\n");
+          wprintFormatNotice(chatWin, time(NULL), "Debug disabled");
        }
        else {
           debugMode = 1;
-          wprintFormat(chatWin, time(NULL), "Alert", "Debug enabled", 10);
-         //wprintw(chatWin, " --- Client: Debug enabled.\n");
+          wprintFormatNotice(chatWin, time(NULL), "Debug enabled");
        }
        pthread_mutex_unlock(&debugModeMutex);
        return 0;
@@ -74,10 +72,10 @@ int userCommand(packet *tx_pkt) {
    // Handle autoconnect command
    else if (strncmp((void *)tx_pkt->buf, "/autoconnect", strlen("/autoconnect")) == 0) {
        if (toggleAutoConnect()) {
-          wprintFormat(chatWin, time(NULL), "Alert", "Autoconnect enabled", 10);
+          wprintFormatNotice(chatWin, time(NULL), "Autoconnect enabled");
        }
        else {
-          wprintFormat(chatWin, time(NULL), "Alert", "Autoconnect disabled", 10);
+          wprintFormatNotice(chatWin, time(NULL), "Autoconnect disabled");
        }
        return 0;
    }
@@ -96,7 +94,6 @@ int userCommand(packet *tx_pkt) {
    // Handle setpass command
    else if (strncmp((void *)tx_pkt->buf, "/setpass", strlen("/setpass")) == 0) {
       if (!setPassword(tx_pkt)) {
-         //wprintw(chatWin, " --- Error: Password mismatch.\n");
           wprintFormatError(chatWin, time(NULL), "Password mismath");
          return 0;
       }

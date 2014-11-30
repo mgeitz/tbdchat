@@ -120,6 +120,7 @@ void resizeHandler(int sig);
 void wprintFormatTime(WINDOW *win, time_t ts);
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);
 void wprintFormatError(WINDOW *win, time_t ts, char *buf);
+void wprintFormatNotice(WINDOW *win, time_t ts, char *buf);
 void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color);
 void wprintSeperator(WINDOW *win, int color);
 

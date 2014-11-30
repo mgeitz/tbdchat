@@ -10,19 +10,19 @@ extern WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLin
 
 /* Initialize some things */
 void initializeCurses() {
-   // Initialize curses
+   // Initialize the terminal window, read terminfo
    if ((mainWin = initscr()) == NULL) { exit(1); }
-   // Start colors
-   start_color();
-   use_default_colors();
    // Do not echo key presses
    noecho();
    // Read input one char at a time
    cbreak();
    // Capture special keys
    keypad(mainWin, TRUE);
+   // Start colors
+   start_color();
+   use_default_colors();
 
-   // Initialize color types
+   // Initialize color pairs
    init_pair(1, -1, -1); // Default                             
    init_pair(2, COLOR_CYAN, -1);
    init_pair(3, COLOR_YELLOW, -1);
@@ -104,6 +104,7 @@ void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
    // Print formatted time
    wprintFormatTime(win, ts);
 
+   // Print error
    wattron(win, A_BOLD);
    wprintw(chatWin, " ");
    waddch(chatWin, ACS_HLINE);
@@ -120,11 +121,36 @@ void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
 }
 
 
+/* Print formatted alert/notification */
+void wprintFormatNotice(WINDOW *win, time_t ts, char *buf) {
+   // Print formatted time
+   wprintFormatTime(win, ts);
+
+   // Print notice
+   wattron(win, A_BOLD);
+   wprintw(chatWin, " ");
+   waddch(chatWin, ACS_HLINE);
+   waddch(chatWin, ACS_HLINE);
+   waddch(chatWin, ACS_HLINE);
+   wprintw(chatWin, " ");
+   wattron(win, COLOR_PAIR(2));
+   wprintw(chatWin, "Notice");
+   wattroff(win, COLOR_PAIR(2));
+   wattroff(win, A_BOLD);
+   wattron(win, COLOR_PAIR(1));
+   wprintw(chatWin, " %s\n", buf);
+   wattroff(win, COLOR_PAIR(1));
+}
+
+
 /* Print formatted and colored timestamp */
 void wprintFormatTime(WINDOW *win, time_t ts) {
    struct tm *timestamp;
+
+   // Get tm struct from localtime using epoch time
    timestamp = localtime(&ts);
 
+   // Print HH:MM:SS
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "%02d", timestamp->tm_hour);
    wattroff(win, COLOR_PAIR(1));
@@ -141,6 +167,7 @@ void wprintFormatTime(WINDOW *win, time_t ts) {
    wprintw(win, "%02d", timestamp->tm_sec);
    wattroff(win, COLOR_PAIR(1));
 
+   // Print vertical line
    wattron(win, COLOR_PAIR(7));
    wprintw(win, " ");
    waddch(win, ACS_VLINE);
@@ -152,14 +179,20 @@ void wprintFormatTime(WINDOW *win, time_t ts) {
 /* Print seperator bar with title 2/3rd the length of the window passed in */
 void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color) {
    int height, width, i;
+
+   // Get window size
    getmaxyx(win, height, width);
 
    // Print formatted time
    wprintFormatTime(win, time(NULL));
+
+   // Print first half of seperator
    wattron(win, COLOR_PAIR(color));
    for (i = 0; i < ((width / 3) - ((strlen(title) + 2) / 2)); i++) {
       waddch(win, ACS_HLINE);
    }
+
+   // Print pipes and center title
    waddch(win, ACS_RTEE);
    wattroff(win, COLOR_PAIR(color));
    wattron(win, COLOR_PAIR(title_color));
@@ -169,6 +202,8 @@ void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color) 
    wattroff(win, COLOR_PAIR(title_color));
    wattron(win, COLOR_PAIR(color));
    waddch(win, ACS_LTEE);
+
+   // Print second half of seperator
    for (i = 0; i < ((width / 3) - ((strlen(title) + 2) / 2)); i++) {
       waddch(win, ACS_HLINE);
    }
@@ -180,9 +215,14 @@ void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color) 
 /* Print seperator bard 2/3 length of window */
 void wprintSeperator(WINDOW *win, int color) {
    int height, width, i;
+
+   // Get window size
    getmaxyx(win, height, width);
 
+   // Print formatted time
    wprintFormatTime(win, time(NULL));
+   
+   // Print seperator
    wattron(win, COLOR_PAIR(color));
    for (i = 0; i < (2 * (width / 3) + 2); i++) {
       waddch(win, ACS_HLINE);
@@ -288,11 +328,15 @@ void resizeHandler(int sig) {
    clear();
    usleep(sleep_time);
 
+   // Redraw windows
    drawChatWin();
    drawInputWin();
    drawInfoLines();
 
+   // Redraw ascii splash
    asciiSplash();
+
+   // Refresh and move cursor to input window
    wrefresh(chatWin);
    wcursyncup(inputWin);
    wrefresh(inputWin);
