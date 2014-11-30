@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
    cbreak();
    // Capture special keys
    keypad(mainWin, TRUE);
+   //curs_set(0);
  
    // Initialize color types
    init_pair(1, -1, -1); // Default                             
@@ -107,6 +108,8 @@ int main(int argc, char **argv) {
    // Primary execution loop 
    while (1) {
       wrefresh(chatWin);
+      wcursyncup(inputWin);
+      wrefresh(inputWin);
       // Wipe packet space
       memset(&tx_pkt, 0, sizeof(packet));
       // Set packet options as untouched
@@ -152,6 +155,8 @@ int main(int argc, char **argv) {
       if (tx_pkt.options == EXIT) {
          break;
       }
+      wcursyncup(inputWin);
+      wrefresh(inputWin);
    }
    
    // Safely close connection
@@ -227,6 +232,7 @@ int userInput(packet *tx_pkt) {
    int i = 0;
    int ch;
    wmove(inputWin, 0, 0);
+   wrefresh(inputWin);
    // Read 1 char at a time
    while ((ch = getch()) != '\n') {
       // Backspace
@@ -244,7 +250,7 @@ int userInput(packet *tx_pkt) {
         continue;
       }
       // Otherwise put in buffer
-      else {
+      else if (ch != ERR) {
          if (i < BUFFERSIZE - 1) {
             strcat(tx_pkt->buf, (char *)&ch);
             i++;
@@ -291,15 +297,18 @@ void *chatRX(void *ptr) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
                wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, 3);
+               beep();
             }
             else {
                int i = hash(rx_pkt.username, 3);
                wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i + 4);  
+               beep();
             }
          }
          // If the received packet is a nonmessage option, handle option response
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
             serverResponse(rx_pkt_ptr);
+            beep();
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
@@ -309,6 +318,8 @@ void *chatRX(void *ptr) {
       }
       // Wipe packet space
       wrefresh(chatWin);
+      wcursyncup(inputWin);
+      wrefresh(inputWin);
       memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
