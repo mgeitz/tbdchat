@@ -275,8 +275,6 @@ void asciiSplash() {
 
    wprintFormatTime(chatWin, time(NULL));
    wprintw(chatWin, "\n");
-
-   wrefresh(chatWin);
 }
 
 
@@ -295,4 +293,7 @@ void resizeHandler(int sig) {
    drawInfoLines();
 
    asciiSplash();
+   wrefresh(chatWin);
+   wcursyncup(inputWin);
+   wrefresh(inputWin);
 }

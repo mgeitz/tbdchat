@@ -70,6 +70,8 @@
 
 
 /* Structures */
+
+// Packet
 struct Packet {
    time_t timestamp;
    char buf[BUFFERSIZE];
@@ -84,15 +86,14 @@ typedef struct Packet packet;
 
 // chat_client.c
 void sigintHandler(int sig_num);
-void resizeHandler(int sig);
 void print_ip( struct addrinfo *ai);
 int get_server_connection(char *hostname, char *port);
 void *chatRX(void *ptr);
 int userInput(packet *tx_pkt);
-void asciiSplash();
 void buildDefaultConfig();
 int auto_connect();
 void newRoom(packet *rx_pkt);
+int hash(char *str, int mod);
 
 // client_commands.c
 int userCommand(packet *tx_pkt);
@@ -105,16 +106,17 @@ int setName(packet *tx_pkt);
 void serverResponse(packet *rx_pkt);
 void debugPacket(packet *rx_pkt);
 int toggleAutoConnect();
-void showHelp(char *buf);
 int validJoin(packet *tx_pkt);
 int validInvite(packet *tx_pkt);
-int hash(char *str, int mod);
+void showHelp(char *buf);
 
 // visual.c
 void initializeCurses();
 void drawChatWin();
 void drawInputWin();
 void drawInfoLines();
+void asciiSplash();
+void resizeHandler(int sig);
 void wprintFormatTime(WINDOW *win, time_t ts);
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);
 void wprintFormatError(WINDOW *win, time_t ts, char *buf);
