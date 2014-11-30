@@ -21,9 +21,8 @@ char realname[64];
 char username[64];
 pthread_t chat_rx_thread;
 char *config_file;
-
-// Curses Windows
 WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *infoLineBottom;
+
 
 int main(int argc, char **argv) {
    int bufSize, send_flag;
@@ -31,7 +30,6 @@ int main(int argc, char **argv) {
    char *config_file_name = CONFIG_FILENAME;
    char full_config_path[64];
    packet *tx_pkt_ptr = &tx_pkt;
-
 
    // Sig Handlers
    signal(SIGINT, sigintHandler);
@@ -48,7 +46,6 @@ int main(int argc, char **argv) {
    cbreak();
    // Capture special keys
    keypad(mainWin, TRUE);
-   //curs_set(0);
  
    // Initialize color types
    init_pair(1, -1, -1); // Default                             
@@ -147,7 +144,7 @@ int main(int argc, char **argv) {
             }
          }
          // If send flag is true but serverfd is still 0, print error
-         else if (send_flag && !serverfd)  {
+         else if (send_flag && !serverfd) {
             wprintFormatError(chatWin, time(NULL), "Not connected to any server. See /help for command usage.");
          } 
       }
@@ -155,8 +152,6 @@ int main(int argc, char **argv) {
       if (tx_pkt.options == EXIT) {
          break;
       }
-      wcursyncup(inputWin);
-      wrefresh(inputWin);
    }
    
    // Safely close connection
@@ -297,7 +292,6 @@ void *chatRX(void *ptr) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
                wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, 3);
-               beep();
             }
             else {
                int i = hash(rx_pkt.username, 3);
@@ -308,19 +302,18 @@ void *chatRX(void *ptr) {
          // If the received packet is a nonmessage option, handle option response
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
             serverResponse(rx_pkt_ptr);
-            beep();
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
             wprintFormat(chatWin, time(NULL), "Client", "Communication with server has terminated.", 1);
             break;
          }
+         // Wipe packet space
+         wrefresh(chatWin);
+         wcursyncup(inputWin);
+         wrefresh(inputWin);
+         memset(&rx_pkt, 0, sizeof(packet));
       }
-      // Wipe packet space
-      wrefresh(chatWin);
-      wcursyncup(inputWin);
-      wrefresh(inputWin);
-      memset(&rx_pkt, 0, sizeof(packet));
    }
    return NULL;
 }
