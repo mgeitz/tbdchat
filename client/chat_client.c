@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
                //timestamp = localtime(&(tx_pkt.timestamp));
-               wprintFormat(chatWin, tx_pkt.timestamp, tx_pkt.realname, tx_pkt.buf, 2);
+               wprintFormatMessage(chatWin, tx_pkt.timestamp, tx_pkt.realname, tx_pkt.buf, 14);
                tx_pkt.options = currentRoom;
             }
             pthread_mutex_unlock(&roomMutex);
@@ -224,14 +224,14 @@ int userInput(packet *tx_pkt) {
 void *chatRX(void *ptr) {
    packet rx_pkt;
    packet *rx_pkt_ptr = &rx_pkt;
-   int received;
+   int received, i;
    int *serverfd = (int *)ptr;
    struct tm *timestamp;
-   while(1) {
+   while (1) {
       // Wait for message to arrive..
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
       
-      if(received) {
+      if (received) {
          // If debug mode is enabled, dump packet contents
          pthread_mutex_lock(&debugModeMutex);
          if (debugMode) {
@@ -241,14 +241,10 @@ void *chatRX(void *ptr) {
          // If the received packet is a message packet, print accordingly
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
-            if(strcmp(rx_pkt.realname, SERVER_NAME) == 0) {
-               wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, 3);
-            }
-            else {
-               int i = hash(rx_pkt.username, 3);
-               wprintFormat(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i + 4);  
-               beep();
-            }
+            if (strcmp(rx_pkt.realname, SERVER_NAME) == 0) { i = 3; }
+            else { i = hash(rx_pkt.username, 12) + 2; }
+            wprintFormatMessage(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i);  
+            beep();
          }
          // If the received packet is a nonmessage option, handle option response
          else if (rx_pkt.options > 0 && rx_pkt.options < 1000) {
@@ -273,7 +269,7 @@ void *chatRX(void *ptr) {
 /* Handle non message packets from server */
 void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == SERV_ERR) {
-      wprintFormat(chatWin, time(NULL), rx_pkt->realname, rx_pkt->buf, 3);
+      wprintFormatMessage(chatWin, time(NULL), rx_pkt->realname, rx_pkt->buf, 3);
    }
    //else if (rx_pkt->options == REGSUC) {
    //   pthread_mutex_lock(&roomMutex);
@@ -292,7 +288,7 @@ void serverResponse(packet *rx_pkt) {
       wprintw(infoLine, " Current room: Lobby"); 
       wrefresh(infoLine);
       pthread_mutex_unlock(&roomMutex);
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 2);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 14);
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
@@ -300,26 +296,26 @@ void serverResponse(packet *rx_pkt) {
       wprintFormat(chatWin, rx_pkt->timestamp, "USER", rx_pkt->buf, 6);
    }
    else if (rx_pkt->options == PASSSUC) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful", 3);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful", 3);
    }
    else if (rx_pkt->options == NAMESUC) {
       pthread_mutex_lock(&nameMutex);
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful", 3);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful", 3);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);
    }
    else if (rx_pkt->options == INVITE) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 3);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, rx_pkt->buf, 3);
    }
    else if (rx_pkt->options == INVITESUC) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent", 3);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent", 3);
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintFormat(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
    }
    else if (rx_pkt->options == MOTD) {
       wprintSeperatorTitle(chatWin, "MOTD", 1, 7);
@@ -332,7 +328,7 @@ void serverResponse(packet *rx_pkt) {
       wprintSeperator(chatWin, 1);
    }
    else if(rx_pkt->options == EXIT) {
-      wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
       wprintFormatNotice(chatWin, rx_pkt->timestamp, "Closing socket connection with server");
       close(serverfd);
    }
@@ -421,6 +417,7 @@ void print_ip( struct addrinfo *ai) {
    struct sockaddr_in *ipv4;
    struct sockaddr_in6 *ipv6;
    short port = 0;
+   char connect_str[128];
    
    for (p = ai; p !=  NULL; p = p->ai_next) {
       if(p->ai_family == AF_INET) {
@@ -438,8 +435,10 @@ void print_ip( struct addrinfo *ai) {
       // Write readable form of IP to ipstr
       inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
       // Print connection information
+      sprintf(connect_str, "Connected to [%s] %s:%d", ipver, ipstr, ntohs(port));
       wbkgd(infoLineBottom, COLOR_PAIR(3));
-      wprintw(infoLineBottom, " Connected to [%s] %s:%d", ipver, ipstr, ntohs(port));
+      wprintFormatNotice(chatWin, time(NULL), connect_str);
+      wprintw(infoLineBottom, " %s", connect_str);
       wrefresh(infoLineBottom);
    }
 }

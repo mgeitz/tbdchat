@@ -232,7 +232,7 @@ int newServerConnection(char *buf) {
          wprintFormatError(chatWin, time(NULL), "chatRX thread not created");
          return 0;
       }
-      wprintFormat(chatWin, time(NULL), "Client", "Connected.", 1);
+      //wprintFormatNotice(chatWin, time(NULL), "Connected");
       i = 0;
       pthread_mutex_lock(&configFileMutex);
       configfp = fopen(config_file, "r+");

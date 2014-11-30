@@ -80,8 +80,28 @@ void drawInfoLines() {
 }
 
 
-/* Print message */
+/* Print message (mostly replaced by wprintFormatMessage) */
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color) {
+
+   // Print formatted time
+   wprintFormatTime(win, ts);
+
+   // Print from and buffer
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "[(");
+   wattroff(win, COLOR_PAIR(1));
+   wattron(win, COLOR_PAIR(from_color));
+   wprintw(win, "%s", from);
+   wattroff(win, COLOR_PAIR(from_color));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, ")] ---> %s\n", buf);
+   wattroff(win, COLOR_PAIR(1));
+}
+
+
+/* Print formatted message */
+void wprintFormatMessage(WINDOW *win, time_t ts, char *from, char *buf, int from_color) {
+   int color;
 
    // Print formatted time
    wprintFormatTime(win, ts);
@@ -90,9 +110,17 @@ void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color)
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "[");
    wattroff(win, COLOR_PAIR(1));
-   wattron(win, COLOR_PAIR(from_color));
+   // If from_color > 7 use bold in name
+   if (from_color > 7) {
+      color = from_color - 6;
+      wattron(win, A_BOLD);
+      if (from_color > 13) { color = 1; }
+   }
+   else { color = from_color; }
+   wattron(win, COLOR_PAIR(color));
    wprintw(win, "%s", from);
-   wattroff(win, COLOR_PAIR(from_color));
+   wattroff(win, COLOR_PAIR(color));
+   if (from_color > 7) { wattroff(win, A_BOLD); }
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "] %s\n", buf);
    wattroff(win, COLOR_PAIR(1));
