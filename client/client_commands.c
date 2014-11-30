@@ -33,6 +33,7 @@ int userCommand(packet *tx_pkt) {
    // Handle clear command
    else if (strncmp((void *)tx_pkt->buf, "/clear", strlen("/clear")) == 0) {
        werase(chatWin);
+       asciiSplash();
        return 0;
    }
    // Handle help command
@@ -490,292 +491,8 @@ void showHelp(char *buf) {
 
    wprintSeperatorTitle(chatWin, "Command List", bar, command);
 
-   // Print if help has no args
-   if (strcmp(cmd, "none") == 0) {
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, A_BOLD);
-      wprintw(chatWin, "Type '/help [command]' or '/help all' for command descriptions and usage examples\n");
-      wattroff(chatWin, A_BOLD);
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "\n");
-      // connect
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /connect\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // reconnect
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /reconnect\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // autoconnect
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /autoconnect\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // clear 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /clear\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // help 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /help\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // exit 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /exit\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // debug 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /debug\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // register 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /register\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // login 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /login\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // setpass 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /setpass\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // setname 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /setname\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // who 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /who\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // list 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /list\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // invite 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /invite\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // join 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /join\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-      // leave 
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /leave\n");
-      wattroff(chatWin, COLOR_PAIR(command));
-
-   }
-
-   // Print specific command arg or all
-   // connect
-   if (strcmp(cmd, "connect")  == 0 || strcmp(cmd, "all") == 0) {
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /connect     ");
-      wattroff(chatWin, COLOR_PAIR(command));
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");         
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/connect address port\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Connect to a chat server\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
-
-   // reconnect
-   if (strcmp(cmd, "reconnect")  == 0 || strcmp(cmd, "all") == 0) {
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /reconnect   ");
-      wattroff(chatWin, COLOR_PAIR(command));
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/reconnect\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Connect using last connect arguments (surprisingly correct spelling)\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
-
-   // autoconnect
-   if (strcmp(cmd, "autoconnect")  == 0 || strcmp(cmd, "all") == 0) {
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /autoconnect ");
-      wattroff(chatWin, COLOR_PAIR(command));
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/autoconnect\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Toggle autoconnect state on chat startup\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
-
-   // clear
-   if (strcmp(cmd, "clear")  == 0 || strcmp(cmd, "all") == 0) {
-      wprintFormatTime(chatWin, time(NULL));
-      wattron(chatWin, COLOR_PAIR(command));
-      wprintw(chatWin, "   /clear       ");
-      wattroff(chatWin, COLOR_PAIR(command));
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/clear\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Clear the chat window\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
-
    // help
-   if (strcmp(cmd, "help")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "help")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /help        ");
@@ -880,8 +597,208 @@ void showHelp(char *buf) {
       wattroff(chatWin, COLOR_PAIR(1));
    }
 
+   // connect
+   if (strcmp(cmd, "connect")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /connect     ");
+      wattroff(chatWin, COLOR_PAIR(command));
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " \n");
+      wattroff(chatWin, COLOR_PAIR(bar));
+      if (strcmp(cmd, "connect")  == 0 || strcmp(cmd, "all") == 0) {
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");         
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/connect address port\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Connect to a chat server\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }
+
+   // reconnect
+   if (strcmp(cmd, "reconnect")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /reconnect   ");
+      wattroff(chatWin, COLOR_PAIR(command));
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " \n");
+      if (strcmp(cmd, "reconnect")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/reconnect\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Connect using last connect arguments (surprisingly correct spelling)\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }
+
+   // autoconnect
+   if (strcmp(cmd, "autoconnect")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /autoconnect ");
+      wattroff(chatWin, COLOR_PAIR(command));
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " \n");
+      if (strcmp(cmd, "autoconnect")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/autoconnect\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Toggle autoconnect state on chat startup\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }
+
+   // clear
+   if (strcmp(cmd, "clear")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
+      wprintFormatTime(chatWin, time(NULL));
+      wattron(chatWin, COLOR_PAIR(command));
+      wprintw(chatWin, "   /clear       ");
+      wattroff(chatWin, COLOR_PAIR(command));
+      wattron(chatWin, COLOR_PAIR(bar));
+      wprintw(chatWin, " ");
+      waddch(chatWin, ACS_VLINE);
+      wprintw(chatWin, " \n");
+      if (strcmp(cmd, "clear")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/clear\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Clear the chat window\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }
+
    // exit
-   if (strcmp(cmd, "exit")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "exit")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /exit        ");
@@ -890,46 +807,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/exit\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Exit the client\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "exit")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/exit\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Exit the client\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // debug
-   if (strcmp(cmd, "debug")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "debug")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /debug       ");
@@ -938,46 +857,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/debug\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Toggle printing of received packet contents\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "debug")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/debug\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Toggle printing of received packet contents\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // register
-   if (strcmp(cmd, "register")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "register")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /register    ");
@@ -986,46 +907,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/register [username] [password] [password]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Register a new user account with the connected server\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "register")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/register [username] [password] [password]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Register a new user account with the connected server\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // login
-   if (strcmp(cmd, "login")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "login")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /login       ");
@@ -1034,46 +957,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/login [username] [password]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Log in to chat with the connected sever\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
+      if (strcmp(cmd, "login")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/login [username] [password]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Log in to chat with the connected sever\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }   
 
    // setpass
-   if (strcmp(cmd, "setpass")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "setpass")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /setpass     ");
@@ -1082,46 +1007,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/setpass [oldpass] [newpass] [newpass]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Change the password for the user currently logged in\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "setpass")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/setpass [oldpass] [newpass] [newpass]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Change the password for the user currently logged in\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // setname
-   if (strcmp(cmd, "setname")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "setname")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /setname     ");
@@ -1130,46 +1057,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/setname [display name]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Request a new display name to be show with all messages\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
+      if (strcmp(cmd, "setname")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/setname [display name]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Request a new display name to be show with all messages\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }   
 
    // who
-   if (strcmp(cmd, "who")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "who")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /who         ");
@@ -1178,104 +1107,106 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/who\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Display a list of users in your current room\n");
-      wattroff(chatWin, COLOR_PAIR(1));
- 
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/who all\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Display a list of all connected users\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/who [username]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Display users real name.\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "who")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/who\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Display a list of users in your current room\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+   
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/who all\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Display a list of all connected users\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+   
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/who [username]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Display users real name.\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // list
-   if (strcmp(cmd, "list")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "list")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /list        ");
@@ -1284,46 +1215,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/list\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Return a list of all public room\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "list")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/list\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Return a list of all public room\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // invite
-   if (strcmp(cmd, "invite")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "invite")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /invite      ");
@@ -1332,46 +1265,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/invite [username]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Invite a user to your current room\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-   }
+      if (strcmp(cmd, "invite")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/invite [username]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Invite a user to your current room\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
+   }  
 
    // join
-   if (strcmp(cmd, "join")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "join")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /join        ");
@@ -1380,46 +1315,48 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/join [roomname]\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Join a room or create a new one\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "join")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/join [roomname]\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Join a room or create a new one\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
 
    // leave
-   if (strcmp(cmd, "leave")  == 0 || strcmp(cmd, "all") == 0) {
+   if (strcmp(cmd, "leave")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
       wprintFormatTime(chatWin, time(NULL));
       wattron(chatWin, COLOR_PAIR(command));
       wprintw(chatWin, "   /leave       ");
@@ -1428,42 +1365,45 @@ void showHelp(char *buf) {
       wprintw(chatWin, " ");
       waddch(chatWin, ACS_VLINE);
       wprintw(chatWin, " \n");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "        ");
-      waddch(chatWin, ACS_LLCORNER);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_HLINE);
-      waddch(chatWin, ACS_TTEE);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Usage: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "/leave\n");
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintFormatTime(chatWin, time(NULL));
-      wprintw(chatWin, "               ");
-      waddch(chatWin, ACS_LLCORNER);
-      wattron(chatWin, COLOR_PAIR(bar));
-      wprintw(chatWin, " ");
-      waddch(chatWin, ACS_VLINE);
-      wprintw(chatWin, " ");
-      wattroff(chatWin, COLOR_PAIR(bar));
-      wattron(chatWin, COLOR_PAIR(title));
-      wprintw(chatWin, "Desc: ");
-      wattroff(chatWin, COLOR_PAIR(title));
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "Leave the room you are in and return to the lobby\n");
-      wattroff(chatWin, COLOR_PAIR(1));
+      if (strcmp(cmd, "leave")  == 0 || strcmp(cmd, "all") == 0) {
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "        ");
+         waddch(chatWin, ACS_LLCORNER);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_HLINE);
+         waddch(chatWin, ACS_TTEE);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Usage: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "/leave\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+         wprintFormatTime(chatWin, time(NULL));
+         wprintw(chatWin, "               ");
+         waddch(chatWin, ACS_LLCORNER);
+         wattron(chatWin, COLOR_PAIR(bar));
+         wprintw(chatWin, " ");
+         waddch(chatWin, ACS_VLINE);
+         wprintw(chatWin, " ");
+         wattroff(chatWin, COLOR_PAIR(bar));
+         wattron(chatWin, COLOR_PAIR(title));
+         wprintw(chatWin, "Desc: ");
+         wattroff(chatWin, COLOR_PAIR(title));
+         wattron(chatWin, COLOR_PAIR(1));
+         wprintw(chatWin, "Leave the room you are in and return to the lobby\n");
+         wattroff(chatWin, COLOR_PAIR(1));
+      }
    }
+
    wprintSeperator(chatWin, bar);
 }

@@ -680,12 +680,16 @@ void asciiSplash() {
    int word = 1;
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "         __\n");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "        /_/\\       ");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    wattron(chatWin, COLOR_PAIR(word));
    wprintw(chatWin, " _____ ____  ____     ____ _           _   \n");
@@ -693,7 +697,9 @@ void asciiSplash() {
 
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "       / /\\ \\      ");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    wattron(chatWin, COLOR_PAIR(word));
    wprintw(chatWin, "|_   _| __ )|  _ \\   / ___| |__   __ _| |_ \n");
@@ -701,7 +707,9 @@ void asciiSplash() {
 
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "      / / /\\ \\      ");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    wattron(chatWin, COLOR_PAIR(word));
    wprintw(chatWin, " | | |  _ \\| | | | | |   | '_ \\ / _` | __|\n");
@@ -709,7 +717,9 @@ void asciiSplash() {
 
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "     / / /\\ \\ \\     ");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    wattron(chatWin, COLOR_PAIR(word));
    wprintw(chatWin, " | | | |_) | |_| | | |___| | | | (_| | |_ \n");
@@ -717,7 +727,9 @@ void asciiSplash() {
 
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "    / /_/__\\ \\ \\    ");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    wattron(chatWin, COLOR_PAIR(word));
    wprintw(chatWin, " |_| |____/|____/   \\____|_| |_|\\__,_|\\__|\n");
@@ -725,12 +737,16 @@ void asciiSplash() {
 
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "   /_/______\\_\\/\\\n");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
 
    wprintFormatTime(chatWin, time(NULL));
    wattron(chatWin, COLOR_PAIR(icon));
+   wattron(chatWin, A_BOLD);
    wprintw(chatWin, "   \\_\\_________\\/\t");
+   wattroff(chatWin, A_BOLD);
    wattroff(chatWin, COLOR_PAIR(icon));
    wattron(chatWin, COLOR_PAIR(1));
    wprintw(chatWin, "version ");
