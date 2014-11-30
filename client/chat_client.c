@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
    // Check autoconnect, run if set
    if (auto_connect()) {
-      wprintFormat(chatWin, time(NULL), "Client", "Auto connecting to most recently connected host . . .", 1);
+      wprintFormatNotice(chatWin, time(NULL), "Auto connecting to most recently connected host . . .");
       reconnect(tx_pkt.buf);
    }
   
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
          }
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd) {
-            wprintFormatError(chatWin, time(NULL), "Not connected to any server. See /help for command usage.");
+            wprintFormatError(chatWin, time(NULL), "Not connected to any server");
          } 
       }
       // If an exit packet was just transmitted, break from primary execution loop
@@ -106,13 +106,13 @@ int main(int argc, char **argv) {
    }
    
    // Safely close connection
-   wprintFormat(chatWin, time(NULL), "Client", " Preparing to exit . . .", 1);
+   wprintFormatNotice(chatWin, time(NULL), " Preparing to exit . . .");
    wrefresh(chatWin);
    close(serverfd);
    // Join chatRX if it was launched
    if (chat_rx_thread) {
       if(pthread_join(chat_rx_thread, NULL)) {
-         wprintFormatError(chatWin, time(NULL), "chatRX thread not joining.");
+         wprintFormatError(chatWin, time(NULL), "chatRX thread not joining");
       }
    }
    // Destroy mutexes
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
    pthread_mutex_destroy(&configFileMutex);
    pthread_mutex_destroy(&roomMutex);
    // Close curses
-   wprintFormat(chatWin, time(NULL), "Client", " Exiting client.", 1);
+   wprintFormatNotice(chatWin, time(NULL), " Exiting client");
    wrefresh(chatWin);
    endwin();
    printf("\33[2J\33[H");
@@ -256,7 +256,7 @@ void *chatRX(void *ptr) {
          }
          // If the received packet contains 0 as the option, we likely received and empty packet, end transmission
          else {
-            wprintFormat(chatWin, time(NULL), "Client", "Communication with server has terminated.", 1);
+            wprintFormatNotice(chatWin, time(NULL), "Communication with server has terminated.");
             break;
          }
          // Wipe packet space
@@ -333,7 +333,7 @@ void serverResponse(packet *rx_pkt) {
    }
    else if(rx_pkt->options == EXIT) {
       wprintFormat(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
-      wprintFormat(chatWin, rx_pkt->timestamp, "Client", "Closing socket connection with server", 1);
+      wprintFormatNotice(chatWin, rx_pkt->timestamp, "Closing socket connection with server");
       close(serverfd);
    }
    else {
