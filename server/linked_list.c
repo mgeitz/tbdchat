@@ -37,14 +37,14 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
 
    Node *temp = *head;
 
-   if(temp->data == to_remove->data) {
+   if(temp == to_remove) {
       *head = temp->next;
       pthread_mutex_unlock(&mutex);
       return 1;
    }
 
    while(temp->next != NULL) {
-      if(temp->next->data ==  to_remove->data) {
+      if(temp->next ==  to_remove) {
          temp->next = temp->next->next;
          pthread_mutex_unlock(&mutex);
          return 1;
@@ -104,35 +104,39 @@ int removeUser(Node **head, User *user, pthread_mutex_t mutex) {
    printf("Removing user: %s\n", user->username);
    pthread_mutex_lock(&mutex);
    printList(head, NULL);
-   User *current = *head;
+   Node *current = *head;
+   User *temp;
+
    if (*head == NULL) {
       printf("Can't remove from empty list.\n");
       pthread_mutex_unlock(&mutex);
       return 0;
    }
-   
-   if (strcmp(current->username, user->username) == 0) {
-      *head = user->next;
-      //current->next = user->next;
-      //user->next = NULL;
+   printf("after if statement\n");
+   temp = (User *)current->data;
+   printf("assigned temp to current\n");
+   if (strcmp(temp->username, user->username) == 0) {
+      printf("Going to remove head\n");
+      pthread_mutex_unlock(&mutex);
+      removeNode(head, current, mutex);
+      printf("removed head\n");
       printf("Potentially removed a user from a list.\n");
       printList(head, NULL);
-      pthread_mutex_unlock(&mutex);
       return 1;
    }
    while (current->next != NULL) {
-      if (strcmp(current->next->username, user->username) == 0) {
-         current->next = user->next;
-         //user->next = NULL;
+      printf("going through user list\n");
+      current = current->next;
+      temp = (User *)current->data;
+      if (strcmp(temp->username, user->username) == 0) {
+         pthread_mutex_unlock(&mutex);
+         printf("going to remove node\n");
+         removeNode(head, current, mutex);
          printf("Potentially removed a user from a list.\n");
          printList(head, NULL);
-         pthread_mutex_unlock(&mutex);
          return 1;
       }
-      current = current->next;
    }
-   //temp->next = new_user;
-   //new_user->next = NULL;
    printf("User not found in list, nothing removed.\n");
    pthread_mutex_unlock(&mutex);
    return 0;
