@@ -18,8 +18,32 @@ void initializeCurses() {
    cbreak();
    // Capture special keys
    keypad(mainWin, TRUE);
-   // Start colors
+   // Start those colors
+   colors();
+   // Draw everything
+   drawChatWin();
+   drawInputWin();
+   drawInfoLines();
+   asciiSplash();
+}
+
+
+/* The end all be all place for colors */
+void colors() {
+   // Most terminals support 8 colors
+   // COLOR_BLACK
+   // COLOR_BLUE
+   // COLOR_GREEN
+   // COLOR_CYAN
+   // COLOR_RED
+   // COLOR_MAGENTA
+   // COLOR_YELLOW
+   // COLOR_WHITE
+   // init_pair(#, [text color], [background color])
+
+   // Tell curses we're using colors
    start_color();
+   // Start using the default terminal colors
    use_default_colors();
 
    // Initialize color pairs
@@ -31,30 +55,26 @@ void initializeCurses() {
    init_pair(6, COLOR_MAGENTA, -1);
    init_pair(7, COLOR_GREEN, -1);
    init_pair(8, COLOR_WHITE, COLOR_RED);
-   init_pair(9, COLOR_WHITE, COLOR_BLUE);
-   init_pair(10, COLOR_WHITE, COLOR_GREEN);
-   init_pair(11, COLOR_BLACK, COLOR_MAGENTA);
-
-   drawChatWin();
-   drawInputWin();
-   drawInfoLines();
-
-   asciiSplash();
+   //init_pair(9, COLOR_WHITE, COLOR_BLUE);
+   //init_pair(10, COLOR_WHITE, COLOR_GREEN);
+   //init_pair(11, COLOR_BLACK, COLOR_MAGENTA);
 }
-
 
 /* Draw chat box and window */
 void drawChatWin() {
-   // Create chat box and window
+   // Create window for chat box, draw said box 
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
+   // Draw a slick title on it
    mvwaddch(chatWinBox, 0, (COLS * 0.5) - 6, ACS_RTEE);
    wattron(chatWinBox, COLOR_PAIR(3));
    mvwaddstr(chatWinBox, 0, (COLS * 0.5) - 5, " TBDChat " );
    wattroff(chatWinBox, COLOR_PAIR(3));
    mvwaddch(chatWinBox, 0, (COLS * 0.5) + 4, ACS_LTEE );
    wrefresh(chatWinBox);
+   // Create sub window in box to hold text
    chatWin = subwin(chatWinBox, (LINES * 0.8 - 2), COLS - 2, 1, 1);
+   // Enable text scrolling
    scrollok(chatWin, TRUE);
 }
 
@@ -70,17 +90,18 @@ void drawInputWin() {
 
 /* Draw info lines */
 void drawInfoLines() {
-   // Create info lines
+   // Create info line above input win
    infoLine = subwin(mainWin, 1, COLS, (LINES * 0.8), 0);
+   // Write startup text to info line
    wbkgd(infoLine, COLOR_PAIR(3));
    wprintw(infoLine, " Type /help to view a list of available commands");
    wrefresh(infoLine);
-   wrefresh(infoLineBottom);
+   // Create lower info line
    infoLineBottom = subwin(mainWin, 1, COLS, LINES - 1, 0);
 }
 
 
-/* Print message (mostly replaced by wprintFormatMessage) */
+/* Generic print with timestamp */
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color) {
 
    // Print formatted time
@@ -94,7 +115,7 @@ void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color)
    wprintw(win, "%s", from);
    wattroff(win, COLOR_PAIR(from_color));
    wattron(win, COLOR_PAIR(1));
-   wprintw(win, ")] ---> %s\n", buf);
+   wprintw(win, ")] %s\n", buf);
    wattroff(win, COLOR_PAIR(1));
 }
 
@@ -106,14 +127,16 @@ void wprintFormatMessage(WINDOW *win, time_t ts, char *from, char *buf, int from
    // Print formatted time
    wprintFormatTime(win, ts);
 
-   // Print from and buffer
+   // Print from
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "[");
    wattroff(win, COLOR_PAIR(1));
+   if (from_color < 2) { from_color += 2; }
    // If from_color > 7 use bold in name
    if (from_color > 7) {
       color = from_color - 6;
       wattron(win, A_BOLD);
+      // If from_color is over 13, use default
       if (from_color > 13) { color = 1; }
    }
    else { color = from_color; }
@@ -121,6 +144,7 @@ void wprintFormatMessage(WINDOW *win, time_t ts, char *from, char *buf, int from
    wprintw(win, "%s", from);
    wattroff(win, COLOR_PAIR(color));
    if (from_color > 7) { wattroff(win, A_BOLD); }
+   // Print buffer
    wattron(win, COLOR_PAIR(1));
    wprintw(win, "] %s\n", buf);
    wattroff(win, COLOR_PAIR(1));
@@ -132,7 +156,7 @@ void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
    // Print formatted time
    wprintFormatTime(win, ts);
 
-   // Print error
+   // Error formatting
    wattron(win, A_BOLD);
    wprintw(chatWin, " ");
    waddch(chatWin, ACS_HLINE);
@@ -143,6 +167,7 @@ void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
    wprintw(chatWin, "Error");
    wattroff(win, COLOR_PAIR(8));
    wattroff(win, A_BOLD);
+   // Print error message
    wattron(win, COLOR_PAIR(1));
    wprintw(chatWin, " %s\n", buf);
    wattroff(win, COLOR_PAIR(1));
@@ -154,7 +179,7 @@ void wprintFormatNotice(WINDOW *win, time_t ts, char *buf) {
    // Print formatted time
    wprintFormatTime(win, ts);
 
-   // Print notice
+   // Print notice formatting
    wattron(win, A_BOLD);
    wprintw(chatWin, " ");
    waddch(chatWin, ACS_HLINE);
@@ -165,6 +190,7 @@ void wprintFormatNotice(WINDOW *win, time_t ts, char *buf) {
    wprintw(chatWin, "Notice");
    wattroff(win, COLOR_PAIR(2));
    wattroff(win, A_BOLD);
+   // Print notice message
    wattron(win, COLOR_PAIR(1));
    wprintw(chatWin, " %s\n", buf);
    wattroff(win, COLOR_PAIR(1));

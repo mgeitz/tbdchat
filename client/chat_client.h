@@ -116,6 +116,7 @@ void drawChatWin();
 void drawInputWin();
 void drawInfoLines();
 void asciiSplash();
+void colors();
 void resizeHandler(int sig);
 void wprintFormatTime(WINDOW *win, time_t ts);
 void wprintFormat(WINDOW *win, time_t ts, char *from, char *buf, int from_color);

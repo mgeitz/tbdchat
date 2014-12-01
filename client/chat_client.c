@@ -242,7 +242,7 @@ void *chatRX(void *ptr) {
          if (rx_pkt.options >= 1000) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if (strcmp(rx_pkt.realname, SERVER_NAME) == 0) { i = 3; }
-            else { i = hash(rx_pkt.username, 12) + 2; }
+            else { i = hash(rx_pkt.username, 12); }
             wprintFormatMessage(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i);  
             beep();
          }
@@ -319,12 +319,10 @@ void serverResponse(packet *rx_pkt) {
    }
    else if (rx_pkt->options == MOTD) {
       wprintSeperatorTitle(chatWin, "MOTD", 1, 7);
-
       wprintFormatTime(chatWin, rx_pkt->timestamp);
       wattron(chatWin, COLOR_PAIR(2));
       wprintw(chatWin, "%s\n", rx_pkt->buf);
       wattroff(chatWin, COLOR_PAIR(2));
-
       wprintSeperator(chatWin, 1);
    }
    else if(rx_pkt->options == EXIT) {

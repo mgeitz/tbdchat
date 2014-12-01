@@ -1,12 +1,48 @@
+*   KNOWN BUGS:
+*********************************************************
+*        
+*
+*      Server:
+*
+*       [URGENT]
+*         - Users persist in active users and as users in rooms after exiting.
+*
+*
+*      Client:
+*
+*       [URGENT]
+*         - After resize event, a key must be pressed before input is read into the buffer
+*         - after "sitting around a while logged in" and then exiting using /exit or /quit, 
+*              exit will hang waiting on chatRX thread
+*
+*       ["FEATURES"]
+*         - userInput is writing special keys to buffer we don't want there
+*         - Some special keys print more chars in the input window than backspace removes
+*
+*       [ALMOST SHOULDN'T CARE]
+*         - Since the changes incorporating getch() into userInput, when parsed 
+*              by strsep /login and /join return the base commands as args[8], oppose to expected result of args[0].
+*            o This does not happen for any other command. This is absolutely dumbfounding.
+*            o The packet buffer is read perfectly fine everywhere else
+*            o This is absolutely related to how the buffer is now populated
+*        
+*        
+*********************************************************
+
 
 TO-DO LIST:
 
 
    Smaller adjustments:
 
-      - [Server] Lists of pointers to registers users nodes and solve all of our problems.
-         *** Mostly almost done     
- 
+      - [Client/Server] /show real name, /username real name, etc - return the user name for a give real name (maybe add check to be in users room?)
+
+      - [Client] /ignore username. Ignore all messages (dont print) all messages from a user (requires /show)
+
+      - [Client/Server] /friends and friends list
+
+      - [Client/Server] /away messages
+
       - [Server] Send notification to all users in a room when another user leaves it
  
       - [Server] Hash stored passwords, hash input on compare
@@ -32,10 +68,7 @@ TO-DO LIST:
 
       - [Client] Add more to config, read entire config on startup
          o Color preferences
-
-      - [Client/Server] /friends and friends list
-
-      - [Client/Server] /away messages
+         o more stuff? anyone? config stuff?
 
       - [Client/Server] Allow clients to be in n rooms at a time
 
@@ -44,21 +77,6 @@ TO-DO LIST:
       - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)
 
 
-
-KNOWN BUGS:
-
-   Server:
-
-      - Users persist in active users and as users in rooms after exiting.
-      - /leave command is somehow only adding the user to the lobby again 
-            
-   Client:
-
-      - Some special keys print more chars in the input window than backspace removes
-      - Window contents are lost after rezises (solved with logging)
-      - After resize event, a key must be pressed before input is read into the buffer
-      - For some reason /login and /join, when parsed by strsep, return the base commands as args[8] instead of args[0]
-      - userInput is writing special keys to buffer we don't want there
 
 CLIENT FEATURES:
 
@@ -169,17 +187,3 @@ SERVER FEATURES:
       - Sanitizes all processed input from connections
  
 
-POTENTIAL RACE CONDITIONS:
-
-      - Server:
-         o Rooms list [addressed]
-         o Registered users list [addressed]
-         o Active users list [addressed]
-         o Room specific user lists [addressed]
-
-      - Client: 
-         o Current room variable access [addressed]
-         o Display name buffer access [addressed]
-         o Debug variable access [addressed]
-         o Configuration file access [addressed]
-         o Printing anything while typing on the client [addressed]
