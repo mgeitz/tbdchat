@@ -6,6 +6,7 @@
 *
 *       [URGENT]
 *         - Users persist in active users and as users in rooms after exiting.
+*         - Server seems to freeze entirely when a client uses /join with several actively chatting users present
 *
 *
 *      Client:
