@@ -626,16 +626,7 @@ void exit_client(packet *pkt, int fd) {
  */
 void send_message(packet *pkt, int clientfd) {
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options, rooms_mutex);
-   char *temp = (char*)malloc(256 * sizeof(char));
-   strcpy(temp, asctime(localtime(&(pkt->timestamp))));
-   temp[strlen(temp) - 1] = ' ';
-   strncat(temp, "| [", 3);
-   strncat(temp, pkt->username, strlen(pkt->username));
-   strncat(temp, "] ", 2);
-   strncat(temp, pkt->buf, strlen(pkt->buf));
-   strncat(temp, "\n", 2);
-   write(currentRoom->fd, temp, strlen(temp) * sizeof(char));
-   printf("%s\n", temp);
+   log_message(pkt, currentRoom->fd);
    printList(&(currentRoom->user_list), currentRoom->user_list_mutex);
    Node *tmp = currentRoom->user_list;
    User *current;
@@ -799,4 +790,20 @@ char *passEncrypt(char *s) {
    }
    //printf("Encrypted String: %s\n", es);
    return es;
+}
+
+/*
+ *Logs the given message packet to teh given fd
+ */
+void log_message(packet *pkt, int fd) {
+   char *temp = (char*)malloc(256 * sizeof(char));
+   strcpy(temp, asctime(localtime(&(pkt->timestamp))));
+   temp[strlen(temp) - 1] = ' ';
+   strncat(temp, "| [", 3);
+   strncat(temp, pkt->username, strlen(pkt->username));
+   strncat(temp, "] ", 2);
+   strncat(temp, pkt->buf, strlen(pkt->buf));
+   strncat(temp, "\n", 2);
+   write(fd, temp, strlen(temp) * sizeof(char));
+   printf("%s\n", temp);
 }
