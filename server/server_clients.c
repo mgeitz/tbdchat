@@ -105,7 +105,7 @@ void *client_receive(void *ptr) {
             // Handle conversation message for logged in client
             else {
                // Will be treated as a message packet, safe to santize entire buffer
-               sanitizeInput((void *)&in_pkt.buf);
+               sanitizeInput((void *)&in_pkt.buf, 0);
                send_message(&in_pkt, client);
             }
          }
@@ -130,16 +130,31 @@ void sendError(char *error, int clientfd) {
 
 
 /* Replace any char in buffer not in safe_chars, return number of unsafe chars changed */
-int sanitizeInput(char *buf) {
+int sanitizeInput(char *buf, int type) {
    int i = 0;
-   char const safe_chars[] = "abcdefghijklmnopqrstuvwxyz"
-                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                       " _,.-/@()*~`&^%$#!?<>'\";:+=[]{}|"
-                       "1234567890";
+  // Allowable chars for message buffer
+   char const safe_buf_chars[] = "abcdefghijklmnopqrstuvwxyz"
+                                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                 " _,.-/@()*~`&^%$#!?<>'\";:+=[]{}|"
+                                 "1234567890";
+  // Allowable chars for realname, username*, roomname*.. 
+  // *[provided they have been strsep'ed first]
+   char const safe_name_chars[] = "abcdefghijklmnopqrstuvwxyz"
+                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                  " _-"
+                                  "1234567890";
    char *end = buf + strlen(buf);
-   for (buf += strspn(buf, safe_chars); buf != end; buf += strspn(buf, safe_chars)) {
-      *buf = '_';
-      i++;
+   if (type == 0) {
+      for (buf += strspn(buf, safe_buf_chars); buf != end; buf += strspn(buf, safe_buf_chars)) {
+         *buf = '_';
+         i++;
+      }
+   }
+   else {
+      for (buf += strspn(buf, safe_name_chars); buf != end; buf += strspn(buf, safe_name_chars)) {
+         *buf = '_';
+         i++;
+      }
    }
    return i;
 }
@@ -361,7 +376,13 @@ void join(packet *pkt, int fd) {
       printf("Checking if room exists . . .\n");
       if (Rget_ID(&room_list, args[0], rooms_mutex) == -1) {
          // create if it does not exist
-         createRoom(&room_list, numRooms, args[0], rooms_mutex);
+         if (validRoomname(args[0], fd)) {
+            createRoom(&room_list, numRooms, args[0], rooms_mutex);
+         }
+         else {
+            // invalid room name requested, already in sequence
+            // to join room, not sure where break; takes us from here.
+         }
       }
       RprintList(&room_list, rooms_mutex);
       printf("Receiving room node for requested room.\n");
@@ -553,12 +574,16 @@ void set_pass(packet *pkt, int fd) {
 
 /* Check requested username */
 int validUsername (char *username, int client) {
-   if (sanitizeInput(username)) {
+   if (sanitizeInput(username, 1)) {
       sendError("Invalid characters in username.", client);
       return 0;
    }
    if (strlen(username) < 3) {
       sendError("Username is too short.", client);
+      return 0;
+   }
+   if (strlen(username) > 63) {
+      sendError("Username is too long.", client);
       return 0;
    }
    return 1;
@@ -567,12 +592,16 @@ int validUsername (char *username, int client) {
 
 /* Check requested realname */
 int validRealname (char *realname, int client) {
-   if (sanitizeInput(realname)) {
-      sendError("Invalid characters in username.", client);
+   if (sanitizeInput(realname, 1)) {
+      sendError("Invalid characters in requested name.", client);
       return 0;
    }
    if (strlen(realname) < 3) {
       sendError("Requested name is too short.", client);
+      return 0;
+   }
+   if (strlen(realname) > 63) {
+      sendError("Requested name is too long.", client);
       return 0;
    }
    return 1;
@@ -582,12 +611,34 @@ int validRealname (char *realname, int client) {
 /* Check password input */
 int validPassword (char *pass1, char *pass2, int client) {
    if (strcmp(pass1, pass2)) {
-      sendError("Password requested does not match.", client);
+      sendError("Password input does not match.", client);
       return 0;
    }
 
    if (strlen(pass1) < 3) {
-      sendError("Password is too short.", client);
+      sendError("Requested password is too short.", client);
+      return 0;
+   }
+   if (strlen(pass1) > 63) {
+      sendError("Requested password is too long.", client);
+      return 0;
+   }
+   return 1;
+}
+
+
+/* Check requested room name */
+int validRoomname (char *roomname, int client) {
+   if (sanitizeInput(roomname, 1)) {
+      sendError("Invalid characters in room name.", client);
+      return 0;
+   }
+   if (strlen(roomname) < 3) {
+      sendError("Requested room name is too short.", client);
+      return 0;
+   }
+   if (strlen(roomname) > 63) {
+      sendError("Requested room name is too long.", client);
       return 0;
    }
    return 1;

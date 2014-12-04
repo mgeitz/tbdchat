@@ -89,9 +89,10 @@ void sigintHandler(int sig_num);
 int accept_client(int serv_sock);
 // server_clients.c
 void *client_receive(void *ptr);
-int sanitizeInput(char *buf);
+int sanitizeInput(char *buf, int type);
 int validUsername(char *username, int client);
 int validRealname(char *realname, int client);
+int validRoomname(char *roomname, int client);
 int validPassword(char *pass1, char *pass2, int client);
 int register_user(packet *in_pkt, int fd);
 int login(packet *pkt, int fd);
@@ -109,6 +110,6 @@ void join(packet *pkt, int fd);
 void invite(packet *in_pkt, int fd);
 void leave(packet *pkt, int fd);
 void log_message(packet *pkt, int fd);
-char * passEncrypt(char *s);
+char *passEncrypt(char *s);
 
 #endif
