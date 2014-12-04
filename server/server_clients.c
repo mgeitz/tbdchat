@@ -177,7 +177,7 @@ int register_user(packet *in_pkt, int fd) {
       User *user = (User *)malloc(sizeof(User));
       strcpy(user->username, args[1]);
       strcpy(user->real_name, args[1]);
-      strcpy(user->password, args[2]);
+      strcpy(user->password, passEncrypt(args[2]));
       user->sock = fd;
       user->next = NULL;
       
@@ -226,11 +226,11 @@ int login(packet *pkt, int fd) {
          sendError("Username not found.", fd);
          return 0;
       }
-      printf("going to check password\n");
+      printf("going to check password %s\n", args[2]);
       // Check for password patch against registered user data
       char *password = get_password(&registered_users_list, args[1], registered_users_mutex);
       printf("returned from get password\n");
-      if (strcmp(args[2], password) != 0) {
+      if (strcmp(passEncrypt(args[2]), password) != 0) {
          sendError("Incorrect password.", fd);
          return 0;
       }
@@ -526,9 +526,9 @@ void set_pass(packet *pkt, int fd) {
       if (!validPassword(args[2], args[3], fd)) { return; }
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
       if (user != NULL) {
-         if(strcmp(user->password, args[1]) == 0) {
+         if(strcmp(user->password, passEncrypt(args[1])) == 0) {
             memset(user->password, 0, 32);
-            strcpy(user->password, args[2]);
+            strcpy(user->password, passEncrypt(args[2]));
             pthread_mutex_lock(&registered_users_mutex);
             writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
             pthread_mutex_unlock(&registered_users_mutex);
@@ -790,4 +790,19 @@ void get_room_list(int fd) {
       temp = temp->next;
    }
    pthread_mutex_unlock(&rooms_mutex);
+}
+
+/*
+ *Encrypts the given string
+ */
+char *passEncrypt(char *s) {
+   char *es = (char*)malloc(32 * sizeof(char));;
+   strcpy(es, s);
+   char key[16]="Ab6D3Jkx9o2nH8SM";
+   int i;
+   for(i = 0; i <strlen(s); i++) {
+      es[i] = s[i]^key[i%16];
+   }
+   //printf("Encrypted String: %s\n", es);
+   return es;
 }

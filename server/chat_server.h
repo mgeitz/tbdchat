@@ -108,5 +108,5 @@ void set_name(packet *pkt, int fd);
 void join(packet *pkt, int fd);
 void invite(packet *in_pkt, int fd);
 void leave(packet *pkt, int fd);
-
+char * passEncrypt(char *s);
 #endif
