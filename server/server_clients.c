@@ -371,18 +371,12 @@ void join(packet *pkt, int fd) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
       args[++i] = strsep(&tmp, " \t");
    }
-   if (i > 1) {
+   if (i > 1 && validRoomname(args[0], fd)) {
       // check if room exists
       printf("Checking if room exists . . .\n");
       if (Rget_ID(&room_list, args[0], rooms_mutex) == -1) {
          // create if it does not exist
-         if (validRoomname(args[0], fd)) {
-            createRoom(&room_list, numRooms, args[0], rooms_mutex);
-         }
-         else {
-            // invalid room name requested, already in sequence
-            // to join room, not sure where break; takes us from here.
-         }
+         createRoom(&room_list, numRooms, args[0], rooms_mutex);
       }
       RprintList(&room_list, rooms_mutex);
       printf("Receiving room node for requested room.\n");
