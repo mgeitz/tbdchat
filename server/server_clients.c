@@ -186,7 +186,7 @@ int register_user(packet *in_pkt, int fd) {
       new_node->next = NULL;
 
       // Insert user as registered user, write new user data to file
-      insertNode(&registered_users_list, new_node, registered_users_mutex);
+      insertUser(&registered_users_list, new_node, registered_users_mutex);
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
 
       // Reform packet as valid login, pass new user data to login
@@ -251,7 +251,7 @@ int login(packet *pkt, int fd) {
       new_usr_rm->next = NULL;
 
       // Check if the user is already logged in
-      if(insertNode(&active_users_list, new_usr_act, active_users_mutex) == 1) {
+      if(insertUser(&active_users_list, new_usr_act, active_users_mutex) == 1) {
          // Login successful, add user to default room
          Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
          insertNode(&(defaultRoom->user_list), new_usr_rm, defaultRoom->user_list_mutex);
@@ -447,7 +447,7 @@ void leave(packet *pkt, int fd) {
 
                // Place user in lobby room
                Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
-               insertNode(&(defaultRoom->user_list), new_node, defaultRoom->user_list_mutex);
+               insertUser(&(defaultRoom->user_list), new_node, defaultRoom->user_list_mutex);
 
                // Send join success to client
                ret.options = JOINSUC;
