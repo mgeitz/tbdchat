@@ -49,6 +49,7 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
          pthread_mutex_unlock(&mutex);
          return 1;
       }
+      temp = temp->next;
    }
 
    printf("Specified node not found\n");
