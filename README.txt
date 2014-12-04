@@ -60,6 +60,11 @@ TO-DO LIST:
          o Add minimum terminal size requirement
          o Improved notification/alert formatting
 
+      - [Server] Should display user is leaving room messages when a user joins a 
+        different room
+
+      - [Client/Server] A client can invite himself to a room; should be blocked
+
 
    Requires considerable time:
 
