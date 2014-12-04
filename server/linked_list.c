@@ -374,6 +374,9 @@ int createRoom(Node **head, int ID, char *name, pthread_mutex_t mutex) {
    newRoom->user_list_mutex = PTHREAD_MUTEX_INITIALIZER;
    strncpy(newRoom->name, name, sizeof(newRoom->name));
    newRoom->user_list = NULL;
+   char *temp = (char*)malloc(strlen(newRoom->name) * sizeof(char));
+   strcpy(temp, newRoom->name);
+   newRoom->fd = open(strncat(temp, ".log", 4), O_WRONLY | O_CREAT, S_IRWXU);
    numRooms++;
    return insertRoom(head, newRoom, mutex);
 }

@@ -642,6 +642,7 @@ void exit_client(packet *pkt, int fd) {
  */
 void send_message(packet *pkt, int clientfd) {
    Room *currentRoom = Rget_roomFID(&room_list, pkt->options, rooms_mutex);
+   write(currentRoom->fd, pkt, sizeof(*pkt));
    printList(&(currentRoom->user_list), currentRoom->user_list_mutex);
    Node *tmp = currentRoom->user_list;
    User *current;

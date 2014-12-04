@@ -24,6 +24,7 @@ typedef struct user User;
 
 struct room {
    int ID;
+   int fd;
    char name[32];
    pthread_mutex_t user_list_mutex;
    struct node *user_list;
