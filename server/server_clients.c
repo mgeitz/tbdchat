@@ -181,10 +181,6 @@ int register_user(packet *in_pkt, int fd) {
       user->sock = fd;
       user->next = NULL;
       
-      Node *new_node = (Node *)malloc(sizeof(Node));
-      new_node->data = (void *) user;
-      new_node->next = NULL;
-
       // Insert user as registered user, write new user data to file
       insertUser(&registered_users_list, user, registered_users_mutex);
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
@@ -589,10 +585,7 @@ int validPassword (char *pass1, char *pass2, int client) {
       sendError("Password requested does not match.", client);
       return 0;
    }
-//   if (sanitizeInput(pass1)) {
-//      sendError("Invalid characters in password.", client);
-//      return 0;
-//   }
+
    if (strlen(pass1) < 3) {
       sendError("Password is too short.", client);
       return 0;
@@ -607,15 +600,6 @@ int validPassword (char *pass1, char *pass2, int client) {
 void exit_client(packet *pkt, int fd) {
    packet ret;
 
-   //User *user = get_user_from_fd(fd)
-   //pthread_mutex_lock(&active_users_mutex);
-   //if(insertUser(&active_users_list, user, active_users_mutex) == 1) {
-   //   removeUser(active_users_list, user, active_users_mutex);
-   //
-   //   // Obtain current (or all) rooms with user, somehow
-   //   // remove them  
-   //
-   //}
 
    // Send disconnect message to lobby
    ret.options = DEFAULT_ROOM;

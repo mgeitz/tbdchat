@@ -47,7 +47,6 @@ int insertUser(Node  **head, User *new_user, pthread_mutex_t mutex);
 int removeUser(Node  **head, User *new_user, pthread_mutex_t mutex);
 char *get_real_name(Node  **head, char *user, pthread_mutex_t mutex);
 char *get_password(Node  **head, char *user, pthread_mutex_t mutex);
-User *clone_user(User *user, pthread_mutex_t mutex);
 void readUserFile(Node  **head, char *filename, pthread_mutex_t mutex);
 void writeUserFile(Node **head, char *filename, pthread_mutex_t mutex);
 void printList(Node **head, pthread_mutex_t mutex);
