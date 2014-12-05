@@ -16,7 +16,7 @@
 #include <sys/wait.h>
 #include <netdb.h>
 #include <pthread.h>
-#include <openssl/sha.h>
+#include <sha256.h>
 /* Local Header Files */
 #include "linked_list.h"
 

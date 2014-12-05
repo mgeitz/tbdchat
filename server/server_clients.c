@@ -199,8 +199,9 @@ int register_user(packet *in_pkt, int fd) {
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(user->password, &sha256);
       printf("NEW HASH - %s\n", args[2]);
-      for (i = 0; i < strlen(args[2]); i++) {
+      for (i = 0; i < 32; i++) {
           printf("%02x",user->password[i]);
+          printf(":");
       }
       printf("\n");
       //strcpy(user->password, passEncrypt(args[2]));
@@ -261,13 +262,15 @@ int login(packet *pkt, int fd) {
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(arg_pass_hash, &sha256);
       printf("ARG HASH - %s\n", args[2]);
-      for (i = 0; i < strlen(args[2]); i++) {
+      for (i = 0; i < 32; i++) {
           printf("%02x", arg_pass_hash[i]);
+          printf(":");
       }
       printf("\n");
       printf("STORED HASH:\n");
-      for (i = 0; i < strlen(args[2]); i++) {
+      for (i = 0; i < 32; i++) {
           printf("%02x",user->password[i]);
+          printf(":");
       }
       printf("\n");
       if (strcmp((char *)arg_pass_hash, (char *)password) != 0) {
@@ -599,7 +602,17 @@ void set_pass(packet *pkt, int fd) {
       if (!validPassword(args[2], args[3], fd)) { return; }
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
       if (user != NULL) {
-      SHA1((unsigned char *)args[1], 32, new_pass_hash);
+         // Hash password
+         SHA256_CTX sha256;
+         SHA256_Init(&sha256);
+         SHA256_Update(&sha256, args[2], strlen(args[2]));
+         SHA256_Final(new_pass_hash, &sha256);
+         printf("NEW HASH - %s\n", args[2]);
+         for (i = 0; i < 32; i++) {
+            printf("%02x",user->password[i]);
+            printf(":");
+         }
+         printf("\n");
          if(strcmp((char *)user->password,(char *)new_pass_hash) == 0) {
             memset(user->password, 0, 32);
             strcpy((char *)user->password, (char *)new_pass_hash);
