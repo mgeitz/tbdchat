@@ -12,8 +12,6 @@
 *
 *       [URGENT]
 *         - After resize event, a key must be pressed before input is read into the buffer
-*         - after "sitting around a while logged in" and then exiting using /exit or /quit, 
-*              exit will hang waiting on chatRX thread
 *
 *       ["FEATURES"]
 *         - userInput is writing special keys to buffer we don't want there
@@ -45,8 +43,6 @@ TO-DO LIST:
 
       - [Server] Send notification to all users in a room when another user leaves it
  
-      - [Server] Hash stored passwords, hash input on compare
-
       - [Client/Server] /logout command (remove from rooms/active users, set logged out, keep connection)
 
       - [Client/Server] /disconnect command (same as /exit but allows the client to /connect again)
@@ -189,6 +185,6 @@ SERVER FEATURES:
          o Create or join rooms
          o invite others to join your room 
 
-      - Sanitizes all processed input from connections
- 
+      - Sanitizes input fields which require so accordingly
 
+      - SHA256 hashing for password storage
