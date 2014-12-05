@@ -12,11 +12,16 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#define SHA256_DIGEST 64
+#define USERNAME_LENGTH 64
+#define REALNAME_LENGTH 64
+#define ROOMNAME_LENGTH 16
+
 /* Structures */
 struct user {
-   char username[50];
-   char real_name[64];
-   char password[32];
+   char username[USERNAME_LENGTH];
+   char real_name[REALNAME_LENGTH];
+   unsigned char password[SHA256_DIGEST];
    int sock;
    struct user *next;
 };
@@ -25,7 +30,7 @@ typedef struct user User;
 struct room {
    int ID;
    int fd;
-   char name[32];
+   char name[ROOMNAME_LENGTH];
    pthread_mutex_t user_list_mutex;
    struct node *user_list;
    struct room *next;
@@ -46,7 +51,7 @@ int removeNode(Node **head, Node *new_node, pthread_mutex_t mutex);
 int insertUser(Node  **head, User *new_user, pthread_mutex_t mutex);
 int removeUser(Node  **head, User *new_user, pthread_mutex_t mutex);
 char *get_real_name(Node  **head, char *user, pthread_mutex_t mutex);
-char *get_password(Node  **head, char *user, pthread_mutex_t mutex);
+unsigned char *get_password(Node  **head, char *user, pthread_mutex_t mutex);
 void readUserFile(Node  **head, char *filename, pthread_mutex_t mutex);
 void writeUserFile(Node **head, char *filename, pthread_mutex_t mutex);
 void printList(Node **head, pthread_mutex_t mutex);

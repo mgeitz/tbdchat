@@ -170,6 +170,7 @@ int register_user(packet *in_pkt, int fd) {
    char *tmp = cpy;
    strcpy(tmp, in_pkt->buf);
 
+   printf("reg buf: %s\n", in_pkt->buf);
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -192,7 +193,17 @@ int register_user(packet *in_pkt, int fd) {
       User *user = (User *)malloc(sizeof(User));
       strcpy(user->username, args[1]);
       strcpy(user->real_name, args[1]);
-      strcpy(user->password, passEncrypt(args[2]));
+      // Hash password
+      SHA256_CTX sha256;
+      SHA256_Init(&sha256);
+      SHA256_Update(&sha256, args[2], SHA256_DIGEST);
+      SHA256_Final(user->password, &sha256);
+      printf("NEW HASH - %s\n", args[2]);
+      for (i = 0; i < SHA256_DIGEST; i++) {
+          printf("%02x",user->password[i]);
+      }
+      printf("\n");
+      //strcpy(user->password, passEncrypt(args[2]));
       user->sock = fd;
       user->next = NULL;
       
@@ -222,8 +233,10 @@ int login(packet *pkt, int fd) {
    char *args[16];
    char cpy[BUFFERSIZE];
    char *tmp = cpy;
+   unsigned char *arg_pass_hash = (unsigned char *)malloc(SHA256_DIGEST);
    strcpy(tmp, pkt->buf);
 
+   printf("login buf: %s\n", pkt->buf);
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -237,18 +250,35 @@ int login(packet *pkt, int fd) {
          sendError("Username not found.", fd);
          return 0;
       }
+      User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
       printf("going to check password %s\n", args[2]);
       // Check for password patch against registered user data
-      char *password = get_password(&registered_users_list, args[1], registered_users_mutex);
+      unsigned char *password = get_password(&registered_users_list, args[1], registered_users_mutex);
       printf("returned from get password\n");
-      if (strcmp(passEncrypt(args[2]), password) != 0) {
+      // Hash login password arg
+      SHA256_CTX sha256;
+      SHA256_Init(&sha256);
+      SHA256_Update(&sha256, args[2], SHA256_DIGEST);
+      SHA256_Final(arg_pass_hash, &sha256);
+      printf("ARG HASH - %s\n", args[2]);
+      for (i = 0; i < SHA256_DIGEST; i++) {
+          printf("%02x", arg_pass_hash[i]);
+      }
+      printf("\n");
+      printf("STORED HASH:\n");
+      for (i = 0; i < SHA256_DIGEST; i++) {
+          printf("%02x",user->password[i]);
+      }
+      printf("\n");
+      if (strcmp((char *)arg_pass_hash, (char *)password) != 0) {
          sendError("Incorrect password.", fd);
+         free(arg_pass_hash);
          return 0;
       }
+      free(arg_pass_hash);
       printf("Going to get user\n");
 
       // Login input is valid, read user data from registered users
-      User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
       user->sock = fd;
 
       //Create node for active users list
@@ -527,6 +557,7 @@ void set_pass(packet *pkt, int fd) {
    char *args[16];
    char cpy[BUFFERSIZE];
    char *tmp = cpy;
+   unsigned char *new_pass_hash;
    strcpy(tmp, pkt->buf);
 
    args[i] = strsep(&tmp, " \t");
@@ -537,9 +568,10 @@ void set_pass(packet *pkt, int fd) {
       if (!validPassword(args[2], args[3], fd)) { return; }
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
       if (user != NULL) {
-         if(strcmp(user->password, passEncrypt(args[1])) == 0) {
+      SHA1((unsigned char *)args[1], 32, new_pass_hash);
+         if(strcmp((char *)user->password,(char *)new_pass_hash) == 0) {
             memset(user->password, 0, 32);
-            strcpy(user->password, passEncrypt(args[2]));
+            strcpy((char *)user->password, (char *)new_pass_hash);
             pthread_mutex_lock(&registered_users_mutex);
             writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
             pthread_mutex_unlock(&registered_users_mutex);
@@ -576,7 +608,7 @@ int validUsername (char *username, int client) {
       sendError("Username is too short.", client);
       return 0;
    }
-   if (strlen(username) > 63) {
+   if (strlen(username) > USERNAME_LENGTH) {
       sendError("Username is too long.", client);
       return 0;
    }
@@ -594,7 +626,7 @@ int validRealname (char *realname, int client) {
       sendError("Requested name is too short.", client);
       return 0;
    }
-   if (strlen(realname) > 63) {
+   if (strlen(realname) > REALNAME_LENGTH) {
       sendError("Requested name is too long.", client);
       return 0;
    }
@@ -613,7 +645,7 @@ int validPassword (char *pass1, char *pass2, int client) {
       sendError("Requested password is too short.", client);
       return 0;
    }
-   if (strlen(pass1) > 63) {
+   if (strlen(pass1) > 32) {
       sendError("Requested password is too long.", client);
       return 0;
    }
@@ -631,7 +663,7 @@ int validRoomname (char *roomname, int client) {
       sendError("Requested room name is too short.", client);
       return 0;
    }
-   if (strlen(roomname) > 63) {
+   if (strlen(roomname) > ROOMNAME_LENGTH) {
       sendError("Requested room name is too long.", client);
       return 0;
    }
@@ -822,6 +854,7 @@ void get_room_list(int fd) {
    pthread_mutex_unlock(&rooms_mutex);
 }
 
+
 /*
  *Encrypts the given string
  */
@@ -836,6 +869,7 @@ char *passEncrypt(char *s) {
    //printf("Encrypted String: %s\n", es);
    return es;
 }
+
 
 /*
  *Logs the given message packet to teh given fd

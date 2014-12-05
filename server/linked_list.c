@@ -184,15 +184,15 @@ char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
 
 
 /* Return stored password for user */
-char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
-   char *error = "ERROR";
+unsigned char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
+   //char *error = "ERROR";
    pthread_mutex_lock(&mutex);
    Node *temp = *head;
 
    //Cannot get password from empty list
    if(*head == NULL) {
       pthread_mutex_unlock(&mutex);
-      return error;
+      return NULL;
    }
 
    //Check if head is the requested user
@@ -213,7 +213,7 @@ char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
       }
    }
    pthread_mutex_unlock(&mutex);
-   return error;
+   return NULL;
 }
 
 

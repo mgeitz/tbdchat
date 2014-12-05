@@ -16,12 +16,15 @@
 #include <sys/wait.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <openssl/sha.h>
+/* Local Header Files */
 #include "linked_list.h"
 
 /* Preprocessor Macros */
 // Misc constants
 #define BACKLOG 2               // how many pending connections the queue will hold
 #define BUFFERSIZE 128
+#define SHA256_DIGEST 64
 #define DEFAULT_ROOM 1000
 #define DEFAULT_ROOM_NAME "Lobby"
 #define SERVER_NAME "SERVER"
@@ -71,14 +74,14 @@ struct Packet {
 };
 typedef struct Packet packet;
 
-struct chatSession {
-   char aliases[2][32];
-   int clients[2];
-   int this_client;
-   int running;
+//struct chatSession {
+//   char aliases[2][32];
+//   int clients[2];
+//   int this_client;
+//   int running;
    //mutex
-};
-typedef struct chatSession session;
+//};
+//typedef struct chatSession session;
 
 /* Function Prototypes */
 // chat_server.c

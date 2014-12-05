@@ -9,7 +9,7 @@ SERVER=$(SPATH)chat_server.c
 
 CC=gcc
 CFLAGS_CLIENT=-Wformat -Wall -lpthread -lncurses $(CPATH)client_commands.c $(CPATH)visual.c
-CFLAGS_SERVER=-Wformat -Wall -lpthread $(SPATH)linked_list.c $(SPATH)server_clients.c
+CFLAGS_SERVER=-Wformat -Wall -lpthread -lssl $(SPATH)linked_list.c $(SPATH)server_clients.c
 
 all: chat_client chat_server
 
