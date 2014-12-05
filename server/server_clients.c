@@ -196,10 +196,10 @@ int register_user(packet *in_pkt, int fd) {
       // Hash password
       SHA256_CTX sha256;
       SHA256_Init(&sha256);
-      SHA256_Update(&sha256, args[2], SHA256_DIGEST);
+      SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(user->password, &sha256);
       printf("NEW HASH - %s\n", args[2]);
-      for (i = 0; i < SHA256_DIGEST; i++) {
+      for (i = 0; i < strlen(args[2]); i++) {
           printf("%02x",user->password[i]);
       }
       printf("\n");
@@ -258,15 +258,15 @@ int login(packet *pkt, int fd) {
       // Hash login password arg
       SHA256_CTX sha256;
       SHA256_Init(&sha256);
-      SHA256_Update(&sha256, args[2], SHA256_DIGEST);
+      SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(arg_pass_hash, &sha256);
       printf("ARG HASH - %s\n", args[2]);
-      for (i = 0; i < SHA256_DIGEST; i++) {
+      for (i = 0; i < strlen(args[2]); i++) {
           printf("%02x", arg_pass_hash[i]);
       }
       printf("\n");
       printf("STORED HASH:\n");
-      for (i = 0; i < SHA256_DIGEST; i++) {
+      for (i = 0; i < strlen(args[2]); i++) {
           printf("%02x",user->password[i]);
       }
       printf("\n");
