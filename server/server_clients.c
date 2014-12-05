@@ -441,6 +441,15 @@ void join(packet *pkt, int fd) {
          send(fd, (void *)&ret, sizeof(packet), MSG_NOSIGNAL);
          memset(&ret, 0, sizeof(ret));
 
+         ret.options = currRoomNum;
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.username, SERVER_NAME);
+         strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
+         strcat(ret.buf, " has left the room.");
+         ret.timestamp = time(NULL);
+         send_message(&ret, -1);
+         memset(&ret, 0, sizeof(ret));
+
          ret.options = newRoom->ID;
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.username, SERVER_NAME);
@@ -490,6 +499,16 @@ void leave(packet *pkt, int fd) {
                Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
                insertUser(&(defaultRoom->user_list), currUser, defaultRoom->user_list_mutex);
 
+               // Send user leave message to room
+               ret.options = roomNum;
+               strcpy(ret.realname, SERVER_NAME);
+               strcpy(ret.username, SERVER_NAME);
+               strncpy(ret.buf, currUser->real_name, sizeof(currUser->real_name));
+               strcat(ret.buf, " has left the room.");
+               ret.timestamp = time(NULL);
+               send_message(&ret, -1);
+               memset(&ret, 0, sizeof(ret));
+
                // Send join success to client
                ret.options = JOINSUC;
                strcpy(ret.realname, SERVER_NAME);
@@ -531,9 +550,21 @@ void set_name(packet *pkt, int fd) {
 
 
    if(user != NULL) {
+      strncpy(ret.buf, user->real_name, sizeof(user->real_name));
       memset(user->real_name, 0, sizeof(user->real_name));
       strncpy(user->real_name, name, sizeof(name));
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
+      
+      int currRoomNum = DEFAULT_ROOM;
+      ret.options = currRoomNum;
+      strcpy(ret.realname, SERVER_NAME);
+      strcpy(ret.username, SERVER_NAME);
+      strcat(ret.buf, " has changed his/her name to ");
+      strcat(ret.buf, user->real_name);
+      ret.timestamp = time(NULL);
+      send_message(&ret, -1);
+      memset(&ret, 0, sizeof(ret));
+      
       ret.options = NAMESUC;
    }
    else {
