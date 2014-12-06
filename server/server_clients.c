@@ -538,6 +538,7 @@ void set_name(packet *pkt, int fd) {
    if (i > 1) {
       strncpy(name, pkt->buf, (strlen(pkt->buf) - strlen(args[i - 1]) - 1) * 
               sizeof(char));
+      name[(strlen(pkt->buf) - strlen(args[i - 1]) - 1)] = '\0';
       if (!validRealname(name, fd)) { return; }
       //strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
