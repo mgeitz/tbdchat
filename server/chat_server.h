@@ -16,7 +16,7 @@
 #include <sys/wait.h>
 #include <netdb.h>
 #include <pthread.h>
-#include <openssl/sha.h>
+#include <sha256.h>
 /* Local Header Files */
 #include "linked_list.h"
 
@@ -113,6 +113,7 @@ void join(packet *pkt, int fd);
 void invite(packet *in_pkt, int fd);
 void leave(packet *pkt, int fd);
 void log_message(packet *pkt, int fd);
-char *passEncrypt(char *s);
+//char *passEncrypt(char *s);
+int comparePasswords(unsigned char *pass1, unsigned char *pass2, int size);
 
 #endif

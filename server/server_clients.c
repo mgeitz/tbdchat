@@ -199,11 +199,11 @@ int register_user(packet *in_pkt, int fd) {
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(user->password, &sha256);
       printf("NEW HASH - %s\n", args[2]);
-      for (i = 0; i < strlen(args[2]); i++) {
+      for (i = 0; i < 32; i++) {
           printf("%02x",user->password[i]);
+          printf(":");
       }
       printf("\n");
-      //strcpy(user->password, passEncrypt(args[2]));
       user->sock = fd;
       user->next = NULL;
       
@@ -261,16 +261,18 @@ int login(packet *pkt, int fd) {
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(arg_pass_hash, &sha256);
       printf("ARG HASH - %s\n", args[2]);
-      for (i = 0; i < strlen(args[2]); i++) {
+      for (i = 0; i < 32; i++) {
           printf("%02x", arg_pass_hash[i]);
+          printf(":");
       }
       printf("\n");
       printf("STORED HASH:\n");
-      for (i = 0; i < strlen(args[2]); i++) {
+      for (i = 0; i < 32; i++) {
           printf("%02x",user->password[i]);
+          printf(":");
       }
       printf("\n");
-      if (strcmp((char *)arg_pass_hash, (char *)password) != 0) {
+      if (comparePasswords(password, arg_pass_hash, 32) != 0) {
          sendError("Incorrect password.", fd);
          free(arg_pass_hash);
          return 0;
@@ -606,7 +608,7 @@ void set_pass(packet *pkt, int fd) {
    char *args[16];
    char cpy[BUFFERSIZE];
    char *tmp = cpy;
-   unsigned char *new_pass_hash;
+   unsigned char *new_pass_hash = (unsigned char *)malloc(SHA256_DIGEST);
    strcpy(tmp, pkt->buf);
 
    args[i] = strsep(&tmp, " \t");
@@ -614,11 +616,24 @@ void set_pass(packet *pkt, int fd) {
        args[++i] = strsep(&tmp, " \t");
    }
    if (i > 3) {
-      if (!validPassword(args[2], args[3], fd)) { return; }
+      if (!validPassword(args[2], args[3], fd)) { 
+         free(new_pass_hash); 
+         return; 
+      }
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
       if (user != NULL) {
-      SHA1((unsigned char *)args[1], 32, new_pass_hash);
-         if(strcmp((char *)user->password,(char *)new_pass_hash) == 0) {
+         // Hash password
+         SHA256_CTX sha256;
+         SHA256_Init(&sha256);
+         SHA256_Update(&sha256, args[2], strlen(args[2]));
+         SHA256_Final(new_pass_hash, &sha256);
+         printf("NEW HASH - %s\n", args[2]);
+         for (i = 0; i < 32; i++) {
+            printf("%02x",user->password[i]);
+            printf(":");
+         }
+         printf("\n");
+         if (comparePasswords(user->password, new_pass_hash, 32) == 0) {
             memset(user->password, 0, 32);
             strcpy((char *)user->password, (char *)new_pass_hash);
             pthread_mutex_lock(&registered_users_mutex);
@@ -640,6 +655,7 @@ void set_pass(packet *pkt, int fd) {
       pkt->options = SERV_ERR;
       strcpy(pkt->buf, "Password change failed, malformed request.");
    }
+   free(new_pass_hash); 
    strcpy(pkt->username, SERVER_NAME);
    strcpy(pkt->realname, SERVER_NAME);
    pkt->timestamp = time(NULL);
@@ -904,9 +920,24 @@ void get_room_list(int fd) {
 }
 
 
+/* Reliably compare unsigned char arrays (debug printfs output a lot) */
+int comparePasswords(unsigned char *pass1, unsigned char *pass2, int size) {
+   int i = 0;
+   //printf("-----------------------------------------------------------\n");
+   //printf("PREPARE PASS COMPARE OF %d. %d of what I don't know\n\n", size, size); 
+
+   for (i = 0; i < size; i++) {
+       //printf("PASS1: %02x\n", pass1[i]);
+       //printf("PASS2: %02x\n\n", pass2[i]);
+      if (pass1[i] != pass2[i]) { return 1; }
+   }
+   //printf("-----------------------------------------------------------\n\n");
+   return 0;
+}
+
+
 /*
  *Encrypts the given string
- */
 char *passEncrypt(char *s) {
    char *es = (char*)malloc(32 * sizeof(char));;
    strcpy(es, s);
@@ -918,6 +949,7 @@ char *passEncrypt(char *s) {
    //printf("Encrypted String: %s\n", es);
    return es;
 }
+ */
 
 
 /*
@@ -935,3 +967,5 @@ void log_message(packet *pkt, int fd) {
    write(fd, temp, strlen(temp) * sizeof(char));
    printf("%s\n", temp);
 }
+
+

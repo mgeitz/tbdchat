@@ -20,11 +20,17 @@ void initializeCurses() {
    keypad(mainWin, TRUE);
    // Start those colors
    colors();
-   // Draw everything
-   drawChatWin();
-   drawInputWin();
-   drawInfoLines();
-   asciiSplash();
+
+   if (LINES < 25 || COLS < 76) {
+      drawTermTooSmall();
+   }
+   else {
+      // Draw everything
+      drawChatWin();
+      drawInputWin();
+      drawInfoLines();
+      asciiSplash();
+   }
 }
 
 
@@ -372,26 +378,40 @@ void asciiSplash() {
 }
 
 
+/* A place for all the bad terminals to go */
+void drawTermTooSmall() {
+   wbkgd(mainWin, COLOR_PAIR(8));
+   wattron(mainWin, A_BOLD);
+   mvwaddstr(mainWin, (LINES * 0.5) - 1, (COLS * 0.5) - 3, "TERMINAL");
+   mvwaddstr(mainWin, (LINES * 0.5), (COLS * 0.5) - 4, "TOO SMALL!");
+   wattroff(mainWin, A_BOLD);
+   wrefresh(mainWin);
+   wbkgd(mainWin, COLOR_PAIR(1));
+}
+
+
 /* Handle window resizing */
 void resizeHandler(int sig) {
-   useconds_t sleep_time = 100;
-
-   // End current windows, wait briefly
+   // End current windows
    endwin();
    refresh();
    clear();
-   usleep(sleep_time);
 
-   // Redraw windows
-   drawChatWin();
-   drawInputWin();
-   drawInfoLines();
+   if (LINES < 25 || COLS < 76) {
+      drawTermTooSmall();
+   }
+   else {
+      // Redraw windows
+      drawChatWin();
+      drawInputWin();
+      drawInfoLines();
 
-   // Redraw ascii splash
-   asciiSplash();
+      // Redraw ascii splash
+      asciiSplash();
 
-   // Refresh and move cursor to input window
-   wrefresh(chatWin);
-   wcursyncup(inputWin);
-   wrefresh(inputWin);
+      // Refresh and move cursor to input window
+      wrefresh(chatWin);
+      wcursyncup(inputWin);
+      wrefresh(inputWin);
+   }
 }

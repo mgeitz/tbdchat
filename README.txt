@@ -12,19 +12,18 @@
 *
 *       [URGENT]
 *         - After resize event, a key must be pressed before input is read into the buffer
-*         - after "sitting around a while logged in" and then exiting using /exit or /quit, 
-*              exit will hang waiting on chatRX thread
 *
 *       ["FEATURES"]
 *         - userInput is writing special keys to buffer we don't want there
 *         - Some special keys print more chars in the input window than backspace removes
 *
 *       [ALMOST SHOULDN'T CARE]
-*         - Since the changes incorporating getch() into userInput, when parsed 
-*              by strsep /login and /join return the base commands as args[8], oppose to expected result of args[0].
+*         - Since the changes incorporating getch() into userInput, 
+*                 when parsed by strsep /login and /join return the base commands as args[8],
+*                 oppose to expected result of args[0].
 *            o This does not happen for any other command. This is absolutely dumbfounding.
 *            o The packet buffer is read perfectly fine everywhere else
-*            o This is absolutely related to how the buffer is now populated
+*            o This is absolutely related to how the buffer is now populated with getch
 *        
 *        
 *********************************************************
@@ -35,25 +34,25 @@ TO-DO LIST:
 
    Smaller adjustments:
 
-      - [Client/Server] /show real name, /username real name, etc - return the user name for a give real name (maybe add check to be in users room?)
+      - [Client/Server] Modify /who commands to also return that users realname
+         o First packet returned for any /who should include # of users info being sent
+         o Print nice title seperator with said # of users in X room
+         o Proceed to send user and realnames / print users with colored realnames
+         o Complimentary features for /list
 
-      - [Client] /ignore username. Ignore all messages (dont print) all messages from a user (requires /show)
+      - [Client] /ignore username. Ignore all messages (dont print) all messages from a user
 
       - [Client/Server] /friends and friends list
 
-      - [Client/Server] /away messages
+      - [Server/Client] 2 person rooms, /msg username, /tell username, or /query username
 
-      - [Server] Send notification to all users in a room when another user leaves it
- 
-      - [Server] Hash stored passwords, hash input on compare
+      - [Client/Server] /away messages, if 2 person chat room attribute
 
       - [Client/Server] /logout command (remove from rooms/active users, set logged out, keep connection)
 
       - [Client/Server] /disconnect command (same as /exit but allows the client to /connect again)
 
-      - [Server/Client] Private / Public room settings, room admins, other room attributes
-
-      - [Server/Client] 2 person rooms, /msg username, /tell username, or /query username
+      - [Server/Client] Private / Public room attribute, room admins, other room attributes
 
       - [client] Curses
          o Add client window to primary screen to display clients currently in room
@@ -62,8 +61,6 @@ TO-DO LIST:
 
       - [Server] Should display user is leaving room messages when a user joins a 
         different room
-
-      - [Client/Server] A client can invite himself to a room; should be blocked
 
 
    Requires considerable time:
@@ -79,7 +76,8 @@ TO-DO LIST:
 
       - [Client/Server] Full encryption using something like openssl or libsodium
 
-      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, messages, etc (will solve resize wipe problem)
+      - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, etc
+         o Worth logging all messages for now, but its utility for cost should be considered
 
 
 
@@ -178,17 +176,18 @@ SERVER FEATURES:
 
       - Register
          o Allows a single registration for any given unique username 
-         o Stores a password associated with each username
-         o Saves username/realname/password to a file so registration persists after server is shutdown
+         o Stores a SHA256 hashed password associated with each username
+         o Saves username/realname/passhash to a file so registration persists after server is shutdown
 
-      - Reacts to accordingly to all client commands
+      - Reacts accordingly to all client commands dependent on client state
 
       - Chat with n clients at a time
 
       - Rooms containing unique chat sessions simultaneously
          o Create or join rooms
-         o invite others to join your room 
+         o Invite others to join your room 
+         o Each room supports n clients
 
-      - Sanitizes all processed input from connections
- 
+      - Sanitizes input fields which require so accordingly
 
+      - SHA256 hashing for password storage

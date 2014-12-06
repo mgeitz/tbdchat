@@ -115,6 +115,7 @@ void initializeCurses();
 void drawChatWin();
 void drawInputWin();
 void drawInfoLines();
+void drawTermTooSmall();
 void asciiSplash();
 void colors();
 void resizeHandler(int sig);
