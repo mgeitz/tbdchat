@@ -538,12 +538,26 @@ void leave(packet *pkt, int fd) {
  *Set user real name
  */
 void set_name(packet *pkt, int fd) {
+   int i = 0;
    char name[64];
+   char *args[16];
    packet ret;
-
-   strncpy(name, pkt->buf, sizeof(name));
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, pkt->buf);
+   
+   printf("HERE\n");
+   args[i] = strsep(&tmp, " \t");
+   printf("HERE%s\n", args[i]);
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+       printf("HERE%s\n", args[i]);
+   }
+   printf("PAST SEP %s\n", args[i-1]);
+   strncpy(name, pkt->buf, (strlen(pkt->buf) - strlen(args[i - 1]) - 1) * 
+sizeof(char));
    if (!validRealname(name, fd)) { return; }
-   strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
+   //strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
    //Submit name change to user list, write list
    User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
@@ -555,16 +569,20 @@ void set_name(packet *pkt, int fd) {
       strncpy(user->real_name, name, sizeof(name));
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
       
-      int currRoomNum = DEFAULT_ROOM;
+      printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
+      int currRoomNum = atoi(args[i - 1]);
+      printf("HERE %d\n", currRoomNum);
       ret.options = currRoomNum;
       strcpy(ret.realname, SERVER_NAME);
       strcpy(ret.username, SERVER_NAME);
       strcat(ret.buf, " has changed his/her name to ");
       strcat(ret.buf, user->real_name);
       ret.timestamp = time(NULL);
+      printf("HERE%s %dy\n", ret.buf, ret.options);
       send_message(&ret, -1);
       memset(&ret, 0, sizeof(ret));
       
+      strncpy(ret.buf, name, sizeof(ret.buf));
       ret.options = NAMESUC;
    }
    else {
