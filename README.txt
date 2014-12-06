@@ -41,8 +41,6 @@ TO-DO LIST:
 
       - [Client/Server] /away messages
 
-      - [Server] Send notification to all users in a room when another user leaves it
- 
       - [Client/Server] /logout command (remove from rooms/active users, set logged out, keep connection)
 
       - [Client/Server] /disconnect command (same as /exit but allows the client to /connect again)
@@ -58,8 +56,6 @@ TO-DO LIST:
 
       - [Server] Should display user is leaving room messages when a user joins a 
         different room
-
-      - [Client/Server] A client can invite himself to a room; should be blocked
 
 
    Requires considerable time:
@@ -174,16 +170,17 @@ SERVER FEATURES:
 
       - Register
          o Allows a single registration for any given unique username 
-         o Stores a password associated with each username
-         o Saves username/realname/password to a file so registration persists after server is shutdown
+         o Stores a SHA256 hashed password associated with each username
+         o Saves username/realname/passhash to a file so registration persists after server is shutdown
 
-      - Reacts to accordingly to all client commands
+      - Reacts accordingly to all client commands dependent on client state
 
       - Chat with n clients at a time
 
       - Rooms containing unique chat sessions simultaneously
          o Create or join rooms
-         o invite others to join your room 
+         o Invite others to join your room 
+         o Each room supports n clients
 
       - Sanitizes input fields which require so accordingly
 
