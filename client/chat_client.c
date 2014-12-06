@@ -303,7 +303,15 @@ void serverResponse(packet *rx_pkt) {
       memset(&realname, 0, sizeof(realname));
       strncpy(realname, rx_pkt->buf, sizeof(realname));
       pthread_mutex_unlock(&nameMutex);
-      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful", 3);
+      wprintFormatTime(chatWin, rx_pkt->timestamp);
+      wattron(chatWin, COLOR_PAIR(1));
+      wprintw(chatWin, "You are now known as ");
+      wattron(chatWin, A_BOLD);
+      wprintw(chatWin, rx_pkt->buf);
+      wattroff(chatWin, A_BOLD);
+      wattroff(chatWin, COLOR_PAIR(1));
+      wprintw(chatWin, "\n");
+      //wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful", 3);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);
