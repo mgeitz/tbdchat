@@ -68,7 +68,7 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
 /* Insert a new user node into the list over user nodes passed in */
 int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
-   printf("Inserting %s\n", new_user->username);
+   //printf("Inserting %s\n", new_user->username);
    Node *temp = *head;
    Node *new_node = (Node *)malloc(sizeof(Node));
    new_node->data = (void *)new_user;
@@ -76,7 +76,7 @@ int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    //Create new list if head is null
    if (*head == NULL) {
       *head = new_node;
-      printf("Insert Success\n");
+      //printf("Insert Success\n");
       pthread_mutex_unlock(&mutex);
       return 1;
    } 
@@ -85,7 +85,7 @@ int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    
    //Checks to ensure there are no duplicate users
    if (strcmp(temp_user->username, new_user->username) == 0) {
-      printf("Insert Failure\n");
+      //printf("Insert Failure\n");
       pthread_mutex_unlock(&mutex);
       return 0;
    }
@@ -95,7 +95,7 @@ int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
       temp_user = (User *)temp->data;
 
       if (strcmp(temp_user->username, new_user->username) == 0) {
-         printf("Insert Failure\n");
+         //printf("Insert Failure\n");
          pthread_mutex_unlock(&mutex);
          return 0;
       }
@@ -103,7 +103,7 @@ int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
 
    //Add user to end of list
    temp->next = new_node;
-   printf("Insert Success\n");
+   //printf("Insert Success\n");
    pthread_mutex_unlock(&mutex);
    return 1;
 }
@@ -306,25 +306,35 @@ void writeUserFile(Node  **head, char *filename, pthread_mutex_t mutex) {
 
 /* Print contents of list */
 void printList(Node **head, pthread_mutex_t mutex) {
+   int i;
    pthread_mutex_lock(&mutex);
    Node *temp = *head;
-   printf("Printing User List\n");
+   printf(" --- Printing User List\n");
    if(*head == NULL) {
       printf("NULL\n");
       pthread_mutex_unlock(&mutex);
       return;
    }
    User *current = (User *)temp->data;
-   printf("%s, %s, %s, %d\n", current->username, current->real_name, current->password,
-          current->sock);
+   printf("%s, %s, %d, ", current->username, current->real_name, current->sock);
+   for (i = 0; i < 32; i++) {
+       printf("%02x",current->password[i]);
+       printf(":");
+   }
+   printf("\n");
    while(temp->next != NULL) {
       temp = temp->next;
       current = temp->data;
-      printf("%s, %s, %s, %d\n", current->username, current->real_name, current->password,
-             current->sock);
+      printf("%s, %s, %d, ", current->username, current->real_name, current->sock);
+      for (i = 0; i < 32; i++) {
+          printf("%02x",current->password[i]);
+          printf(":");
+      }
+      printf("\n");
    }
+
    pthread_mutex_unlock(&mutex);
-   printf("End User List\n");
+   printf(" --- End User List\n");
 }
 
 
@@ -372,6 +382,7 @@ int insertRoom(Node **head, Room *new_room, pthread_mutex_t mutex) {
    pthread_mutex_unlock(&mutex);
    return 1;
 }
+
 
 /*Creates a new room and inserts it in the specified rooms list*/
 int createRoom(Node **head, int ID, char *name, pthread_mutex_t mutex) {

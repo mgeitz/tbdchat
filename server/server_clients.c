@@ -170,7 +170,6 @@ int register_user(packet *in_pkt, int fd) {
    char *tmp = cpy;
    strcpy(tmp, in_pkt->buf);
 
-   printf("reg buf: %s\n", in_pkt->buf);
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -198,12 +197,12 @@ int register_user(packet *in_pkt, int fd) {
       SHA256_Init(&sha256);
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(user->password, &sha256);
-      printf("NEW HASH - %s\n", args[2]);
-      for (i = 0; i < 32; i++) {
-          printf("%02x",user->password[i]);
-          printf(":");
-      }
-      printf("\n");
+      //printf("NEW HASH - %s\n", args[2]);
+      //for (i = 0; i < 32; i++) {
+      //    printf("%02x",user->password[i]);
+      //    printf(":");
+      //}
+      //printf("\n");
       user->sock = fd;
       user->next = NULL;
       
@@ -236,7 +235,6 @@ int login(packet *pkt, int fd) {
    unsigned char *arg_pass_hash = (unsigned char *)malloc(SHA256_DIGEST);
    strcpy(tmp, pkt->buf);
 
-   printf("login buf: %s\n", pkt->buf);
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -244,43 +242,28 @@ int login(packet *pkt, int fd) {
    // Check there are enough arguements to safely inspect them
    if (i > 2) {
       packet ret;
-      printf("Going to check if user exists\n");
       // Check if user exists as registered user
       if (strcmp(get_real_name(&registered_users_list, args[1], registered_users_mutex), "ERROR") == 0) {
          sendError("Username not found.", fd);
          return 0;
       }
-      User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
-      printf("going to check password %s\n", args[2]);
-      // Check for password patch against registered user data
+      // Retreive password for requested user
       unsigned char *password = get_password(&registered_users_list, args[1], registered_users_mutex);
-      printf("returned from get password\n");
       // Hash login password arg
       SHA256_CTX sha256;
       SHA256_Init(&sha256);
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(arg_pass_hash, &sha256);
-      printf("ARG HASH - %s\n", args[2]);
-      for (i = 0; i < 32; i++) {
-          printf("%02x", arg_pass_hash[i]);
-          printf(":");
-      }
-      printf("\n");
-      printf("STORED HASH:\n");
-      for (i = 0; i < 32; i++) {
-          printf("%02x",user->password[i]);
-          printf(":");
-      }
-      printf("\n");
+      // Compare pass arg and stored pass
       if (comparePasswords(password, arg_pass_hash, 32) != 0) {
          sendError("Incorrect password.", fd);
          free(arg_pass_hash);
          return 0;
       }
       free(arg_pass_hash);
-      printf("Going to get user\n");
 
       // Login input is valid, read user data from registered users
+      User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
       user->sock = fd;
 
       //Create node for active users list
@@ -303,7 +286,7 @@ int login(packet *pkt, int fd) {
          strcpy(ret.realname, get_real_name(&registered_users_list, args[1], registered_users_mutex));
          strcpy(ret.username, args[1]);
          ret.options = LOGSUC;
-         printf("%s logged in\n", ret.username);
+         //printf("%s logged in\n", ret.username);
          ret.timestamp = time(NULL);
          send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 
@@ -548,14 +531,10 @@ void set_name(packet *pkt, int fd) {
    char *tmp = cpy;
    strcpy(tmp, pkt->buf);
    
-   printf("HERE\n");
    args[i] = strsep(&tmp, " \t");
-   printf("HERE%s\n", args[i]);
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
-       printf("HERE%s\n", args[i]);
    }
-   printf("PAST SEP %s\n", args[i-1]);
    strncpy(name, pkt->buf, (strlen(pkt->buf) - strlen(args[i - 1]) - 1) * 
 sizeof(char));
    if (!validRealname(name, fd)) { return; }
@@ -564,23 +543,21 @@ sizeof(char));
    //Submit name change to user list, write list
    User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
 
-
    if(user != NULL) {
       strncpy(ret.buf, user->real_name, sizeof(user->real_name));
       memset(user->real_name, 0, sizeof(user->real_name));
       strncpy(user->real_name, name, sizeof(name));
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
       
-      printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
+      //printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
       int currRoomNum = atoi(args[i - 1]);
-      printf("HERE %d\n", currRoomNum);
       ret.options = currRoomNum;
       strcpy(ret.realname, SERVER_NAME);
       strcpy(ret.username, SERVER_NAME);
       strcat(ret.buf, " has changed his/her name to ");
       strcat(ret.buf, user->real_name);
       ret.timestamp = time(NULL);
-      printf("HERE%s %dy\n", ret.buf, ret.options);
+      //printf("HERE%s %dy\n", ret.buf, ret.options);
       send_message(&ret, -1);
       memset(&ret, 0, sizeof(ret));
       
@@ -627,12 +604,6 @@ void set_pass(packet *pkt, int fd) {
          SHA256_Init(&sha256);
          SHA256_Update(&sha256, args[2], strlen(args[2]));
          SHA256_Final(new_pass_hash, &sha256);
-         printf("NEW HASH - %s\n", args[2]);
-         for (i = 0; i < 32; i++) {
-            printf("%02x",user->password[i]);
-            printf(":");
-         }
-         printf("\n");
          if (comparePasswords(user->password, new_pass_hash, 32) == 0) {
             memset(user->password, 0, 32);
             strcpy((char *)user->password, (char *)new_pass_hash);
@@ -779,6 +750,7 @@ void send_message(packet *pkt, int clientfd) {
       }
       tmp = tmp->next;
    }
+   // extra unlock????
    pthread_mutex_unlock(&currentRoom->user_list_mutex);
 }
 
@@ -937,22 +909,6 @@ int comparePasswords(unsigned char *pass1, unsigned char *pass2, int size) {
 
 
 /*
- *Encrypts the given string
-char *passEncrypt(char *s) {
-   char *es = (char*)malloc(32 * sizeof(char));;
-   strcpy(es, s);
-   char key[16]="Ab6D3Jkx9o2nH8SM";
-   int i;
-   for(i = 0; i <strlen(s); i++) {
-      es[i] = s[i]^key[i%16];
-   }
-   //printf("Encrypted String: %s\n", es);
-   return es;
-}
- */
-
-
-/*
  *Logs the given message packet to teh given fd
  */
 void log_message(packet *pkt, int fd) {
@@ -965,7 +921,7 @@ void log_message(packet *pkt, int fd) {
    strncat(temp, pkt->buf, strlen(pkt->buf));
    strncat(temp, "\n", 2);
    write(fd, temp, strlen(temp) * sizeof(char));
-   printf("%s\n", temp);
+   printf("%s", temp);
 }
 
 

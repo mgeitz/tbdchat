@@ -74,11 +74,11 @@ TO-DO LIST:
 
       - [Client/Server] Allow clients to be in n rooms at a time
 
-      - [Client/Server] Full encryption using something like openssl or libsodium
+      - [Client/Server] Full encryption using something like openssl or ***libsodium***
 
       - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, etc
          o Worth logging all messages for now, but its utility for cost should be considered
-
+         o Will finally bring an end to server spam
 
 
 CLIENT FEATURES:
