@@ -535,45 +535,50 @@ void set_name(packet *pkt, int fd) {
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
    }
-   strncpy(name, pkt->buf, (strlen(pkt->buf) - strlen(args[i - 1]) - 1) * 
-sizeof(char));
-   if (!validRealname(name, fd)) { return; }
-   //strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
+   if (i > 1) {
+      strncpy(name, pkt->buf, (strlen(pkt->buf) - strlen(args[i - 1]) - 1) * 
+              sizeof(char));
+      if (!validRealname(name, fd)) { return; }
+      //strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
-   //Submit name change to user list, write list
-   User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
+      //Submit name change to user list, write list
+      User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
 
-   if(user != NULL) {
-      strncpy(ret.buf, user->real_name, sizeof(user->real_name));
-      memset(user->real_name, 0, sizeof(user->real_name));
-      strncpy(user->real_name, name, sizeof(name));
-      writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
+      if(user != NULL) {
+         strncpy(ret.buf, user->real_name, sizeof(user->real_name));
+         memset(user->real_name, 0, sizeof(user->real_name));
+         strncpy(user->real_name, name, sizeof(name));
+         writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
       
-      //printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
-      int currRoomNum = atoi(args[i - 1]);
-      ret.options = currRoomNum;
+         //printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
+         int currRoomNum = atoi(args[i - 1]);
+         ret.options = currRoomNum;
+         strcpy(ret.realname, SERVER_NAME);
+         strcpy(ret.username, SERVER_NAME);
+         strcat(ret.buf, " is now known as ");
+         strcat(ret.buf, user->real_name);
+         ret.timestamp = time(NULL);
+         //printf("HERE%s %dy\n", ret.buf, ret.options);
+         send_message(&ret, -1);
+         memset(&ret, 0, sizeof(ret));
+      
+         strncpy(ret.buf, name, sizeof(ret.buf));
+         ret.options = NAMESUC;
+      }
+      else {
+         printf("%s --- Error:%s Trying to modify null user in user_list.\n", RED, NORMAL);
+         strcpy(ret.buf, "Name change failed, for some reason we couldn't find you.");
+         ret.options = SERV_ERR;
+      }
+
       strcpy(ret.realname, SERVER_NAME);
       strcpy(ret.username, SERVER_NAME);
-      strcat(ret.buf, " has changed his/her name to ");
-      strcat(ret.buf, user->real_name);
       ret.timestamp = time(NULL);
-      //printf("HERE%s %dy\n", ret.buf, ret.options);
-      send_message(&ret, -1);
-      memset(&ret, 0, sizeof(ret));
-      
-      strncpy(ret.buf, name, sizeof(ret.buf));
-      ret.options = NAMESUC;
+      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
    }
    else {
-      printf("%s --- Error:%s Trying to modify null user in user_list.\n", RED, NORMAL);
-      strcpy(ret.buf, "Name change failed, for some reason we couldn't find you.");
-      ret.options = SERV_ERR;
+      printf("%s --- Error:%s Malformed set_name packet, ignoring.\n", RED, NORMAL);
    }
-
-   strcpy(ret.realname, SERVER_NAME);
-   strcpy(ret.username, SERVER_NAME);
-   ret.timestamp = time(NULL);
-   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
 }
 
 
