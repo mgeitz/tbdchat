@@ -27,6 +27,7 @@ int userCommand(packet *tx_pkt) {
    // Handle exit command
    if ((strncmp((void *)tx_pkt->buf, "/exit", strlen("/exit")) == 0) || \
        (strncmp((void *)tx_pkt->buf, "/quit", strlen("/quit")) == 0)) {
+       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
        tx_pkt->options = EXIT;
        return 1;;
    }

@@ -451,7 +451,7 @@ void sigintHandler(int sig_num) {
       pthread_mutex_lock(&nameMutex);
       strcpy(tx_pkt.username, username);
       strcpy(tx_pkt.realname, realname);
-      strcpy(tx_pkt.buf, "/exit");
+      sprintf(tx_pkt.buf, "/exit %d", currentRoom);
       pthread_mutex_unlock(&nameMutex);
       tx_pkt.timestamp = time(NULL);
       tx_pkt.options = EXIT;

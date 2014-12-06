@@ -718,10 +718,24 @@ int validRoomname (char *roomname, int client) {
  */
 void exit_client(packet *pkt, int fd) {
    packet ret;
+   int i = 0;
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, pkt->buf);
 
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      ret.options = atoi(args[i - 1]);
+   }
+   else {
+      ret.options = DEFAULT_ROOM;
+   }
 
-   // Send disconnect message to lobby
-   ret.options = DEFAULT_ROOM;
+   // Send disconnect message to user room
    strcpy(ret.realname, SERVER_NAME);
    strcpy(ret.username, SERVER_NAME);
    sprintf(ret.buf, "User %s has disconnected.", pkt->realname);
