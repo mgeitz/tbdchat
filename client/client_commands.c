@@ -162,7 +162,6 @@ int validInvite(packet *tx_pkt) {
 
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       //wprintw(chatWin, "%d: %s\n", i, args[i]);
        args[++i] = strsep(&tmp, " \t");
    }
 
@@ -232,7 +231,6 @@ int newServerConnection(char *buf) {
          wprintFormatError(chatWin, time(NULL), "chatRX thread not created");
          return 0;
       }
-      //wprintFormatNotice(chatWin, time(NULL), "Connected");
       i = 0;
       pthread_mutex_lock(&configFileMutex);
       configfp = fopen(config_file, "r+");
@@ -283,7 +281,6 @@ int reconnect(char *buf) {
                else {
                   fclose(configfp);
                   pthread_mutex_unlock(&configFileMutex);
-                  //wprintw(chatWin, " --- Error: No previous connection to reconnect to.\n");
                   wprintFormatError(chatWin, time(NULL), "No previous connect to reconnect to");
                   box(chatWin, 0, 0);
                   wrefresh(chatWin);
@@ -421,7 +418,6 @@ int setPassword(packet *tx_pkt) {
 int setName(packet *tx_pkt) {
    if(strlen(tx_pkt->buf) > strlen("/setname ")) {
       memmove(tx_pkt->buf, tx_pkt->buf + strlen("/setname "), sizeof(tx_pkt->buf));
-      //strcat(tx_pkt->buf, (char *)currentRoom);
       sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
       tx_pkt->options = SETNAME;
       return 1;
@@ -435,7 +431,6 @@ int setName(packet *tx_pkt) {
 
 /* Dump contents of received packet from server */
 void debugPacket(packet *rx_pkt) {
-
    wprintSeperatorTitle(chatWin, "PACKET REPORT", 6, 3 );
 
    wprintFormatTime(chatWin, time(NULL));
