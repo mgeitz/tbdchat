@@ -92,6 +92,10 @@ void *chatRX(void *ptr);
 int userInput(packet *tx_pkt);
 void buildDefaultConfig();
 int auto_connect();
+void serverResponse(packet *rx_pkt);
+void nameChange(packet *rx_pkt);
+void whoResponse(packet *rx_pkt);
+void loggedIn(packet *rx_pkt);
 void newRoom(packet *rx_pkt);
 int hash(char *str, int mod);
 
@@ -103,7 +107,6 @@ int serverLogin(packet *tx_pkt);
 int serverRegistration(packet *tx_pkt);
 int setPassword(packet *tx_pkt);
 int setName(packet *tx_pkt);
-void serverResponse(packet *rx_pkt);
 void debugPacket(packet *rx_pkt);
 int toggleAutoConnect();
 int validJoin(packet *tx_pkt);
@@ -127,5 +130,6 @@ void wprintFormatNotice(WINDOW *win, time_t ts, char *buf);
 void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color);
 void wprintSeperator(WINDOW *win, int color);
 void wprintWhoseLineIsItAnyways(WINDOW *win, time_t ts, char *user, char *real, int from_color);
+void wprintFormatmotd(WINDOW *win, time_t ts, char *motd);
 
 #endif

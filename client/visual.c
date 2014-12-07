@@ -157,6 +157,17 @@ void wprintFormatMessage(WINDOW *win, time_t ts, char *from, char *buf, int from
 }
 
 
+/* Print formatted MOTD */
+void wprintFormatmotd(WINDOW *win, time_t ts, char *motd) {
+   wprintSeperatorTitle(chatWin, "MOTD", 1, 7);
+   wprintFormatTime(chatWin, ts);
+   wattron(chatWin, COLOR_PAIR(2));
+   wprintw(chatWin, "%s\n", motd);
+   wattroff(chatWin, COLOR_PAIR(2));
+   wprintSeperator(chatWin, 1);
+}
+
+
 /* Print formatted who line */
 void wprintWhoseLineIsItAnyways(WINDOW *win, time_t ts, char *user, char *real, int from_color) {
    int color;

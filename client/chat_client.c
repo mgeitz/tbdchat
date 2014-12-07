@@ -271,62 +271,23 @@ void serverResponse(packet *rx_pkt) {
    if (rx_pkt->options == SERV_ERR) {
       wprintFormatMessage(chatWin, time(NULL), rx_pkt->realname, rx_pkt->buf, 3);
    }
-   //else if (rx_pkt->options == REGSUC) {
-   //   pthread_mutex_lock(&roomMutex);
    //   currentRoom = DEFAULT_ROOM;
    //   pthread_mutex_unlock(&roomMutex);
    //   wprintFormat(chatWin, time(NULL), "Client", " --- Success: Registration successful!\n");
    //}
    else if (rx_pkt->options == LOGSUC) {
-      pthread_mutex_lock(&nameMutex);
-      strcpy(username, rx_pkt->username);
-      strcpy(realname, rx_pkt->realname);
-      pthread_mutex_unlock(&nameMutex);
-      pthread_mutex_lock(&roomMutex);
-      currentRoom = DEFAULT_ROOM;
-      werase(infoLine);
-      wprintw(infoLine, " Current room: Lobby"); 
-      wrefresh(infoLine);
-      pthread_mutex_unlock(&roomMutex);
-      wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 14);
+      loggedIn(rx_pkt);
    }
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      //wprintFormat(chatWin, rx_pkt->timestamp, "USER", rx_pkt->buf, 6);
-      char *args[2];
-      int i = 0;
-      char *tmp = rx_pkt->buf;
-      args[i] = strsep(&tmp, "-");
-      while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-         args[++i] = strsep(&tmp, "-");
-      }
-      if (args[1] == '\0') {
-         wprintSeperatorTitle(chatWin, args[0], 6, 2);
-      }
-      else {
-         i = hash(args[0], 12);
-         wprintWhoseLineIsItAnyways(chatWin, rx_pkt->timestamp, args[0], args[1], i);
-         //wprintFormat(chatWin, rx_pkt->timestamp, "USER", args[0], 6);
-         //wprintFormat(chatWin, rx_pkt->timestamp, "USER", args[1], 6);
-      }
+      whoResponse(rx_pkt);
    }
    else if (rx_pkt->options == PASSSUC) {
       wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful", 3);
    }
    else if (rx_pkt->options == NAMESUC) {
-      pthread_mutex_lock(&nameMutex);
-      memset(&realname, 0, sizeof(realname));
-      strncpy(realname, rx_pkt->buf, sizeof(realname));
-      pthread_mutex_unlock(&nameMutex);
-      wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wattron(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "You are now known as ");
-      wattron(chatWin, A_BOLD);
-      wprintw(chatWin, rx_pkt->buf);
-      wattroff(chatWin, A_BOLD);
-      wattroff(chatWin, COLOR_PAIR(1));
-      wprintw(chatWin, "\n");
+      nameChange(rx_pkt);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);
@@ -341,12 +302,7 @@ void serverResponse(packet *rx_pkt) {
       wprintFormatMessage(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
    }
    else if (rx_pkt->options == MOTD) {
-      wprintSeperatorTitle(chatWin, "MOTD", 1, 7);
-      wprintFormatTime(chatWin, rx_pkt->timestamp);
-      wattron(chatWin, COLOR_PAIR(2));
-      wprintw(chatWin, "%s\n", rx_pkt->buf);
-      wattroff(chatWin, COLOR_PAIR(2));
-      wprintSeperator(chatWin, 1);
+      wprintFormatmotd(chatWin, rx_pkt->timestamp, rx_pkt->buf);
    }
    else if(rx_pkt->options == EXIT) {
       wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
@@ -355,6 +311,58 @@ void serverResponse(packet *rx_pkt) {
    }
    else {
       wprintFormatError(chatWin, time(NULL), "Unknown message received from server");
+   }
+}
+
+
+/* Handle login success */
+void loggedIn(packet *rx_pkt) {
+   pthread_mutex_lock(&nameMutex);
+   strcpy(username, rx_pkt->username);
+   strcpy(realname, rx_pkt->realname);
+   pthread_mutex_unlock(&nameMutex);
+   pthread_mutex_lock(&roomMutex);
+   currentRoom = DEFAULT_ROOM;
+   werase(infoLine);
+   wprintw(infoLine, " Current room: Lobby"); 
+   wrefresh(infoLine);
+   pthread_mutex_unlock(&roomMutex);
+   wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 14);
+}
+
+
+/* Handle name change success */
+void nameChange(packet *rx_pkt) {
+   pthread_mutex_lock(&nameMutex);
+   memset(&realname, 0, sizeof(realname));
+   strncpy(realname, rx_pkt->buf, sizeof(realname));
+   pthread_mutex_unlock(&nameMutex);
+   wprintFormatTime(chatWin, rx_pkt->timestamp);
+   wattron(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "You are now known as ");
+   wattron(chatWin, A_BOLD);
+   wprintw(chatWin, rx_pkt->buf);
+   wattroff(chatWin, A_BOLD);
+   wattroff(chatWin, COLOR_PAIR(1));
+   wprintw(chatWin, "\n");
+}
+
+
+/* Handle who command response */
+void whoResponse(packet *rx_pkt) {
+   char *args[2];
+   int i = 0;
+   char *tmp = rx_pkt->buf;
+   args[i] = strsep(&tmp, "-");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, "-");
+   }
+   if (args[1] == '\0') {
+      wprintSeperatorTitle(chatWin, args[0], 6, 2);
+   }
+   else {
+      i = hash(args[0], 12);
+      wprintWhoseLineIsItAnyways(chatWin, rx_pkt->timestamp, args[0], args[1], i);
    }
 }
 
