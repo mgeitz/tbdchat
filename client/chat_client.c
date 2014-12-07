@@ -11,6 +11,7 @@
 #include "chat_client.h"
 
 int serverfd = 0;
+int logfd = 0;
 pthread_mutex_t roomMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t nameMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t debugModeMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -19,6 +20,7 @@ volatile int currentRoom;
 volatile int debugMode;
 char realname[64];
 char username[64];
+char logfile[64];
 pthread_t chat_rx_thread;
 char *config_file;
 WINDOW *mainWin, *inputWin, *chatWin, *chatWinBox, *inputWinBox, *infoLine, *infoLineBottom;
@@ -258,6 +260,7 @@ void *chatRX(void *ptr) {
             wprintFormatNotice(chatWin, time(NULL), "Communication with server has terminated.");
             break;
          }
+         log_message(&rx_pkt, logfd);
          // Wipe packet space
          wrefresh(chatWin);
          wcursyncup(inputWin);
@@ -311,6 +314,7 @@ void serverResponse(packet *rx_pkt) {
       wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Server has closed its connection with you", 3);
       wprintFormatNotice(chatWin, rx_pkt->timestamp, "Closing socket connection with server");
       close(serverfd);
+      close(logfd);
    }
    else {
       wprintFormatError(chatWin, time(NULL), "Unknown message received from server");
@@ -326,6 +330,10 @@ void loggedIn(packet *rx_pkt) {
    pthread_mutex_unlock(&nameMutex);
    pthread_mutex_lock(&roomMutex);
    currentRoom = DEFAULT_ROOM;
+   strcpy(logfile, username);
+   strcat(logfile, "_Lobby.log\0");
+   logfd = open(logfile, O_WRONLY | O_CREAT, S_IRWXU);
+   lseek(logfd, 0, 2);
    werase(infoLine);
    wprintw(infoLine, " Current room: Lobby"); 
    wrefresh(infoLine);
@@ -408,6 +416,13 @@ void newRoom(packet *rx_pkt) {
       pthread_mutex_lock(&roomMutex);
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
+         close(logfd);
+         strcpy(logfile, username);
+         strcat(logfile, "_");
+         strcat(logfile, args[0]);
+         strcat(logfile, ".log\0");
+         logfd = open(logfile, O_WRONLY | O_CREAT, S_IRWXU);
+         lseek(logfd, 0, 2);
          wprintFormatTime(chatWin, rx_pkt->timestamp);
          wprintw(chatWin, "Joined Room ");
          wattron(chatWin, COLOR_PAIR(3));
@@ -506,11 +521,13 @@ void sigintHandler(int sig_num) {
       pthread_mutex_lock(&nameMutex);
       strcpy(tx_pkt.username, username);
       strcpy(tx_pkt.realname, realname);
-      sprintf(tx_pkt.buf, "/exit %d", currentRoom);
+      strcpy(tx_pkt.buf, "/exit");
+      //sprintf(tx_pkt.buf, "/exit %d", currentRoom);
       pthread_mutex_unlock(&nameMutex);
       tx_pkt.timestamp = time(NULL);
       tx_pkt.options = EXIT;
       send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
+      close(logfd);
       close(serverfd); 
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {

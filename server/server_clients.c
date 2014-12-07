@@ -975,14 +975,14 @@ int comparePasswords(unsigned char *pass1, unsigned char *pass2, int size) {
 
 
 /*
- *Logs the given message packet to teh given fd
+ *Logs the given message packet to the given fd
  */
 void log_message(packet *pkt, int fd) {
    char *temp = (char*)malloc(256 * sizeof(char));
    strcpy(temp, asctime(localtime(&(pkt->timestamp))));
    temp[strlen(temp) - 1] = ' ';
    strncat(temp, "| [", 3);
-   strncat(temp, pkt->username, strlen(pkt->username));
+   strncat(temp, pkt->realname, strlen(pkt->username));
    strncat(temp, "] ", 2);
    strncat(temp, pkt->buf, strlen(pkt->buf));
    strncat(temp, "\n", 2);
