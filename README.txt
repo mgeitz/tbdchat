@@ -34,12 +34,6 @@ TO-DO LIST:
 
    Smaller adjustments:
 
-      - [Client/Server] Modify /who commands to also return that users realname
-         o First packet returned for any /who should include # of users info being sent
-         o Print nice title seperator with said # of users in X room
-         o Proceed to send user and realnames / print users with colored realnames
-         o Complimentary features for /list
-
       - [Client] /ignore username. Ignore all messages (dont print) all messages from a user
 
       - [Client/Server] /friends and friends list
@@ -56,8 +50,6 @@ TO-DO LIST:
 
       - [client] Curses
          o Add client window to primary screen to display clients currently in room
-         o Add minimum terminal size requirement
-         o Improved notification/alert formatting
 
       - [Server] Should display user is leaving room messages when a user joins a 
         different room
@@ -65,6 +57,8 @@ TO-DO LIST:
 
    Requires considerable time:
 
+      - [Server] Room specific user list tracking, enforce user interaction with correct room, solve many problems
+ 
       - [Client] Client message archiving; by room name, readable format and easy to parse to read back on client
          o Used logged contents to redraw window after resize event
 
