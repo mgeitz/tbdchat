@@ -866,18 +866,25 @@ void get_room_users(packet *in_pkt, int fd) {
       roomNum = atoi(args[1]);
       Room *currRoom = Rget_roomFID(&room_list, roomNum, rooms_mutex);
       if (currRoom != NULL) {
-         pthread_mutex_lock(&currRoom->user_list_mutex);
-         Node *temp = currRoom->user_list;
-         User *current;
          packet ret;
+         int num_users = listLength(&currRoom->user_list, currRoom->user_list_mutex);
 
          ret.options = GETUSERS;
          strcpy(ret.username, SERVER_NAME);
          strcpy(ret.realname, SERVER_NAME);
+
+         sprintf(ret.buf, "%d users in %s", num_users, currRoom->name);
+         ret.timestamp = time(NULL);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+         memset(&ret.buf, 0, sizeof(ret.buf));
+  
+         pthread_mutex_lock(&currRoom->user_list_mutex);
+         Node *temp = currRoom->user_list;
+         User *current;
          while(temp != NULL ) {
             current = (User *)temp->data;
             ret.timestamp = time(NULL);
-            strcpy(ret.buf, current->username);
+            sprintf(ret.buf, "%s-%s", current->username, current->real_name);
             send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
             memset(&ret.buf, 0, sizeof(ret.buf));
             temp = temp->next;
