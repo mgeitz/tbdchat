@@ -726,7 +726,9 @@ void exit_client(packet *pkt, int fd) {
    char cpy[BUFFERSIZE];
    char *tmp = cpy;
    strcpy(tmp, pkt->buf);
+   User *current;
 
+   /*
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
        args[++i] = strsep(&tmp, " \t");
@@ -737,23 +739,36 @@ void exit_client(packet *pkt, int fd) {
    else {
       ret.options = DEFAULT_ROOM;
    }
+   */
+   
+   //Remove user from their current room and the active user's list
+   current = get_user(&active_users_list, pkt->username, active_users_mutex);
+   if(current != NULL) {
+      //Send disconnect message to user room
+      ret.options = current->roomID;
+      strcpy(ret.realname, SERVER_NAME);
+      strcpy(ret.username, SERVER_NAME);
+      sprintf(ret.buf, "User %s has disconnected.", pkt->realname);
+      ret.timestamp = time(NULL);
+      send_message(&ret, -1);
 
-   // Send disconnect message to user room
-   strcpy(ret.realname, SERVER_NAME);
-   strcpy(ret.username, SERVER_NAME);
-   sprintf(ret.buf, "User %s has disconnected.", pkt->realname);
-   ret.timestamp = time(NULL);
-   send_message(&ret, -1);
+      memset(&ret, 0, sizeof(packet));
+      strcpy(ret.realname, SERVER_NAME);
+      strcpy(ret.username, SERVER_NAME);
+      ret.options = EXIT;
+      strcat(ret.buf, "Goodbye!");
+      ret.timestamp = time(NULL);
+      printf("Sending close message to %d\n", fd);
+      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+      close(fd);
 
-   memset(&ret, 0, sizeof(packet));
-   strcpy(ret.realname, SERVER_NAME);
-   strcpy(ret.username, SERVER_NAME);
-   ret.options = EXIT;
-   strcat(ret.buf, "Goodbye!");
-   ret.timestamp = time(NULL);
-   printf("Sending close message to %d\n", fd);
-   send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
-   close(fd);
+      Room *room = Rget_roomFID(&room_list, current->roomID, rooms_mutex);
+      printf("got room\n");
+      removeUser(&(room->user_list), current, room->user_list_mutex); 
+      printf("removed user from current room\n");
+      removeUser(&active_users_list, current, active_users_mutex);
+      printf("removed user from active users\n");
+   }
 }
 
 
