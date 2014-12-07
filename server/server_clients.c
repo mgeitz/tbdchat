@@ -836,12 +836,19 @@ void user_lookup(packet *in_pkt, int fd) {
       if (strcmp(realname, "ERROR") == 0) {
          ret.options = SERV_ERR;
          sprintf(ret.buf, "%s not found.", args[1]);
+         ret.timestamp = time(NULL);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
       }
       else {
+         sprintf(ret.buf, "User Lookup");
+         ret.timestamp = time(NULL);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
+         memset(&ret.buf, 0, sizeof(ret.buf));
+
          strcpy(ret.buf, realname);
+         sprintf(ret.buf, "%s-%s", args[1], realname);
+         send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
       }
-      ret.timestamp = time(NULL);
-      send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
    }
    else {
       printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
