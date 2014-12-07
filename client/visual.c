@@ -178,6 +178,7 @@ void wprintWhoseLineIsItAnyways(WINDOW *win, time_t ts, char *user, char *real, 
    wprintw(win, "%s", real);
    wattroff(win, COLOR_PAIR(color));
    if (from_color > 7) { wattroff(win, A_BOLD); }
+   wprintw(win, "\n");
 }
 
 
