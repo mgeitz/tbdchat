@@ -419,7 +419,6 @@ int setPassword(packet *tx_pkt) {
 int setName(packet *tx_pkt) {
    if(strlen(tx_pkt->buf) > strlen("/setname ")) {
       memmove(tx_pkt->buf, tx_pkt->buf + strlen("/setname "), sizeof(tx_pkt->buf));
-      sprintf(tx_pkt->buf, "%s %d", tx_pkt->buf, currentRoom);
       tx_pkt->options = SETNAME;
       return 1;
    }

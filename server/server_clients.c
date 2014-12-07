@@ -522,24 +522,12 @@ void leave(packet *pkt, int fd) {
  *Set user real name
  */
 void set_name(packet *pkt, int fd) {
-   int i = 0;
    char name[64];
-   char *args[16];
    packet ret;
-   char cpy[BUFFERSIZE];
-   char *tmp = cpy;
-   strcpy(tmp, pkt->buf);
    
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       args[++i] = strsep(&tmp, " \t");
-   }
-   if (i > 1) {
-      strncpy(name, pkt->buf, (strlen(pkt->buf) - strlen(args[i - 1]) - 1) * 
-              sizeof(char));
-      name[(strlen(pkt->buf) - strlen(args[i - 1]) - 1)] = '\0';
+      strncpy(name, pkt->buf, sizeof(name)); 
+      name[strlen(pkt->buf)] = '\0';
       if (!validRealname(name, fd)) { return; }
-      //strncpy(ret.buf, pkt->buf, sizeof(ret.buf));
 
       //Submit name change to user list, write list
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
@@ -551,8 +539,7 @@ void set_name(packet *pkt, int fd) {
          writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
       
          //printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
-         int currRoomNum = atoi(args[i - 1]);
-         ret.options = currRoomNum;
+         ret.options = user->roomID;
          strcpy(ret.realname, SERVER_NAME);
          strcpy(ret.username, SERVER_NAME);
          strcat(ret.buf, " is now known as ");
@@ -575,10 +562,6 @@ void set_name(packet *pkt, int fd) {
       strcpy(ret.username, SERVER_NAME);
       ret.timestamp = time(NULL);
       send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
-   }
-   else {
-      printf("%s --- Error:%s Malformed set_name packet, ignoring.\n", RED, NORMAL);
-   }
 }
 
 
@@ -721,26 +704,8 @@ int validRoomname (char *roomname, int client) {
  */
 void exit_client(packet *pkt, int fd) {
    packet ret;
-   int i = 0;
-   char *args[16];
-   char cpy[BUFFERSIZE];
-   char *tmp = cpy;
-   strcpy(tmp, pkt->buf);
    User *current;
 
-   /*
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-       args[++i] = strsep(&tmp, " \t");
-   }
-   if (i > 1) {
-      ret.options = atoi(args[i - 1]);
-   }
-   else {
-      ret.options = DEFAULT_ROOM;
-   }
-   */
-   
    //Remove user from their current room and the active user's list
    current = get_user(&active_users_list, pkt->username, active_users_mutex);
    if(current != NULL) {
