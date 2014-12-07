@@ -44,7 +44,10 @@ int main(int argc, char **argv) {
    config_file = full_config_path;
    // If config does not exist, create the default config file
    if (access(config_file, F_OK) == -1) {
+      wprintFormatNotice(chatWin, time(NULL), "Building default config file in user home . . .");
       buildDefaultConfig();
+      wprintFormatNotice(chatWin, time(NULL), "First run detected, auto displaying /help . . .");
+      showHelp("none");
    }
 
    // Check autoconnect, run if set
