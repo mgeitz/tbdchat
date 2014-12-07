@@ -554,7 +554,7 @@ void set_name(packet *pkt, int fd) {
          strcat(ret.buf, user->real_name);
          ret.timestamp = time(NULL);
          //printf("HERE%s %dy\n", ret.buf, ret.options);
-         send_message(&ret, -1);
+         send_message(&ret, fd);
          memset(&ret, 0, sizeof(ret));
       
          strncpy(ret.buf, name, sizeof(ret.buf));
