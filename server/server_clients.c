@@ -197,12 +197,6 @@ int register_user(packet *in_pkt, int fd) {
       SHA256_Init(&sha256);
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(user->password, &sha256);
-      //printf("NEW HASH - %s\n", args[2]);
-      //for (i = 0; i < 32; i++) {
-      //    printf("%02x",user->password[i]);
-      //    printf(":");
-      //}
-      //printf("\n");
       user->sock = fd;
       user->next = NULL;
       
@@ -591,7 +585,7 @@ void set_pass(packet *pkt, int fd) {
    char *args[16];
    char cpy[BUFFERSIZE];
    char *tmp = cpy;
-   unsigned char *new_pass_hash = (unsigned char *)malloc(SHA256_DIGEST);
+   unsigned char *curr_pass_hash = (unsigned char *)malloc(SHA256_DIGEST);
    strcpy(tmp, pkt->buf);
 
    args[i] = strsep(&tmp, " \t");
@@ -600,22 +594,26 @@ void set_pass(packet *pkt, int fd) {
    }
    if (i > 3) {
       if (!validPassword(args[2], args[3], fd)) { 
-         free(new_pass_hash); 
+         free(curr_pass_hash); 
          return; 
       }
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
       if (user != NULL) {
-         // Hash password
+         // Hash for pw compare
          SHA256_CTX sha256;
          SHA256_Init(&sha256);
-         SHA256_Update(&sha256, args[2], strlen(args[2]));
-         SHA256_Final(new_pass_hash, &sha256);
-         if (comparePasswords(user->password, new_pass_hash, 32) == 0) {
+         SHA256_Update(&sha256, args[1], strlen(args[1]));
+         SHA256_Final(curr_pass_hash, &sha256);
+         if (comparePasswords(user->password, curr_pass_hash, 32) == 0) {
             memset(user->password, 0, 32);
-            strcpy((char *)user->password, (char *)new_pass_hash);
-            pthread_mutex_lock(&registered_users_mutex);
+            // Hash new password
+            SHA256_CTX sha256;
+            SHA256_Init(&sha256);
+            SHA256_Update(&sha256, args[2], strlen(args[2]));
+            SHA256_Final(user->password, &sha256);
+            //pthread_mutex_lock(&registered_users_mutex);
             writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
-            pthread_mutex_unlock(&registered_users_mutex);
+            //pthread_mutex_unlock(&registered_users_mutex);
             pkt->options = PASSSUC;
          }
          else {
@@ -632,7 +630,7 @@ void set_pass(packet *pkt, int fd) {
       pkt->options = SERV_ERR;
       strcpy(pkt->buf, "Password change failed, malformed request.");
    }
-   free(new_pass_hash); 
+   free(curr_pass_hash); 
    strcpy(pkt->username, SERVER_NAME);
    strcpy(pkt->realname, SERVER_NAME);
    pkt->timestamp = time(NULL);
