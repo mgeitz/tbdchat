@@ -284,8 +284,8 @@ void readUserFile(Node **head, char *filename, pthread_mutex_t mutex) {
       for(i = 0; i < n; i++) {
          temp = (Node *)malloc(sizeof(Node));
          current = (User *)malloc(sizeof(User));
-         current->roomID = -1;   //reset room ID between sessions
          read(fd, current, sizeof(User));
+         current->roomID = -1;   //reset room ID between sessions
          temp->data = current;
          temp->next = NULL;
          insertNode(head, temp, mutex);
@@ -332,7 +332,7 @@ void printList(Node **head, pthread_mutex_t mutex) {
       return;
    }
    User *current = (User *)temp->data;
-   printf("%s, %s, %d, ", current->username, current->real_name, current->sock);
+   printf("%s, %s, %d, room: %d ", current->username, current->real_name, current->sock, current->roomID);
    for (i = 0; i < 32; i++) {
        printf("%02x",current->password[i]);
        printf(":");
@@ -341,7 +341,7 @@ void printList(Node **head, pthread_mutex_t mutex) {
    while(temp->next != NULL) {
       temp = temp->next;
       current = temp->data;
-      printf("%s, %s, %d, ", current->username, current->real_name, current->sock);
+      printf("%s, %s, %d, room: %d ", current->username, current->real_name, current->sock, current->roomID);
       for (i = 0; i < 32; i++) {
           printf("%02x",current->password[i]);
           printf(":");
