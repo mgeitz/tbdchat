@@ -21,7 +21,7 @@ void initializeCurses() {
    // Start those colors
    colors();
 
-   if (LINES < 25 || COLS < 76) {
+   if (LINES < 24 || COLS < 76) {
       drawTermTooSmall();
    }
    else {
