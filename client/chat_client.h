@@ -96,6 +96,7 @@ void serverResponse(packet *rx_pkt);
 void nameChange(packet *rx_pkt);
 void whoResponse(packet *rx_pkt);
 void loggedIn(packet *rx_pkt);
+void roomListResponse(packet *rx_pkt);
 void newRoom(packet *rx_pkt);
 int hash(char *str, int mod);
 

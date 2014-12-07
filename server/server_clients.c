@@ -912,19 +912,26 @@ void get_room_users(packet *in_pkt, int fd) {
  *Get list of rooms
  */
 void get_room_list(int fd) {
-   pthread_mutex_lock(&rooms_mutex);
-   Node  *temp = room_list;
-   Room *current;
    packet pkt;
+
    pkt.options = GETROOMS;
    strcpy(pkt.username, SERVER_NAME);
    strcpy(pkt.realname, SERVER_NAME);
+   pkt.timestamp = time(NULL);
+   int num_rooms = listLength(&room_list, rooms_mutex);
+   sprintf(pkt.buf, "%d Rooms Found", num_rooms);
+   send(fd, &pkt, sizeof(pkt), MSG_NOSIGNAL);
+   memset(&pkt.buf, 0, sizeof(pkt.buf));
 
+   pthread_mutex_lock(&rooms_mutex);
+   Node  *temp = room_list;
+   Room *current;
    while(temp != NULL ) {
       current = (Room *)temp->data;
       pkt.timestamp = time(NULL);
       strcpy(pkt.buf, current->name);
       send(fd, &pkt, sizeof(pkt), MSG_NOSIGNAL);
+      memset(&pkt.buf, 0, sizeof(pkt.buf));
       temp = temp->next;
    }
    pthread_mutex_unlock(&rooms_mutex);

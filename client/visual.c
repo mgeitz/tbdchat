@@ -175,6 +175,16 @@ void wprintWhoseLineIsItAnyways(WINDOW *win, time_t ts, char *user, char *real, 
    // Print formatted time
    wprintFormatTime(win, ts);
 
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "[");
+   wattroff(win, COLOR_PAIR(1));
+   wattron(win, COLOR_PAIR(6));
+   wprintw(win, "USER");
+   wattroff(win, COLOR_PAIR(6));
+   wattron(win, COLOR_PAIR(1));
+   wprintw(win, "] ");
+   wattroff(win, COLOR_PAIR(1));
+
    wprintw(chatWin, "%s: ", user);
    if (from_color < 2) { from_color += 2; }
    // If from_color > 7 use bold in name

@@ -299,7 +299,7 @@ void serverResponse(packet *rx_pkt) {
       wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Invite sent", 3);
    }
    else if (rx_pkt->options == GETROOMS) {
-      wprintFormatMessage(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
+      roomListResponse(rx_pkt);
    }
    else if (rx_pkt->options == MOTD) {
       wprintFormatmotd(chatWin, rx_pkt->timestamp, rx_pkt->buf);
@@ -363,6 +363,27 @@ void whoResponse(packet *rx_pkt) {
    else {
       i = hash(args[0], 12);
       wprintWhoseLineIsItAnyways(chatWin, rx_pkt->timestamp, args[0], args[1], i);
+   }
+}
+
+
+/* Handle list command response */
+void roomListResponse(packet *rx_pkt) {
+   char *args[16];
+   int i = 0;
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, rx_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+      args[++i] = strsep(&tmp, " \t");
+   }
+   if (args[1] == '\0') {
+      wprintFormatMessage(chatWin, rx_pkt->timestamp, "ROOM", rx_pkt->buf, 6);
+   }
+   else {
+      wprintSeperatorTitle(chatWin, rx_pkt->buf, 3, 2);
    }
 }
 
