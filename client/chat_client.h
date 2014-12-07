@@ -126,6 +126,6 @@ void wprintFormatError(WINDOW *win, time_t ts, char *buf);
 void wprintFormatNotice(WINDOW *win, time_t ts, char *buf);
 void wprintSeperatorTitle(WINDOW *win, char *title, int color, int title_color);
 void wprintSeperator(WINDOW *win, int color);
-
+void wprintWhoseLineIsItAnyways(WINDOW *win, time_t ts, char *user, char *real, int from_color);
 
 #endif

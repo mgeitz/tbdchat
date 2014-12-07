@@ -56,6 +56,7 @@ void readUserFile(Node  **head, char *filename, pthread_mutex_t mutex);
 void writeUserFile(Node **head, char *filename, pthread_mutex_t mutex);
 void printList(Node **head, pthread_mutex_t mutex);
 User *get_user(Node **head, char *user, pthread_mutex_t mutex);
+int listLength(Node **head, pthread_mutex_t mutex);
 // room nodes
 int insertRoom(Node **head, Room *new_room, pthread_mutex_t mutex);
 int Rget_ID(Node **head, char *name, pthread_mutex_t mutex);

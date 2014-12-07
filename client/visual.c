@@ -157,6 +157,30 @@ void wprintFormatMessage(WINDOW *win, time_t ts, char *from, char *buf, int from
 }
 
 
+/* Print formatted who line */
+void wprintWhoseLineIsItAnyways(WINDOW *win, time_t ts, char *user, char *real, int from_color) {
+   int color;
+
+   // Print formatted time
+   wprintFormatTime(win, ts);
+
+   wprintw(chatWin, "%s: ", user);
+   if (from_color < 2) { from_color += 2; }
+   // If from_color > 7 use bold in name
+   if (from_color > 7) {
+      color = from_color - 6;
+      wattron(win, A_BOLD);
+      // If from_color is over 13, use default
+      if (from_color > 13) { color = 1; }
+   }
+   else { color = from_color; }
+   wattron(win, COLOR_PAIR(color));
+   wprintw(win, "%s", real);
+   wattroff(win, COLOR_PAIR(color));
+   if (from_color > 7) { wattroff(win, A_BOLD); }
+}
+
+
 /* Print formatted error */
 void wprintFormatError(WINDOW *win, time_t ts, char *buf) {
    // Print formatted time

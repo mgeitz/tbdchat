@@ -293,7 +293,23 @@ void serverResponse(packet *rx_pkt) {
    else if (rx_pkt->options == GETUSERS || \
             rx_pkt->options == GETALLUSERS || \
             rx_pkt->options == GETUSER) {
-      wprintFormat(chatWin, rx_pkt->timestamp, "USER", rx_pkt->buf, 6);
+      //wprintFormat(chatWin, rx_pkt->timestamp, "USER", rx_pkt->buf, 6);
+      char *args[2];
+      int i = 0;
+      char *tmp = rx_pkt->buf;
+      args[i] = strsep(&tmp, "-");
+      while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+         args[++i] = strsep(&tmp, "-");
+      }
+      if (args[1] == '\0') {
+         wprintSeperatorTitle(chatWin, args[0], 6, 2);
+      }
+      else {
+         i = hash(args[0], 12);
+         wprintWhoseLineIsItAnyways(chatWin, rx_pkt->timestamp, args[0], args[1], i);
+         //wprintFormat(chatWin, rx_pkt->timestamp, "USER", args[0], 6);
+         //wprintFormat(chatWin, rx_pkt->timestamp, "USER", args[1], 6);
+      }
    }
    else if (rx_pkt->options == PASSSUC) {
       wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Password change successful", 3);
@@ -311,7 +327,6 @@ void serverResponse(packet *rx_pkt) {
       wattroff(chatWin, A_BOLD);
       wattroff(chatWin, COLOR_PAIR(1));
       wprintw(chatWin, "\n");
-      //wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Name change successful", 3);
    }
    else if (rx_pkt->options == JOINSUC) {
       newRoom(rx_pkt);

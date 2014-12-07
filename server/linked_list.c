@@ -29,6 +29,8 @@ int insertNode(Node **head, Node *new_node, pthread_mutex_t mutex) {
    return 1;
 }
 
+
+/* Remove a node from list of node structs */
 int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    if(*head == NULL) {
@@ -60,8 +62,21 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
    printf("Specified node not found\n");
    pthread_mutex_unlock(&mutex);
    return 0;
+}
 
-   
+
+/* Return length of list */
+int listLength(Node **head, pthread_mutex_t mutex) {
+   int i = 0;
+
+   if (*head == NULL) { return 0; }
+
+   Node *temp = *head;
+   while (temp->next != NULL) {
+      i++;
+      temp = temp->next;
+   }
+   return i + 1;
 }
 
 
@@ -217,6 +232,7 @@ unsigned char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
 }
 
 
+/* Return node object pointing to user with username given */
 User *get_user(Node **head, char *user, pthread_mutex_t mutex) {
    pthread_mutex_lock(&mutex);
    Node *temp = *head;
