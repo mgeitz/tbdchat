@@ -845,18 +845,9 @@ void user_lookup(packet *in_pkt, int fd) {
  *Get users from specific room
  */
 void get_room_users(packet *in_pkt, int fd) {
-   int i = 0, roomNum;
-   char *args[16];
-   char *tmp = in_pkt->buf;
-
-   // Split command args
-   args[i] = strsep(&tmp, " \t");
-   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
-      args[++i] = strsep(&tmp, " \t");
-   }
-   if (i > 1) {
-      roomNum = atoi(args[1]);
-      Room *currRoom = Rget_roomFID(&room_list, roomNum, rooms_mutex);
+   User *user = get_user(&active_users_list, in_pkt->username, active_users_mutex);
+   if(user != NULL) {
+      Room *currRoom = Rget_roomFID(&room_list, user->roomID, rooms_mutex);
       if (currRoom != NULL) {
          packet ret;
          int num_users = listLength(&currRoom->user_list, currRoom->user_list_mutex);
@@ -886,9 +877,6 @@ void get_room_users(packet *in_pkt, int fd) {
       else {
          printf("%s --- Error:%s Trying to read user info but room is null.\n", RED, NORMAL);
       }
-   }
-   else {
-      printf("%s --- Error:%s Malformed buffer received, ignoring.\n", RED, NORMAL);
    }
 }
 
