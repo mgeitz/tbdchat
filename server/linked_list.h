@@ -23,6 +23,7 @@ struct user {
    char real_name[REALNAME_LENGTH];
    unsigned char password[SHA256_DIGEST];
    int sock;
+   int roomID;
    struct user *next;
 };
 typedef struct user User;

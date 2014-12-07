@@ -74,14 +74,6 @@ struct Packet {
 };
 typedef struct Packet packet;
 
-//struct chatSession {
-//   char aliases[2][32];
-//   int clients[2];
-//   int this_client;
-//   int running;
-   //mutex
-//};
-//typedef struct chatSession session;
 
 /* Function Prototypes */
 // chat_server.c

@@ -248,6 +248,7 @@ int login(packet *pkt, int fd) {
       SHA256_Init(&sha256);
       SHA256_Update(&sha256, args[2], strlen(args[2]));
       SHA256_Final(arg_pass_hash, &sha256);
+
       // Compare pass arg and stored pass
       if (comparePasswords(password, arg_pass_hash, 32) != 0) {
          sendError("Incorrect password.", fd);
@@ -259,6 +260,7 @@ int login(packet *pkt, int fd) {
       // Login input is valid, read user data from registered users
       User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
       user->sock = fd;
+      user->roomID = 1000;
 
       //Create node for active users list
       Node *new_usr_act = (Node *)malloc(sizeof(Node));
@@ -403,10 +405,12 @@ void join(packet *pkt, int fd) {
          User *currUser = get_user(&(currentRoom->user_list), pkt->username, currentRoom->user_list_mutex);
          printf("Removing user from his current rooms user list\n");
          removeUser(&(currentRoom->user_list), currUser, currentRoom->user_list_mutex);
-         printf("Returned from remove user\n");
+         printf("User removed from current room\n");
+         
          //Create node to add user to other room list.
          Node *new_node = (Node *)malloc(sizeof(Node));
          new_node->data = currUser;
+         currUser->roomID = newRoom->ID;
          printf("Inserting user into new rooms user list\n");
          insertUser(&(newRoom->user_list), currUser, newRoom->user_list_mutex);
 
@@ -476,6 +480,7 @@ void leave(packet *pkt, int fd) {
 
                // Place user in lobby room
                Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
+               currUser->roomID = 1000;
                insertUser(&(defaultRoom->user_list), currUser, defaultRoom->user_list_mutex);
 
                // Send user leave message to room

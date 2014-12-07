@@ -284,10 +284,10 @@ void readUserFile(Node **head, char *filename, pthread_mutex_t mutex) {
       for(i = 0; i < n; i++) {
          temp = (Node *)malloc(sizeof(Node));
          current = (User *)malloc(sizeof(User));
+         current->roomID = -1;   //reset room ID between sessions
          read(fd, current, sizeof(User));
          temp->data = current;
          temp->next = NULL;
-         //printf("%s, %s, %s\n", temp->username, temp->real_name, temp->password);
          insertNode(head, temp, mutex);
       }
    }
