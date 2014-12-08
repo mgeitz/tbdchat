@@ -259,8 +259,6 @@ int login(packet *pkt, int fd) {
 
       // Login input is valid, read user data from registered users
       User *user = get_user(&registered_users_list, args[1], registered_users_mutex);
-      user->sock = fd;
-      user->roomID = 1000;
 
       //Create node for active users list
       Node *new_usr_act = (Node *)malloc(sizeof(Node));
@@ -274,6 +272,9 @@ int login(packet *pkt, int fd) {
 
       // Check if the user is already logged in
       if(insertUser(&active_users_list, user, active_users_mutex) == 1) {
+         user->sock = fd;
+         user->roomID = 1000;
+
          // Login successful, add user to default room
          Room *defaultRoom = Rget_roomFID(&room_list, DEFAULT_ROOM, rooms_mutex);
          insertNode(&(defaultRoom->user_list), new_usr_rm, defaultRoom->user_list_mutex);
