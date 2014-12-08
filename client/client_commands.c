@@ -1426,7 +1426,6 @@ void log_message(packet *tx_pkt, int fd) {
 
 /*
  *Displays a log from the given room in pico
- */
 void show_log(packet *tx_pkt) {
    int c_pid, status, i;
    char* param[10];
@@ -1468,3 +1467,4 @@ void show_log(packet *tx_pkt) {
       wprintFormatError(chatWin, time(NULL), "Usage: /showlog room");
    }
 }
+*/
