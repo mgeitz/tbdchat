@@ -1413,15 +1413,17 @@ void showHelp(char *buf) {
  *Logs the given message packet to the given fd
  */
 void log_message(packet *tx_pkt, int fd) {
-   char *temp = (char*)malloc(256 * sizeof(char));
-   strcpy(temp, asctime(localtime(&(tx_pkt->timestamp))));
-   temp[strlen(temp) - 1] = ' ';
-   strncat(temp, "| [", 3);
-   strncat(temp, tx_pkt->realname, strlen(tx_pkt->realname));
-   strncat(temp, "] ", 2);
-   strncat(temp, tx_pkt->buf, strlen(tx_pkt->buf));
-   strncat(temp, "\n", 2);
-   write(fd, temp, strlen(temp) * sizeof(char));
+   if(fd) {
+      char *temp = (char*)malloc(256 * sizeof(char));
+      strcpy(temp, asctime(localtime(&(tx_pkt->timestamp))));
+      temp[strlen(temp) - 1] = ' ';
+      strncat(temp, "| [", 3);
+      strncat(temp, tx_pkt->realname, strlen(tx_pkt->realname));
+      strncat(temp, "] ", 2);
+      strncat(temp, tx_pkt->buf, strlen(tx_pkt->buf));
+      strncat(temp, "\n", 2);
+      write(fd, temp, strlen(temp) * sizeof(char));
+   }
 }
 
 /*
