@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
             // If sending a message, print the message client side
             pthread_mutex_lock(&roomMutex);
             if (currentRoom >= 1000 && tx_pkt.options == -1) {
+               //log_message(&rx_pkt, logfd);
                //timestamp = localtime(&(tx_pkt.timestamp));
                wprintFormatMessage(chatWin, tx_pkt.timestamp, tx_pkt.realname, tx_pkt.buf, 14);
                tx_pkt.options = currentRoom;

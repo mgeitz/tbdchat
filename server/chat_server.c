@@ -18,8 +18,8 @@ pthread_mutex_t rooms_mutex = PTHREAD_MUTEX_INITIALIZER;
 Node *registered_users_list;
 Node *active_users_list;
 Node *room_list;
-char const *server_MOTD = "Welcome to The Best Damn Chat Server!"
-                    " It's demo day!";
+char const *server_MOTD = "Thanks for connecting to the TBDChat Demo Server."
+                          " It's demo day!";
 
 
 int main(int argc, char **argv) {
