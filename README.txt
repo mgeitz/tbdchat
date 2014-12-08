@@ -5,8 +5,7 @@
 *      Server:
 *
 *       [URGENT]
-*         - Users persist in active users and as users in rooms after exiting.
-*
+*         -Surely there are bugs we haven't found. No urgent bugs is in itself a bug. 
 *
 *      Client:
 *
@@ -38,7 +37,7 @@ TO-DO LIST:
 
       - [Client/Server] /friends and friends list
 
-      - [Server/Client] 2 person rooms, /msg username, /tell username, or /query username
+      - [Server/Client] 2 person only rooms, /msg username, /tell username, or /query username
 
       - [Client/Server] /away messages, if 2 person chat room attribute
 
@@ -49,18 +48,12 @@ TO-DO LIST:
       - [Server/Client] Private / Public room attribute, room admins, other room attributes
 
       - [client] Curses
-         o Add client window to primary screen to display clients currently in room
+         o Add client window to primary screen to display clients in current room
 
-      - [Server] Should display user is leaving room messages when a user joins a 
-        different room
+      - [Client] /showlog to fork into editor to display a particular log file
 
 
    Requires considerable time:
-
-      - [Server] Room specific user list tracking, enforce user interaction with correct room, solve many problems
- 
-      - [Client] Client message archiving; by room name, readable format and easy to parse to read back on client
-         o Used logged contents to redraw window after resize event
 
       - [Client] Add more to config, read entire config on startup
          o Color preferences
@@ -68,7 +61,7 @@ TO-DO LIST:
 
       - [Client/Server] Allow clients to be in n rooms at a time
 
-      - [Client/Server] Full encryption using something like openssl or ***libsodium***
+      - [Client/Server] Full encryption using something like openssl or ->***libsodium***<-
 
       - [Server] Logging 3 levels (root, debug, info); connections, logins, regisrations, disconnects, etc
          o Worth logging all messages for now, but its utility for cost should be considered
@@ -185,3 +178,4 @@ SERVER FEATURES:
       - Sanitizes input fields which require so accordingly
 
       - SHA256 hashing for password storage
+
