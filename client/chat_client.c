@@ -77,6 +77,13 @@ int main(int argc, char **argv) {
          if(strncmp("/", (void *)tx_pkt.buf, 1) == 0) {
              send_flag = userCommand(tx_pkt_ptr);
          }
+         else if(send_flag) {
+            pthread_mutex_lock(&nameMutex);
+            strcpy(tx_pkt.username, username);
+            strcpy(tx_pkt.realname, realname);
+            pthread_mutex_unlock(&nameMutex);
+            log_message(&tx_pkt, logfd);
+         }
          // If connected and handling a packet flagged to be sent
          if (send_flag && serverfd) {
             // Copy current username and realname to packet
@@ -330,7 +337,9 @@ void loggedIn(packet *rx_pkt) {
    pthread_mutex_unlock(&nameMutex);
    pthread_mutex_lock(&roomMutex);
    currentRoom = DEFAULT_ROOM;
-   strcpy(logfile, username);
+   strcpy(logfile, getenv("HOME"));
+   strcat(logfile, "/");
+   strcat(logfile, username);
    strcat(logfile, "_Lobby.log\0");
    logfd = open(logfile, O_WRONLY | O_CREAT, S_IRWXU);
    lseek(logfd, 0, 2);
@@ -417,7 +426,9 @@ void newRoom(packet *rx_pkt) {
       if (roomNumber != currentRoom) {
          currentRoom = roomNumber;
          close(logfd);
-         strcpy(logfile, username);
+         strcpy(logfile, getenv("HOME"));
+         strcat(logfile, "/");
+         strcat(logfile, username);
          strcat(logfile, "_");
          strcat(logfile, args[0]);
          strcat(logfile, ".log\0");

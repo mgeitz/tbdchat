@@ -114,6 +114,7 @@ int validJoin(packet *tx_pkt);
 int validInvite(packet *tx_pkt);
 void showHelp(char *buf);
 void log_message(packet *tx_pkt, int fd);
+void show_log(packet *tx_pkt);
 
 // visual.c
 void initializeCurses();

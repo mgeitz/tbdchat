@@ -145,6 +145,13 @@ int userCommand(packet *tx_pkt) {
        tx_pkt->options = GETROOMS;
        return 1;
    }
+   /*
+   // Handle showlog command
+   else if(strncmp((void *)tx_pkt->buf, "/showlog", strlen("/showlog")) == 0) {
+      show_log(tx_pkt);
+      return 0;
+   }
+   */
    // If it wasn't any of that, invalid command
    else {
       wprintFormatError(chatWin, time(NULL), "Invalid command");
@@ -1410,9 +1417,54 @@ void log_message(packet *tx_pkt, int fd) {
    strcpy(temp, asctime(localtime(&(tx_pkt->timestamp))));
    temp[strlen(temp) - 1] = ' ';
    strncat(temp, "| [", 3);
-   strncat(temp, tx_pkt->realname, strlen(tx_pkt->username));
+   strncat(temp, tx_pkt->realname, strlen(tx_pkt->realname));
    strncat(temp, "] ", 2);
    strncat(temp, tx_pkt->buf, strlen(tx_pkt->buf));
    strncat(temp, "\n", 2);
    write(fd, temp, strlen(temp) * sizeof(char));
+}
+
+/*
+ *Displays a log from the given room in pico
+ */
+void show_log(packet *tx_pkt) {
+   int c_pid, status, i;
+   char* param[10];
+   char *p0 = (char*)malloc(16 * sizeof(char));
+   char *p1 = (char*)malloc(BUFFERSIZE * sizeof(char));
+   char *args[16];
+   char cpy[BUFFERSIZE];
+   char *tmp = cpy;
+   strcpy(tmp, tx_pkt->buf);
+
+   args[i] = strsep(&tmp, " \t");
+   while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
+       args[++i] = strsep(&tmp, " \t");
+   }
+   if (i > 1) {
+      strcpy(p0, "pico");
+      strcpy(p1, username);
+      strcat(p1, "_");
+      strcat(p1, args[1]);
+      strcat(p1, ".log");
+      param[0] = p0;
+      param[1] = p1;
+      param[2] = NULL;
+      printf("%s", param[0]);
+      //param[2] = p1;
+      if((c_pid = fork()) != 0)
+      {
+         status = execvp(p0, param);
+      }
+      else
+      {
+         c_pid = wait(&status);
+         printf("\33[2J\33[H");
+         printf("Finished viewing log. To return to TBDchat press any key.\n");
+         wrefresh(chatWin);
+      }
+   }
+   else {
+      wprintFormatError(chatWin, time(NULL), "Usage: /showlog room");
+   }
 }
