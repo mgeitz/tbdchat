@@ -1,0 +1,14 @@
+version: '3'
+services:
+  tbdc:
+    build:
+      context: .
+      dockerfile: Dockerfile-client
+    command: ./tbdchat
+  tbdc_server:
+    build:
+      context: .
+      dockerfile: Dockerfile-server
+    command: tbdchat_server
+    volumes:
+      - .:/bin/tbdc
