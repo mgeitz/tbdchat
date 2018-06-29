@@ -32,7 +32,7 @@
 #include <sys/wait.h>
 #include <netdb.h>
 #include <pthread.h>
-#include <sha256.h>
+#include <openssl/sha.h>
 /* Local Header Files */
 #include "linked_list.h"
 
