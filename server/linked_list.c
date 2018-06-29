@@ -421,7 +421,7 @@ int createRoom(Node **head, int ID, char *name, pthread_mutex_t mutex) {
    printf("Creating room %d %s\n", ID, name);
    Room *newRoom = (Room *) malloc(sizeof(Room));
    newRoom->ID = ID;
-   newRoom->user_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+   newRoom->user_list_mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
    strncpy(newRoom->name, name, sizeof(newRoom->name));
    newRoom->user_list = NULL;
    char *temp = (char*)malloc(strlen(newRoom->name) * sizeof(char));
