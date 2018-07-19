@@ -51,7 +51,7 @@
 // Client options
 #define INVALID -1
 #define REGISTER 1
-#define SETPASS 2 
+#define SETPASS 2
 #define SETNAME 3
 #define LOGIN 4
 #define EXIT 5

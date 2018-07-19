@@ -1,4 +1,4 @@
-/* 
+/*
 //   Program:             TBD Chat Client
 //   File Name:           client_commands.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
@@ -325,7 +325,7 @@ int toggleAutoConnect() {
    FILE *configfp;
    char line[128];
    int ret;
- 
+
    pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r+");
    if (configfp != NULL) {
@@ -382,7 +382,7 @@ int serverRegistration(packet *tx_pkt) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, tx_pkt->buf);
-   
+
    // Split command args
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -415,7 +415,7 @@ int setPassword(packet *tx_pkt) {
    char cpy[128];
    char *tmp = cpy;
    strcpy(tmp, tx_pkt->buf);
-   
+
    // Split command args
    args[i] = strsep(&tmp, " \t");
    while ((i < sizeof(args) - 1) && (args[i] != '\0')) {
@@ -627,7 +627,7 @@ void showHelp(char *buf) {
       wattroff(chatWin, COLOR_PAIR(bar));
       if (strcmp(cmd, "connect")  == 0 || strcmp(cmd, "all") == 0) {
          wprintFormatTime(chatWin, time(NULL));
-         wprintw(chatWin, "        ");         
+         wprintw(chatWin, "        ");
          waddch(chatWin, ACS_LLCORNER);
          waddch(chatWin, ACS_HLINE);
          waddch(chatWin, ACS_HLINE);
@@ -1012,7 +1012,7 @@ void showHelp(char *buf) {
          wprintw(chatWin, "Log in to chat with the connected sever\n");
          wattroff(chatWin, COLOR_PAIR(1));
       }
-   }   
+   }
 
    // setpass
    if (strcmp(cmd, "setpass")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
@@ -1112,7 +1112,7 @@ void showHelp(char *buf) {
          wprintw(chatWin, "Request a new display name to be show with all messages\n");
          wattroff(chatWin, COLOR_PAIR(1));
       }
-   }   
+   }
 
    // who
    if (strcmp(cmd, "who")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
@@ -1161,7 +1161,7 @@ void showHelp(char *buf) {
          wattron(chatWin, COLOR_PAIR(1));
          wprintw(chatWin, "Display a list of users in your current room\n");
          wattroff(chatWin, COLOR_PAIR(1));
-   
+
          wprintFormatTime(chatWin, time(NULL));
          wprintw(chatWin, "               ");
          waddch(chatWin, ACS_LTEE);
@@ -1190,7 +1190,7 @@ void showHelp(char *buf) {
          wattron(chatWin, COLOR_PAIR(1));
          wprintw(chatWin, "Display a list of all connected users\n");
          wattroff(chatWin, COLOR_PAIR(1));
-   
+
          wprintFormatTime(chatWin, time(NULL));
          wprintw(chatWin, "               ");
          waddch(chatWin, ACS_LTEE);
@@ -1320,7 +1320,7 @@ void showHelp(char *buf) {
          wprintw(chatWin, "Invite a user to your current room\n");
          wattroff(chatWin, COLOR_PAIR(1));
       }
-   }  
+   }
 
    // join
    if (strcmp(cmd, "join")  == 0 || strcmp(cmd, "all") == 0 || strcmp(cmd, "none") == 0) {
