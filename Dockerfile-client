@@ -1,7 +1,7 @@
 FROM debian:stretch
 
 LABEL maintainer="mgeitz" \
-      version="0.1.1" \
+      version="0.5.0" \
       description="This image is used to start the tbdchat client executable"
 
 RUN apt-get update -y && apt-get install -y \
@@ -9,12 +9,18 @@ RUN apt-get update -y && apt-get install -y \
     libncurses5-dev \
     libssl1.0-dev
 
+RUN groupadd -g 999 tbdchat && \
+    useradd -r -u 999 -ms /bin/bash -g tbdchat tbdchat
+
 WORKDIR /bin/tbdc
 
 COPY client/ client/
 
 COPY Makefile .
 
-RUN make chat_client
+RUN make chat_client && \
+    chown -R tbdchat:tbdchat ./
+
+USER tbdchat
 
 CMD ./tbdchat
