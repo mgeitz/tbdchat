@@ -9,10 +9,16 @@ RUN apt-get update -y && apt-get install -y \
     libncurses5-dev \
     libssl1.0-dev
 
+RUN groupadd -g 999 tbdchat && \
+    useradd -r -u 999 -ms /bin/bash -g tbdchat tbdchat
+
 WORKDIR /bin/tbdc
 
 COPY . .
 
-RUN make chat_server
+RUN make chat_server && \
+    chown -R tbdchat:tbdchat ./
+
+USER tbdchat
 
 CMD /bin/bash
