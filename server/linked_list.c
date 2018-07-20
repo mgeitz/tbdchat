@@ -1,4 +1,4 @@
-/* 
+/*
 //   Program:             TBD Chat Server
 //   File Name:           linked_list.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
@@ -53,11 +53,11 @@ int removeNode(Node **head, Node *to_remove, pthread_mutex_t mutex) {
       printf("Cannot remove from an empty list\n");
       pthread_mutex_unlock(&mutex);
       return 0;
-   
+
    }
 
    Node *temp = *head;
-   
+
    //Check if head is the node to be removed
    if(temp == to_remove) {
       *head = temp->next;
@@ -103,24 +103,24 @@ int insertUser(Node **head, User *new_user, pthread_mutex_t mutex) {
    Node *temp = *head;
    Node *new_node = (Node *)malloc(sizeof(Node));
    new_node->data = (void *)new_user;
-   
+
    //Create new list if head is null
    if (*head == NULL) {
       *head = new_node;
       //printf("Insert Success\n");
       pthread_mutex_unlock(&mutex);
       return 1;
-   } 
-   
+   }
+
    User *temp_user = (User *)temp->data;
-   
+
    //Checks to ensure there are no duplicate users
    if (strcmp(temp_user->username, new_user->username) == 0) {
       //printf("Insert Failure\n");
       pthread_mutex_unlock(&mutex);
       return 0;
    }
-   
+
    while (temp->next != NULL) {
       temp = temp->next;
       temp_user = (User *)temp->data;
@@ -147,7 +147,7 @@ int removeUser(Node **head, User *user, pthread_mutex_t mutex) {
    Node *current = *head;
    User *temp;
 
-   
+
    if (*head == NULL) {
       printf("Can't remove from empty list.\n");
       pthread_mutex_unlock(&mutex);
@@ -162,7 +162,7 @@ int removeUser(Node **head, User *user, pthread_mutex_t mutex) {
       printf("Potentially removed a user from a list.\n");
       return 1;
    }
-   
+
    //Search list for node to be removed
    while (current->next != NULL) {
       current = current->next;
@@ -193,7 +193,7 @@ char *get_real_name(Node **head, char *user, pthread_mutex_t mutex) {
 
    //Iterate through list to search for user
    User *current = (User *)temp->data;
-   if(strcmp(user, current->username) == 0){ 
+   if(strcmp(user, current->username) == 0){
       pthread_mutex_unlock(&mutex);
       return current->real_name;
    }
@@ -232,8 +232,8 @@ unsigned char *get_password(Node  **head, char *user, pthread_mutex_t mutex) {
       pthread_mutex_unlock(&mutex);
       return current->password;
    }
-    
-   //Search list for specified user  
+
+   //Search list for specified user
    while(temp->next != NULL) {
       temp = temp->next;
       current = (User *)temp->data;
@@ -322,7 +322,7 @@ void writeUserFile(Node  **head, char *filename, pthread_mutex_t mutex) {
       close(fd);
       return;
    }
-   
+
    User *current = (User *)temp->data;
    //printf("wrote: %s, %s, %s\n", temp->username, temp->real_name, temp->password);
    write(fd, current, sizeof(User));
@@ -389,13 +389,13 @@ int insertRoom(Node **head, Room *new_room, pthread_mutex_t mutex) {
       return 1;
    }
    current = (Room *)temp->data;
-   
+
    //Iterate through list to make sure there are no duplicate room names
    if(strcmp(current->name, new_room->name) == 0 || current->ID == new_room->ID) {
       pthread_mutex_unlock(&mutex);
       return 0;
    }
-   
+
    while(temp->next != NULL) {
       temp = temp->next;
       current = (Room *)temp->data;
@@ -500,7 +500,7 @@ void RprintList(Node **head, pthread_mutex_t mutex) {
       pthread_mutex_unlock(&mutex);
       return;
    }
-   current = (Room *)temp->data; 
+   current = (Room *)temp->data;
    printf("Room ID: %d, Room Name: %s,\n", current->ID, current->name);
    printf("Contains Users...\n");
    while(temp->next != NULL) {
@@ -558,7 +558,7 @@ Room *Rget_roomFNAME(Node **head, char *name, pthread_mutex_t mutex) {
       temp = temp->next;
       current = (Room *)temp->data;
    }
-   
+
    pthread_mutex_unlock(&mutex);
    return current;
 }

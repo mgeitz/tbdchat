@@ -5,10 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile-client
     command: ./tbdchat
+    links:
+      - tbdc_server
   tbdc_server:
     build:
       context: .
       dockerfile: Dockerfile-server
-    command: tbdchat_server
-    volumes:
-      - .:/bin/tbdc
+    command: ./tbdchat_server tbdc_server 9001
+    ports:
+      - '9001:9001'

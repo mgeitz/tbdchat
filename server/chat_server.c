@@ -1,4 +1,4 @@
-/* 
+/*
 //   Program:             TBD Chat Server
 //   File Name:           chat_server.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
@@ -43,9 +43,9 @@ int main(int argc, char **argv) {
       printf("%s --- Error:%s Usage: %s IP_ADDRESS PORT.\n", RED, NORMAL, argv[0]);
       exit(0);
    }
-  
+
    signal(SIGINT, sigintHandler);
-   
+
    room_list = NULL;
    registered_users_list = NULL;
    active_users_list = NULL;
@@ -54,16 +54,16 @@ int main(int argc, char **argv) {
    RprintList(&room_list, rooms_mutex);
 
    readUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
-   printList(&registered_users_list, registered_users_mutex);  
+   printList(&registered_users_list, registered_users_mutex);
    // Open server socket
    chat_serv_sock_fd = get_server_socket(argv[1], argv[2]);
-   
+
    // step 3: get ready to accept connections
    if(start_server(chat_serv_sock_fd, BACKLOG) == -1) {
       printf("start server error\n");
       exit(1);
-   }	
-   //Main execution loop   
+   }
+   //Main execution loop
    while(1) {
       //Accept a connection, start a thread
       int new_client = accept_client(chat_serv_sock_fd);
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
          pthread_create(&new_client_thread, NULL, client_receive, (void *)&new_client);
       }
    }
-   
+
    close(chat_serv_sock_fd);
 }
 
@@ -83,17 +83,17 @@ int get_server_socket(char *hostname, char *port) {
    int status;
    int server_socket;
    int yes = 1;
-   
+
    memset(&hints, 0, sizeof hints);
    hints.ai_family = PF_UNSPEC;      // either ipv4 or ipv6
    hints.ai_socktype = SOCK_STREAM;  // TCP
    hints.ai_flags = AI_PASSIVE;      // Flag for returning bindable socket addr for either ipv4/6
-   
+
    if ((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
       printf("getaddrinfo: %s\n", gai_strerror(status));
       exit(1);
    }
-   
+
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       // step 1: create a socket
       if((server_socket = socket(p->ai_family, p->ai_socktype,p->ai_protocol)) == -1) {
@@ -105,7 +105,7 @@ int get_server_socket(char *hostname, char *port) {
          printf("socket option\n");
          continue;
       }
-      
+
       // step 2: bind socket to an IP addr and port
       if (bind(server_socket, p->ai_addr, p->ai_addrlen) == -1) {
          printf("socket bind \n");
@@ -114,7 +114,7 @@ int get_server_socket(char *hostname, char *port) {
       break;
    }
    freeaddrinfo(servinfo);
-   
+
    return server_socket;
 }
 
@@ -135,7 +135,7 @@ int accept_client(int serv_sock) {
    socklen_t sin_size = sizeof(struct sockaddr_storage);
    struct sockaddr_storage client_addr;
    //char client_printable_addr[INET6_ADDRSTRLEN];
-   
+
    // accept a connection request from a client
    // the returned file descriptor from accept will be used
    // to communicate with this client.
@@ -161,7 +161,7 @@ void debugPacket(packet *rx_pkt) {
 /* Handle SIGINT (CTRL+C) */
 void sigintHandler(int sig_num) {
    printf("\b\b%s --- Error:%s Forced Exit.\n", RED, NORMAL);
-  
+
    //Closing client sockets and freeing memory from user lists
    Node *temp = active_users_list;
    Node *next;
@@ -189,7 +189,7 @@ void sigintHandler(int sig_num) {
       free(temp);
       temp = next;
    }
-      
+
    close(chat_serv_sock_fd);
    exit(0);
 }

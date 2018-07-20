@@ -1,4 +1,4 @@
-/* 
+/*
 //   Program:             TBD Chat Client
 //   File Name:           visual.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
@@ -69,7 +69,7 @@ void colors() {
    use_default_colors();
 
    // Initialize color pairs
-   init_pair(1, -1, -1); // Default                             
+   init_pair(1, -1, -1); // Default
    init_pair(2, COLOR_CYAN, -1);
    init_pair(3, COLOR_YELLOW, -1);
    init_pair(4, COLOR_RED, -1);
@@ -84,7 +84,7 @@ void colors() {
 
 /* Draw chat box and window */
 void drawChatWin() {
-   // Create window for chat box, draw said box 
+   // Create window for chat box, draw said box
    chatWinBox = subwin(mainWin, (LINES * 0.8), COLS, 0, 0);
    box(chatWinBox, 0, 0);
    // Draw a slick title on it
@@ -343,7 +343,7 @@ void wprintSeperator(WINDOW *win, int color) {
 
    // Print formatted time
    wprintFormatTime(win, time(NULL));
-   
+
    // Print seperator
    wattron(win, COLOR_PAIR(color));
    for (i = 0; i < (2 * (width / 3) + 2); i++) {
