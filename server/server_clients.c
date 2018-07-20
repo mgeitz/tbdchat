@@ -1,4 +1,4 @@
-/* 
+/*
 //   Program:             TBD Chat Server
 //   File Name:           server_clients.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
@@ -69,7 +69,7 @@ void *client_receive(void *ptr) {
          else if (logged_in) {
             // Handle option messages for logged in client
             if (in_pkt.options < 1000) {
-               if(in_pkt.options == REGISTER) { 
+               if(in_pkt.options == REGISTER) {
                   sendError("You may not register while logged in.", client);
                }
                else if(in_pkt.options == SETPASS) {
@@ -153,7 +153,7 @@ int sanitizeInput(char *buf, int type) {
                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                  " _,.-/@()*~`&^%$#!?<>'\";:+=[]{}|"
                                  "1234567890";
-  // Allowable chars for realname, username*, roomname*.. 
+  // Allowable chars for realname, username*, roomname*..
   // *[provided they have been strsep'ed first]
    char const safe_name_chars[] = "abcdefghijklmnopqrstuvwxyz"
                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -215,7 +215,7 @@ int register_user(packet *in_pkt, int fd) {
       SHA256_Final(user->password, &sha256);
       user->sock = fd;
       user->next = NULL;
-      
+
       // Insert user as registered user, write new user data to file
       insertUser(&registered_users_list, user, registered_users_mutex);
       writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
@@ -423,7 +423,7 @@ void join(packet *pkt, int fd) {
          printf("Removing user from his current rooms user list\n");
          removeUser(&(currentRoom->user_list), currUser, currentRoom->user_list_mutex);
          printf("User removed from current room\n");
-         
+
          //Create node to add user to other room list.
          Node *new_node = (Node *)malloc(sizeof(Node));
          new_node->data = currUser;
@@ -541,8 +541,8 @@ void leave(packet *pkt, int fd) {
 void set_name(packet *pkt, int fd) {
    char name[64];
    packet ret;
-   
-      strncpy(name, pkt->buf, sizeof(name)); 
+
+      strncpy(name, pkt->buf, sizeof(name));
       name[strlen(pkt->buf)] = '\0';
       if (!validRealname(name, fd)) { return; }
 
@@ -554,7 +554,7 @@ void set_name(packet *pkt, int fd) {
          memset(user->real_name, 0, sizeof(user->real_name));
          strncpy(user->real_name, name, sizeof(name));
          writeUserFile(&registered_users_list, USERS_FILE, registered_users_mutex);
-      
+
          //printf("RIGHT BEFORE ATOI %s\n", args[i - 1]);
          ret.options = user->roomID;
          strcpy(ret.realname, SERVER_NAME);
@@ -565,7 +565,7 @@ void set_name(packet *pkt, int fd) {
          //printf("HERE%s %dy\n", ret.buf, ret.options);
          send_message(&ret, fd);
          memset(&ret, 0, sizeof(ret));
-      
+
          strncpy(ret.buf, name, sizeof(ret.buf));
          ret.options = NAMESUC;
       }
@@ -598,9 +598,9 @@ void set_pass(packet *pkt, int fd) {
        args[++i] = strsep(&tmp, " \t");
    }
    if (i > 3) {
-      if (!validPassword(args[2], args[3], fd)) { 
-         free(curr_pass_hash); 
-         return; 
+      if (!validPassword(args[2], args[3], fd)) {
+         free(curr_pass_hash);
+         return;
       }
       User *user = get_user(&registered_users_list, pkt->username, registered_users_mutex);
       if (user != NULL) {
@@ -635,7 +635,7 @@ void set_pass(packet *pkt, int fd) {
       pkt->options = SERV_ERR;
       strcpy(pkt->buf, "Password change failed, malformed request.");
    }
-   free(curr_pass_hash); 
+   free(curr_pass_hash);
    strcpy(pkt->username, SERVER_NAME);
    strcpy(pkt->realname, SERVER_NAME);
    pkt->timestamp = time(NULL);
@@ -746,7 +746,7 @@ void exit_client(packet *pkt, int fd) {
 
       Room *room = Rget_roomFID(&room_list, current->roomID, rooms_mutex);
       printf("got room\n");
-      removeUser(&(room->user_list), current, room->user_list_mutex); 
+      removeUser(&(room->user_list), current, room->user_list_mutex);
       printf("removed user from current room\n");
       removeUser(&active_users_list, current, active_users_mutex);
       printf("removed user from active users\n");
@@ -795,7 +795,7 @@ void get_active_users(int fd) {
    ret.options = GETALLUSERS;
    strcpy(ret.username, SERVER_NAME);
    strcpy(ret.realname, SERVER_NAME);
-   
+
    int num_users = listLength(&active_users_list, active_users_mutex);
    sprintf(ret.buf, "%d users online", num_users);
    ret.timestamp = time(NULL);
@@ -877,7 +877,7 @@ void get_room_users(packet *in_pkt, int fd) {
          ret.timestamp = time(NULL);
          send(fd, &ret, sizeof(packet), MSG_NOSIGNAL);
          memset(&ret.buf, 0, sizeof(ret.buf));
-  
+
          pthread_mutex_lock(&currRoom->user_list_mutex);
          Node *temp = currRoom->user_list;
          User *current;
@@ -932,7 +932,7 @@ void get_room_list(int fd) {
 int comparePasswords(unsigned char *pass1, unsigned char *pass2, int size) {
    int i = 0;
    //printf("-----------------------------------------------------------\n");
-   //printf("PREPARE PASS COMPARE OF %d. %d of what I don't know\n\n", size, size); 
+   //printf("PREPARE PASS COMPARE OF %d. %d of what I don't know\n\n", size, size);
 
    for (i = 0; i < size; i++) {
        //printf("PASS1: %02x\n", pass1[i]);

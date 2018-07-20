@@ -1,4 +1,4 @@
-/* 
+/*
 //   Program:             TBD Chat Client
 //   File Name:           chat_client.c
 //   Authors:             Matthew Owens, Michael Geitz, Shayne Wierbowski
@@ -73,8 +73,8 @@ int main(int argc, char **argv) {
       wprintFormatNotice(chatWin, time(NULL), "Auto connecting to most recently connected host . . .");
       reconnect(tx_pkt.buf);
    }
-  
-   // Primary execution loop 
+
+   // Primary execution loop
    while (1) {
       wrefresh(chatWin);
       wcursyncup(inputWin);
@@ -126,14 +126,14 @@ int main(int argc, char **argv) {
          // If send flag is true but serverfd is still 0, print error
          else if (send_flag && !serverfd) {
             wprintFormatError(chatWin, time(NULL), "Not connected to any server");
-         } 
+         }
       }
       // If an exit packet was just transmitted, break from primary execution loop
       if (tx_pkt.options == EXIT) {
          break;
       }
    }
-   
+
    // Safely close connection
    wprintFormatNotice(chatWin, time(NULL), " Preparing to exit . . .");
    wrefresh(chatWin);
@@ -176,7 +176,7 @@ void buildDefaultConfig() {
 int auto_connect() {
    FILE *configfp;
    char line[128];
-   
+
    pthread_mutex_lock(&configFileMutex);
    configfp = fopen(config_file, "r");
    if (configfp != NULL) {
@@ -259,7 +259,7 @@ void *chatRX(void *ptr) {
    while (1) {
       // Wait for message to arrive..
       received = recv(*serverfd, (void *)&rx_pkt, sizeof(packet), 0);
-      
+
       if (received) {
          // If debug mode is enabled, dump packet contents
          pthread_mutex_lock(&debugModeMutex);
@@ -272,7 +272,7 @@ void *chatRX(void *ptr) {
             timestamp = localtime(&(rx_pkt.timestamp));
             if (strcmp(rx_pkt.realname, SERVER_NAME) == 0) { i = 3; }
             else { i = hash(rx_pkt.username, 12); }
-            wprintFormatMessage(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i);  
+            wprintFormatMessage(chatWin, rx_pkt.timestamp, rx_pkt.realname, rx_pkt.buf, i);
             beep();
          }
          // If the received packet is a nonmessage option, handle option response
@@ -361,7 +361,7 @@ void loggedIn(packet *rx_pkt) {
    logfd = open(logfile, O_WRONLY | O_CREAT, S_IRWXU);
    lseek(logfd, 0, 2);
    werase(infoLine);
-   wprintw(infoLine, " Current room: Lobby"); 
+   wprintw(infoLine, " Current room: Lobby");
    wrefresh(infoLine);
    pthread_mutex_unlock(&roomMutex);
    wprintFormatMessage(chatWin, rx_pkt->timestamp, rx_pkt->realname, "Login Successful!", 14);
@@ -458,7 +458,7 @@ void newRoom(packet *rx_pkt) {
          wattroff(chatWin, COLOR_PAIR(3));
          werase(infoLine);
          wbkgd(infoLine, COLOR_PAIR(3));
-         wprintw(infoLine, " Current room: %s", args[0]); 
+         wprintw(infoLine, " Current room: %s", args[0]);
          wrefresh(infoLine);
       }
       pthread_mutex_unlock(&roomMutex);
@@ -474,23 +474,23 @@ int get_server_connection(char *hostname, char *port) {
    int serverfd;
    struct addrinfo hints, *servinfo, *p;
    int status;
-   
+
    memset(&hints, 0, sizeof hints);
    hints.ai_family = PF_UNSPEC;
    hints.ai_socktype = SOCK_STREAM;
-   
+
    if((status = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
       wprintFormatTime(chatWin, time(NULL));
       wprintw(chatWin, "getaddrinfo: %s\n", gai_strerror(status));
       return -1;
    }
-   
+
    for (p = servinfo; p != NULL; p = p ->ai_next) {
       if((serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
          wprintFormatError(chatWin, time(NULL), "socket socket");
          continue;
       }
-      
+
       if(connect(serverfd, p->ai_addr, p->ai_addrlen) == -1) {
          close(serverfd);
          wprintFormatError(chatWin, time(NULL), "socket connect");
@@ -514,7 +514,7 @@ void print_ip( struct addrinfo *ai) {
    struct sockaddr_in6 *ipv6;
    short port = 0;
    char connect_str[128];
-   
+
    for (p = ai; p !=  NULL; p = p->ai_next) {
       if(p->ai_family == AF_INET) {
          ipv4 = (struct sockaddr_in *)p->ai_addr;
@@ -544,7 +544,7 @@ void print_ip( struct addrinfo *ai) {
 void sigintHandler(int sig_num) {
    wprintFormatError(chatWin, time(NULL), "Forced Exit.");
    // If the client is connected, safely close the connection
-   if (serverfd) { 
+   if (serverfd) {
       packet tx_pkt;
       pthread_mutex_lock(&nameMutex);
       strcpy(tx_pkt.username, username);
@@ -556,7 +556,7 @@ void sigintHandler(int sig_num) {
       tx_pkt.options = EXIT;
       send(serverfd, (void *)&tx_pkt, sizeof(packet), 0);
       close(logfd);
-      close(serverfd); 
+      close(serverfd);
       if (chat_rx_thread) {
          if(pthread_join(chat_rx_thread, NULL)) {
             wprintFormatError(chatWin, time(NULL), "chatRX thread not joining.");
@@ -581,8 +581,8 @@ int hash(char *str, int mod) {
    int c;
    while ((c = *str++)) {
       //Binary shift left by 5, add c
-      hash = ((hash << 5) + hash) + c; 
-   } 
+      hash = ((hash << 5) + hash) + c;
+   }
    // Return modded value
    return hash % mod;
 }

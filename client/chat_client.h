@@ -45,13 +45,13 @@
 #define BUFFERSIZE 128
 #define DEFAULT_ROOM 1000
 #define SERVER_NAME "SERVER"
-#define VERSION "0.4.0" // Completely made up version progression, change at will
+#define VERSION "0.5.0"
 #define CONFIG_FILENAME "/.tbdchat"
 
 // Client options
 #define INVALID -1
 #define REGISTER 1
-#define SETPASS 2 
+#define SETPASS 2
 #define SETNAME 3
 #define LOGIN 4
 #define EXIT 5
