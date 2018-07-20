@@ -39,29 +39,14 @@ $ apt-get install build-essential libncurses5-dev libssl-dev
 
 ### Getting Started
 
-#### Docker Client
+#### Docker-Compose
 ```sh
-$ docker-compose build tbdc
+$ docker-compose build
 $ docker-compose run --rm tbdc
 ```
+> connect to the container server via `/connect tbdc_server 9001`
 
-#### Docker Server
-```sh
-$ docker-compose build tbdc_server
-$ docker-compose run --rm tbdc_server
-```
-
-#### Client Compilation
-```sh
-$ make chat_client
-```
-
-#### Server Compilation
-```sh
-$ make chat_server
-```
-
-#### Compile All the Things
+#### Local Compilation
 ```sh
 $ make all
 ```
