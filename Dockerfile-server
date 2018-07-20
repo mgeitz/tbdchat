@@ -15,4 +15,4 @@ COPY . .
 
 RUN make chat_server
 
-CMD tbdchat_server
+CMD /bin/bash

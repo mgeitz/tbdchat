@@ -7,11 +7,13 @@ LABEL maintainer="mgeitz" \
 RUN apt-get update -y && apt-get install -y \
     build-essential \
     libncurses5-dev \
-    libssl-dev
+    libssl1.0-dev
 
 WORKDIR /bin/tbdc
 
-COPY . .
+COPY client/ client/
+
+COPY Makefile .
 
 RUN make chat_client
 
