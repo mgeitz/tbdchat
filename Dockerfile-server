@@ -14,7 +14,9 @@ RUN groupadd -g 999 tbdchat && \
 
 WORKDIR /bin/tbdc
 
-COPY . .
+COPY server/ server/
+
+COPY Makefile .
 
 RUN make chat_server && \
     chown -R tbdchat:tbdchat ./
